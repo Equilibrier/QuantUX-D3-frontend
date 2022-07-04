@@ -80,7 +80,7 @@ export default {
         return new Promise(async(resolve) => {
             const engine = new ScriptEngine()
             this.logger.log(-1, "runScript", 'Root: ', this.$root);
-            let result = await engine.run(script, this.model, this.dataBindingValues, this.canvas.getSettings()).then()
+            let result = await engine.run(script, this.model, this.dataBindingValues).then()//, this.canvas.getSettings()).then()
     
             if (result.status === 'ok') {     
                 requestAnimationFrame( () => {
