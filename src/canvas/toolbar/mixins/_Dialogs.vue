@@ -662,9 +662,13 @@ export default {
 
 		onSaveSettings (dialog, themeList, mouseWheelList, colorPicker, zoomChkBox, protoMotoCheckBox, gridSnapTopLeftChkBox, selectMoveBox, designTokenCheckBox, globalScriptsCBs){
 
+			console.log("globalScripts-before: ", globalScriptsCBs);
+
 			Object.keys(globalScriptsCBs).map(url => {
 				globalScriptsCBs[url] = globalScriptsCBs[url].getValue()
 			});
+
+			console.log("globalScripts-after: ", globalScriptsCBs);
 
 			var settings = {
 				canvasTheme: themeList.getValue(),
