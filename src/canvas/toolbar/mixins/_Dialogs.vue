@@ -616,19 +616,16 @@ export default {
 			gridSnapTopLeftChkBox.placeAt(gridSnapTopLeftCntr);
 
 
-			db.label("MatcMarginTop", "JS global scripts:").build(cntr);
+			db.label("MatcMarginTop", "JS global scripts (just add screen comments with JS_GLOBAL: as prefix and followed by the url):").build(cntr);
 			var urlCntr = db.div("form-group").build(cntr);
 
 			let comments = await Services.getCommentService().find(this.model.id, 'ScreenComment')
-			console.log("Comments: ", comments);
 			var globalScriptsCBs = {};
 			for (let c of comments) {
 				if (c.message.toLowerCase().trim().startsWith("js_global:")) {
 						const url = c.message.substring(c.message.toLowerCase().indexOf("js_global:") + "js_global:".length).trim();
-						console.log("Preluam js script global de la: ", url);
 						let jsgCode = await (await fetch(url)).text();
-						console.log("Cod preluat: \n", jsgCode);
-
+						
 						let urlCB = this.$new(CheckBox);
 						urlCB.setLabel(url);
 						urlCB.setValue(settings.globalScriptUrlsEnabled[url] !== undefined ? settings.globalScriptUrlsEnabled[url] : true);
