@@ -621,6 +621,7 @@ export default {
 
 			let comments = await Services.getCommentService().find(this.model.id, 'ScreenComment')
 			console.log("Comments: ", comments);
+			var globalScriptsCBs = {};
 			for (let c of comments) {
 				if (c.message.toLowerCase().trim().startsWith("js_global:")) {
 						const url = c.message.substring(c.message.toLowerCase().indexOf("js_global:") + "js_global:".length).trim();
@@ -630,8 +631,10 @@ export default {
 
 						let urlCB = this.$new(CheckBox);
 						urlCB.setLabel(url);
-						urlCB.setValue(false);
+						urlCB.setValue(settings.globalScriptUrlsEnabled[url] !== undefined ? settings.globalScriptUrlsEnabled[url] : false);
 						urlCB.placeAt(urlCntr);
+
+						globalScriptsCBs[urlCB] = urlCB;
 				}
 			}
 
@@ -664,7 +667,8 @@ export default {
 				hasProtoMoto: protoMotoCheckBox.getValue(),
 				snapGridOnlyToTopLeft: gridSnapTopLeftChkBox.getValue(),
 				selectMove: selectMoveBox.getValue(),
-				hasDesignToken: designTokenCheckBox.getValue()
+				hasDesignToken: designTokenCheckBox.getValue(),
+				globalScriptUrlsEnabled: globalScriptsCBs.map(cb => cb.getValue())
 			};
 
 			this.canvas.setSettings(settings);

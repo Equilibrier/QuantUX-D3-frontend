@@ -375,7 +375,8 @@ export default {
 				hasProtoMoto: false,
 				zoomSnapp: true,
 				selectMove: true,
-				hasDesignToken: true
+				hasDesignToken: true,
+				globalScriptUrlsEnabled: {}
 			};
 
 			var s = this._getStatus("matcSettings");
