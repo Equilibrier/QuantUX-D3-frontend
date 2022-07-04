@@ -629,8 +629,6 @@ export default {
 						let jsgCode = await (await fetch(url)).text();
 						console.log("Cod preluat: \n", jsgCode);
 
-						console.log("settings.globalScript...: ", settings.globalScriptUrlsEnabled);
-
 						let urlCB = this.$new(CheckBox);
 						urlCB.setLabel(url);
 						urlCB.setValue(settings.globalScriptUrlsEnabled[url] !== undefined ? settings.globalScriptUrlsEnabled[url] : true);
@@ -662,13 +660,9 @@ export default {
 
 		onSaveSettings (dialog, themeList, mouseWheelList, colorPicker, zoomChkBox, protoMotoCheckBox, gridSnapTopLeftChkBox, selectMoveBox, designTokenCheckBox, globalScriptsCBs){
 
-			console.log("globalScripts-before: ", globalScriptsCBs);
-
 			Object.keys(globalScriptsCBs).map(url => {
 				globalScriptsCBs[url] = globalScriptsCBs[url].getValue()
 			});
-
-			console.log("globalScripts-after: ", globalScriptsCBs);
 
 			var settings = {
 				canvasTheme: themeList.getValue(),
