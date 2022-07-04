@@ -631,7 +631,7 @@ export default {
 
 						let urlCB = this.$new(CheckBox);
 						urlCB.setLabel(url);
-						urlCB.setValue(settings.globalScriptUrlsEnabled[url] !== undefined ? settings.globalScriptUrlsEnabled[url] : false);
+						urlCB.setValue(settings.globalScriptUrlsEnabled[url] !== undefined ? settings.globalScriptUrlsEnabled[url] : true);
 						urlCB.placeAt(urlCntr);
 
 						globalScriptsCBs[urlCB] = urlCB;
