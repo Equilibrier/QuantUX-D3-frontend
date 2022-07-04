@@ -79,11 +79,7 @@ export default {
 
         return new Promise(async(resolve) => {
             const engine = new ScriptEngine()
-            this.logger.log(-1, "runScript", 'Root: ', this.$root);
-            this.logger.warn("runScript", "Root: ", this.$root);
-            this.logger.warn("runScript", "Root: ", this.$root.$options.name);
-            this.logger.warn("runScript", "Root: ", this.$root.canvas);
-            let result = await engine.run(script, this.model, this.dataBindingValues).then()//, this.canvas.getSettings()).then()
+            let result = await engine.run(script, this.model, this.dataBindingValues).then()
     
             if (result.status === 'ok') {     
                 requestAnimationFrame( () => {

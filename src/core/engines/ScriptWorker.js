@@ -9,8 +9,7 @@ self.addEventListener('message', e => {
     const js = e.data.code
     const model = e.data.model
     const viewModel = e.data.viewModel
-    //const settings = e.data.settings;
-    //Logger.log(3, `global-script urls: ${Object.values(settings.globalScriptUrlsEnabled)}`, e)
+    
     const qux = new ScriptAPI(model)
     const code = new Function('qux', 'data', 'console', js);
     const console = new ScriptConsole()
