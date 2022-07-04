@@ -82,6 +82,7 @@ export default {
             this.logger.log(-1, "runScript", 'Root: ', this.$root);
             this.logger.warn("runScript", "Root: ", this.$root);
             this.logger.warn("runScript", "Root: ", this.$root.$options.name);
+            this.logger.warn("runScript", "Root: ", this.$root.canvas);
             let result = await engine.run(script, this.model, this.dataBindingValues).then()//, this.canvas.getSettings()).then()
     
             if (result.status === 'ok') {     
