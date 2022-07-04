@@ -636,7 +636,7 @@ export default {
 						urlCB.setValue(settings.globalScriptUrlsEnabled[url] !== undefined ? settings.globalScriptUrlsEnabled[url] : true);
 						urlCB.placeAt(urlCntr);
 
-						globalScriptsCBs[urlCB] = urlCB;
+						globalScriptsCBs[url] = urlCB;
 				}
 			}
 
