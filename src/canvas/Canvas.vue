@@ -439,8 +439,10 @@ export default {
 			if (s.hasDesignToken === true || s.hasDesignToken === false) {
 				this.settings.hasDesignToken = s.hasDesignToken
 			}
+			console.log("merge globalScriptUrlsEnabled");
 			if (s.globalScriptUrlsEnabled !== undefined && s.globalScriptUrlsEnabled !== null) {
 				this.settings.globalScriptUrlsEnabled = s.globalScriptUrlsEnabled;
+				console.log("da");
 			}
 		},
 
@@ -448,6 +450,7 @@ export default {
 		 * Called from the dialog
 		 */
 		setSettings (s){
+			console.log("setam setarile cu ", s);
 			this.mergeSettings(s)
 			this._setStatus("matcSettings",this.settings);
 			this.applySettings(this.settings);
