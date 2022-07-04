@@ -540,7 +540,7 @@ export default {
 		 * Settings
 		 **********************************************************************/
 
-		onShowSettings:function(){
+		onShowSettings:async function(){
 
 			var db = new DomBuilder();
 			var popup = db.div("MatcDialog MatcHeaderDialog MatcPadding").build();
