@@ -7,7 +7,8 @@ self.addEventListener('message', e => {
 
 
     const js = e.data.code
-    Logger.log(3, `global-script urls: ${Object.values(this.canvas.getSettings().globalScriptUrlsEnabled)}`, e)
+    //Logger.log(3, `global-script urls: ${Object.values(this.canvas.getSettings().globalScriptUrlsEnabled)}`, e)
+    Logger.log(3, `e: ${Object.keys(e)}`, e)
     const model = e.data.model
     const viewModel = e.data.viewModel
     const qux = new ScriptAPI(model)
