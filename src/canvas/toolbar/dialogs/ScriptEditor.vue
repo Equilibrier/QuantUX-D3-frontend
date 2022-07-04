@@ -222,7 +222,7 @@ return "myScreen"
             this.$emit('run', this.script)
             this.errorMsg = ''
             try {
-                Logger.warn(2, "ScriptEditor->run->canvas", this.canvas);
+                Logger.warn("ScriptEditor->run->canvas", this.canvas);
                 const result = await this.simulator.runScript(this.script)
                 if (result) {
                     if (result.console) {
