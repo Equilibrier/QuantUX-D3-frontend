@@ -79,8 +79,7 @@ export default {
 
         return new Promise(async(resolve) => {
             const engine = new ScriptEngine()
-            console.log("model: ", this.model);
-            let result = await engine.run(script, this.model, this.dataBindingValues).then()
+            let result = await engine.run(script, this.model, this.dataBindingValues, this.canvas.getSettings()).then()
     
             if (result.status === 'ok') {     
                 requestAnimationFrame( () => {
