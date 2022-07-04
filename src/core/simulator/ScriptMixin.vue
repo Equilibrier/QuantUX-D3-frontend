@@ -81,6 +81,7 @@ export default {
             const engine = new ScriptEngine()
             this.logger.log(-1, "runScript", 'Root: ', this.$root);
             this.logger.warn("runScript", "Root: ", this.$root);
+            this.logger.warn("runScript", "Root: ", this.$root.name);
             let result = await engine.run(script, this.model, this.dataBindingValues).then()//, this.canvas.getSettings()).then()
     
             if (result.status === 'ok') {     
