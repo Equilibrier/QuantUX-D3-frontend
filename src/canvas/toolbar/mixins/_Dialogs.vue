@@ -659,6 +659,11 @@ export default {
 		},
 
 		onSaveSettings (dialog, themeList, mouseWheelList, colorPicker, zoomChkBox, protoMotoCheckBox, gridSnapTopLeftChkBox, selectMoveBox, designTokenCheckBox, globalScriptsCBs){
+
+			Object.keys(globalScriptsCBs).map(url => {
+				globalScriptsCBs[url] = globalScriptsCBs[url].getValue()
+			});
+
 			var settings = {
 				canvasTheme: themeList.getValue(),
 				mouseWheelMode: mouseWheelList.getValue(),
@@ -668,7 +673,7 @@ export default {
 				snapGridOnlyToTopLeft: gridSnapTopLeftChkBox.getValue(),
 				selectMove: selectMoveBox.getValue(),
 				hasDesignToken: designTokenCheckBox.getValue(),
-				globalScriptUrlsEnabled: globalScriptsCBs.map(cb => cb.getValue())
+				globalScriptUrlsEnabled: globalScriptsCBs
 			};
 
 			this.canvas.setSettings(settings);
