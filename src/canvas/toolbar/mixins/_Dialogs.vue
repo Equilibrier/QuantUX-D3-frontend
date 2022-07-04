@@ -624,7 +624,6 @@ export default {
 			for (let c of comments) {
 				if (c.message.toLowerCase().trim().startsWith("js_global:")) {
 						const url = c.message.substring(c.message.toLowerCase().indexOf("js_global:") + "js_global:".length).trim();
-						let jsgCode = await (await fetch(url)).text();
 						
 						let urlCB = this.$new(CheckBox);
 						urlCB.setLabel(url);
