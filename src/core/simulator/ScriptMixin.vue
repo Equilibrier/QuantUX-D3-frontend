@@ -80,6 +80,7 @@ export default {
         return new Promise(async(resolve) => {
             const engine = new ScriptEngine()
             this.logger.log(-1, "runScript", 'Root: ', this.$root);
+            this.logger.warn("runOnLoadedScreenAnimation","11111111111111exit because do not run!");
             let result = await engine.run(script, this.model, this.dataBindingValues).then()//, this.canvas.getSettings()).then()
     
             if (result.status === 'ok') {     
