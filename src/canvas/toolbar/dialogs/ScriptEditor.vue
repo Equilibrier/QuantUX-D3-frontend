@@ -103,6 +103,12 @@ return "myScreen"
         }
     },
     methods: {
+        // dependency //////////
+        setCanvas (c){
+            this.canvas = c;
+        },
+        ////////////////////////
+    
         setJwtToken (t) {
             this.jwtToken = t
         },
