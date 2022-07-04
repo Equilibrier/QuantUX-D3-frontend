@@ -5,7 +5,7 @@ let worker = new Worker(new URL('./ScriptWorker.js', import.meta.url))
 export default class ScriptEngine {
     
 
-    run (js, model, viewModel, settings) {
+    run (js, model, viewModel) {//, settings) {
         Logger.log(1, 'ScriptEngine.run()')
         this.isDone = false
         return new Promise((resolve, reject) => {
@@ -18,7 +18,7 @@ export default class ScriptEngine {
                     code: js, 
                     model: lang.clone(model), 
                     viewModel: lang.clone(viewModel),
-                    settings: lang.clone(settings)
+                    //settings: lang.clone(settings)
                 })
 
 
