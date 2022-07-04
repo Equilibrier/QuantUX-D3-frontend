@@ -439,6 +439,9 @@ export default {
 			if (s.hasDesignToken === true || s.hasDesignToken === false) {
 				this.settings.hasDesignToken = s.hasDesignToken
 			}
+			if (s.globalScriptUrlsEnabled !== undefined && s.globalScriptUrlsEnabled !== null) {
+				this.settings.globalScriptUrlsEnabled = s.globalScriptUrlsEnabled;
+			}
 		},
 
 		/**
