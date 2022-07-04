@@ -229,6 +229,7 @@ return "myScreen"
             this.errorMsg = ''
             try {
                 Logger.warn("ScriptEditor->run", this.canvas.settings);
+                // here goes my global-scripts logic; should pre-append those scripts to this.script, before giving it to the executor
                 const result = await this.simulator.runScript(this.script)
                 if (result) {
                     if (result.console) {

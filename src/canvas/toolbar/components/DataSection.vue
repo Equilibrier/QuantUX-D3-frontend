@@ -1054,7 +1054,6 @@ export default {
 			const popup = this.db.div("MatcScriptEditorDialog MatcPadding " + dialogCSS).build();
 			const cntr = this.db.div("").build(popup);
 			const settings = this.$new(ScriptEdior);
-			//this.logger.warn("DataSection", "canvas", this.canvas);
 			settings.setCanvas(this.canvas);
 			const bar = this.db.div("MatcButtonBar MatcMarginTop").build(popup);
 			const write = this.db.div("MatcButton", "Ok").build(bar);
