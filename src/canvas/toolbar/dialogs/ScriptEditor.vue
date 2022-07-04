@@ -230,7 +230,16 @@ return "myScreen"
             try {
                 Logger.warn("ScriptEditor->run", this.canvas.settings);
                 // here goes my global-scripts logic; should pre-append those scripts to this.script, before giving it to the executor
-                const result = await this.simulator.runScript(this.script)
+
+                let globalScriptPrepender = "";
+                for (let url of Object.keys(this.canvas.settings.globalScriptUrlsEnabled)) {
+                    const enabled = this.canvas.settings.globalScriptUrlsEnabled[url];
+                    if (enabled) {
+                        let jsgCode = await (await fetch(url)).text();
+						globalScriptPrepender += jsgCode + "\n";
+                    }
+                }
+                const result = await this.simulator.runScript(globalScriptPrepender + this.script)
                 if (result) {
                     if (result.console) {
                         this.logs = result.console
