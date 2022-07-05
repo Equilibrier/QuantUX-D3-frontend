@@ -240,7 +240,7 @@ return "myScreen"
                 }
                 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-                Logger.warn("ScriptEditor", "code-to-be-ran", globalScriptPrepender + this.script)
+                Logger.warn("code-to-be-ran", globalScriptPrepender + this.script)
 
                 const result = await this.simulator.runScript(globalScriptPrepender + this.script)
                 if (result) {
