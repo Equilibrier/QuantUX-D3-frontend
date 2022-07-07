@@ -64,6 +64,8 @@ import Prototyping from 'canvas/Prototyping'
 
 import FastDomUtil from 'core/FastDomUtil'
 
+import DIPProvider from 'core/dip/DIPProvider'
+
 export default {
   name: 'Canvas',
 	mixins:[DojoWidget, _DragNDrop, Util, Render, Lines, DnD, Add, Select, Distribute, Tools,
@@ -79,7 +81,11 @@ export default {
 					active: true,
 					name: 'XCanvas'
         }
-    },
+	},
+	beforeCreate: function() {
+		console.warn("Setez canvas in DIP");
+		DIPProvider.setCanvas(this);
+	},
     components: {},
     methods: {
 		postCreate (){
