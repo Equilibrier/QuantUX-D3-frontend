@@ -6,6 +6,8 @@
 import ScriptEngine from '../../core/engines/ScriptEngine'
 import * as ScriptToModel from '../../core/engines/ScriptToModel'
 
+import DIProvider from 'core/di/DIProvider'
+
 export default {
   name: 'ScriptMixin',
   methods: {
@@ -74,12 +76,31 @@ export default {
             this.logger.error("executeScript","exit > could not find " + widgetID);
         }
     },
+
+    async _prefetchGlobalJS() {
+        let canvas = DIProvider.canvas();
+        if (canvas === null) {
+            console.error("ScriptMixing: _prefetchGlobalJS: Canvas was not set yet in the DI-provider, but it is needed here.");
+            return "";
+        }
+        let globalScriptPrepender = "";
+        for (let url of Object.keys(canvas.settings.globalScriptUrlsEnabled)) {
+            const enabled = canvas.settings.globalScriptUrlsEnabled[url];
+            if (enabled) {
+                let jsgCode = await (await fetch(url)).text();
+                globalScriptPrepender += jsgCode + "\n";
+            }
+        }
+        return globalScriptPrepender;
+    },
+
     async runScript (script, widget, orginalLine) {
         this.logger.log(-2,"runScript","enter", widget?.name);
 
         return new Promise(async(resolve) => {
             const engine = new ScriptEngine()
-            let result = await engine.run(script, this.model, this.dataBindingValues).then()
+            let glbJS = this._prefetchGlobalJS();
+            let result = await engine.run(glbJS + script, this.model, this.dataBindingValues).then()
     
             if (result.status === 'ok') {     
                 requestAnimationFrame( () => {
