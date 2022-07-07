@@ -11,6 +11,9 @@ export default class ScriptEngine {
         return new Promise((resolve, reject) => {
 
             try {
+                Logger.log(0, "Code to be executed: ");
+                Logger.log(0, js);
+
                 // TDOD: we could compress the model and just remove everything like styles etc...
                 const start = new Date().getTime()
                 worker.onmessage = (m) => this.onMessage(m, resolve, reject, start, js)
