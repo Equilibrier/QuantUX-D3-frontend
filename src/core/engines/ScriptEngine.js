@@ -17,8 +17,7 @@ export default class ScriptEngine {
                 worker.postMessage({
                     code: js, 
                     model: lang.clone(model), 
-                    viewModel: lang.clone(viewModel),
-                    console
+                    viewModel: lang.clone(viewModel)
                 })
 
 
