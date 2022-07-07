@@ -99,7 +99,7 @@ export default {
 
         return new Promise(async(resolve) => {
             const engine = new ScriptEngine()
-            let glbJS = this._prefetchGlobalJS();
+            let glbJS = await this._prefetchGlobalJS();
             let result = await engine.run(glbJS + script, this.model, this.dataBindingValues).then()
     
             if (result.status === 'ok') {     
