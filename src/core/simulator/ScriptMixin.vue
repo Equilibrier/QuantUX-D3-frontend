@@ -83,15 +83,15 @@ export default {
             console.error("ScriptMixing: _prefetchGlobalJS: Canvas was not set yet in the DI-provider, but it is needed here.");
             return "";
         }
-        let globalScriptPrepender = "";
+        let outp = "";
         for (let url of Object.keys(canvas.settings.globalScriptUrlsEnabled)) {
             const enabled = canvas.settings.globalScriptUrlsEnabled[url];
             if (enabled) {
                 let jsgCode = await (await fetch(url)).text();
-                globalScriptPrepender += jsgCode + "\n";
+                outp += jsgCode + "\n";
             }
         }
-        return globalScriptPrepender;
+        return outp;
     },
 
     async runScript (script, widget, orginalLine) {
