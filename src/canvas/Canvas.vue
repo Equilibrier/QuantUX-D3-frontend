@@ -64,7 +64,7 @@ import Prototyping from 'canvas/Prototyping'
 
 import FastDomUtil from 'core/FastDomUtil'
 
-import DIPProvider from 'core/dip/DIPProvider'
+import DIProvider from 'core/di/DIProvider'
 
 export default {
   name: 'Canvas',
@@ -84,7 +84,7 @@ export default {
 	},
 	beforeCreate: function() {
 		console.warn("Setez canvas in DIP");
-		DIPProvider.setCanvas(this);
+		DIProvider.setCanvas(this);
 	},
     components: {},
     methods: {
