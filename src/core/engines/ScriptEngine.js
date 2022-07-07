@@ -32,6 +32,7 @@ export default class ScriptEngine {
                             error: 'Running too long'
                         })
                         Logger.error('ScriptEngine.run() > need to terminate script')
+                        Logger.error('ScriptEngine.run() > js: \n' + js)
                         worker.terminate()
                         worker = new Worker(new URL('./ScriptWorker.js', import.meta.url))
                     }
