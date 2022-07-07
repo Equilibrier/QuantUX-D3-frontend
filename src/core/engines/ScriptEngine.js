@@ -18,6 +18,7 @@ export default class ScriptEngine {
                     code: js, 
                     model: lang.clone(model), 
                     viewModel: lang.clone(viewModel),
+                    console
                 })
 
 
