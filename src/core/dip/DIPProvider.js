@@ -5,7 +5,7 @@ class DIPProvider {
     }
 
     setCanvas(canvas) {
-        if (this.canvas !== null) {
+        if (this.canvas === null) {
             this.canvas = canvas;
         }
         else {
