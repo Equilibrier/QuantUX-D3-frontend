@@ -7,8 +7,8 @@ self.addEventListener('message', e => {
 
 
     const js = e.data.code
-    console.log("Code to be executed: ");
-    console.log(js);
+    e.console.log("Code to be executed: ");
+    e.console.log(js);
     const model = e.data.model
     const viewModel = e.data.viewModel
     
