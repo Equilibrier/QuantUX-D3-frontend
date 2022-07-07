@@ -1,19 +1,19 @@
 
 class DIProvider {
     constructor() {
-        this.canvas = null;
+        this._canvas = null;
     }
 
     setCanvas(canvas) {
-        if (this.canvas === null) {
-            this.canvas = canvas;
+        if (this._canvas === null) {
+            this._canvas = canvas;
         }
         else {
             console.warn("Canvas already set...");
         }
     }
 
-    canvas() { return this.canvas }
+    canvas() { return this._canvas; }
 }
 
 export default new DIProvider();
