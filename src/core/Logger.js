@@ -1,7 +1,7 @@
 class Logger {
 
   constructor () {
-      this.logLevel = 1000
+      this.logLevel = 0
   }
 
   setLogLevel (l) {
