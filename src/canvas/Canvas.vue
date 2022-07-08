@@ -358,21 +358,22 @@ export default {
 		async initGlobalScripts() {
 			let model = await DIProvider.modelAsync();
 
-			var globalScriptsCBs = {};
+			var globalScriptsActivates = {};
 
 			if (model !== null) {
 				let comments = await Services.getCommentService().find(model.id, 'ScreenComment')
 				for (let c of comments) {
 					if (c.message.toLowerCase().trim().startsWith("js_global:")) {
 							const url = c.message.substring(c.message.toLowerCase().indexOf("js_global:") + "js_global:".length).trim();
-							globalScriptsCBs[url] = true;
+							globalScriptsActivates[url] = true;
 					}
 				}
 			}
 			else {
 				// should write err, but DIProvider will write this error itself...
 			}
-			return globalScriptsCBs;
+			//return globalScriptsActivates;
+			this.settings.globalScriptUrlsEnabled = globalScriptsActivates;
 		},
 
 
@@ -380,7 +381,7 @@ export default {
 		 * Settings
 		 ***************************************************************************/
 
-		async initSettings (){
+		initSettings (){
 			this.logger.log(0, "initSettings", "enter > " );
 			/**
 			 * default settings.
@@ -404,8 +405,10 @@ export default {
 				zoomSnapp: true,
 				selectMove: true,
 				hasDesignToken: true,
-				globalScriptUrlsEnabled: await this.initGlobalScripts()
+				globalScriptUrlsEnabled: {}
 			};
+
+			this.initGlobalScripts() // not using await because this will delay initSettings, and some other mechanisms will crush --> the original source code isn't well written, it lacks async mechanism for for not-ready data
 
 			var s = this._getStatus("matcSettings");
 			if (s){
