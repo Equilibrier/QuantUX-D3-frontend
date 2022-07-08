@@ -37,8 +37,9 @@ class DIProvider {
         }
     }
 
-    __waitUntil = (condition, result, timeoutMs = -1) => {
+    __waitUntil = (checkedField, timeoutMs = -1) => {
         let periodMs = 100;
+        const condition = () => this[checkedField] !== null;
 
         return new Promise((resolve) => {
             let countMs = 0;
@@ -54,7 +55,7 @@ class DIProvider {
                     return
                 }
                 clearInterval(interval)
-                resolve(result)
+                resolve(this['checkedField'])
             }, periodMs);
         })
     }
@@ -71,10 +72,10 @@ class DIProvider {
     }
 
     canvas() { return this._canvas; }
-    async canvasAsync() { return await this.__waitUntil(() => this._canvas !== null, this._canvas, 3000); }
+    async canvasAsync() { return await this.__waitUntil('_canvas', 3000); }
     
     model() { return this._model; }
-    async modelAsync() { return await this.__waitUntil(() => this._model !== null, this._model, 3000); }
+    async modelAsync() { return await this.__waitUntil('_model', 3000); }
 }
 
 export default new DIProvider();
