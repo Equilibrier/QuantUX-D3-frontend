@@ -8,16 +8,11 @@ class DIProvider {
         this._route = null;
 
         const f = async () => {
-            console.error("Evrika0");
             await this.__waitUntil(() => this._route !== null, this._route, 5000);
             if (this._route !== null) {
-                console.error("Evrika1");
                 const modelService = Services.getModelService(this._route);
-                console.error("Evrika2: '", modelService, "'");
                 let id = this._route.params.id;
-                console.error("Evrika3: '", id, "'");
                 this._model = await modelService.findApp(id);
-                console.error("Evrika4: '", this._model, "'");
             }
             else {
                 console.error("DIProvider: _route was not properly fed in 5 secs");
