@@ -621,17 +621,13 @@ export default {
 
 			let comments = await Services.getCommentService().find(this.model.id, 'ScreenComment')
 			var globalScriptsCBs = {};
-			for (let c of comments) {
-				if (c.message.toLowerCase().trim().startsWith("js_global:")) {
-						const url = c.message.substring(c.message.toLowerCase().indexOf("js_global:") + "js_global:".length).trim();
-						
-						let urlCB = this.$new(CheckBox);
-						urlCB.setLabel(url);
-						urlCB.setValue(settings.globalScriptUrlsEnabled[url] !== undefined ? settings.globalScriptUrlsEnabled[url] : true);
-						urlCB.placeAt(urlCntr);
+			for (let url of Object.keys(settings.globalScriptUrlsEnabled)) {
+				let urlCB = this.$new(CheckBox);
+				urlCB.setLabel(url);
+				urlCB.setValue(settings.globalScriptUrlsEnabled[url]);
+				urlCB.placeAt(urlCntr);
 
-						globalScriptsCBs[url] = urlCB;
-				}
+				globalScriptsCBs[url] = urlCB;
 			}
 
 			var bar = db.div("MatcButtonBar MatcMarginTopXL").build(popup);

@@ -353,6 +353,18 @@ export default {
 		},
 
 
+		initGlobalScripts() {
+			let comments = await Services.getCommentService().find(this.model.id, 'ScreenComment')
+			var globalScriptsCBs = {};
+			for (let c of comments) {
+				if (c.message.toLowerCase().trim().startsWith("js_global:")) {
+						const url = c.message.substring(c.message.toLowerCase().indexOf("js_global:") + "js_global:".length).trim();
+						globalScriptsCBs[url] = true;
+				}
+			}
+			return globalScriptsCBs;
+		},
+
 
 		/***************************************************************************
 		 * Settings
@@ -382,7 +394,7 @@ export default {
 				zoomSnapp: true,
 				selectMove: true,
 				hasDesignToken: true,
-				globalScriptUrlsEnabled: {}
+				globalScriptUrlsEnabled: this.initGlobalScripts()
 			};
 
 			var s = this._getStatus("matcSettings");
