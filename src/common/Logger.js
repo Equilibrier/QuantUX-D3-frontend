@@ -2,7 +2,7 @@
 var vommonLoggingQueue = []
 var vommonLoggingQueuePos = 0
 var vommonLoggingQueueMax = 50
-var vommonLoggingDebugLevel = 4
+var vommonLoggingDebugLevel = 1000
 
 
 export default class Logger {
