@@ -30,6 +30,8 @@ import Util from 'core/Util'
 import _DesignToken from './_DesignToken'
 import DesignTokenView from './DesignTokenView'
 
+import DIProvider from 'core/di/DIProvider';
+
 export default {
   name: 'ToolbarColor',
 	mixins:[Util, _Color, DojoWidget, _DesignToken, _DropDown],
@@ -602,6 +604,7 @@ export default {
 
 		if (this.app) {
 			this.setModel(this.app)
+			DIProvider.setModel(this.app)
 		}
 
 		if (this.color) {

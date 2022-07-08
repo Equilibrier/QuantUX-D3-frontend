@@ -24,6 +24,8 @@
 import DesignTokenDialog from 'canvas/toolbar/dialogs/DesignTokenDialog'
 import designToken1 from './data/designToken1.json'
 
+import DIProvider from 'core/di/DIProvider';
+
 export default {
   name: "DataSettingsTest",
   mixins: [],
@@ -45,6 +47,7 @@ export default {
   },
   mounted() {
     this.$refs.dialog.setModel(designToken1)
+    DIProvider.setModel(designToken1);
     this.$refs.dialog.setValue()
 
   }

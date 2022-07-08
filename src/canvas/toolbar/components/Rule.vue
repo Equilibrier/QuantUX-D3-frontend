@@ -14,6 +14,8 @@ import Input from 'common/Input'
 import SegmentButton from 'page/SegmentButton'
 import Layout from 'core/Layout'
 
+import DIProvider from 'core/di/DIProvider';
+
 export default {
     name: 'Rule',
 	mixins:[Layout, DojoWidget],
@@ -523,6 +525,7 @@ export default {
     mounted () {
 		if (this.app) {
 			this.setModel(this.app)
+			DIProvider.setModel(this.app)
 		}
 		if (this.l) {
 			this.setValue(this.l)

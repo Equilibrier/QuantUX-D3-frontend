@@ -213,6 +213,8 @@ import DropDownButton from 'page/DropDownButton'
 import Input from 'common/Input'
 import FileButton from 'common/FileButton'
 
+import DIProvider from 'core/di/DIProvider';
+
 export default {
     name: 'RestSettings',
     mixins:[DojoWidget, Util],
@@ -607,6 +609,7 @@ export default {
         this.logger = new Logger("RestSettings")
         if (this.app) {
             this.setModel(this.app)
+            DIProvider.setModel(this.app)
         }
         if (this.value) {
             this.setWidget(this.value)

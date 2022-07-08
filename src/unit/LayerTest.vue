@@ -36,6 +36,8 @@ import layerapp from './data/layerapp.json'
 import LayerList from 'canvas/toolbar/LayerList'
 import Controller from 'canvas/controller/Controller'
 
+import DIProvider from 'core/di/DIProvider';
+
 export default {
   name: "AnimationTest",
   mixins: [],
@@ -55,6 +57,7 @@ export default {
 
     this.controller = new Controller()
     this.controller.setModel(this.app)
+    DIProvider.setModel(this.app);
     this.controller.saveModelChanges = () => {
       console.debug('onModelUpdate')
       this.app = this.controller.model

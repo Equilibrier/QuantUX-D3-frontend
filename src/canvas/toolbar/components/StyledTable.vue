@@ -120,6 +120,8 @@ import ToolbarColor from './ToolbarColor'
 import PropertySection from './PropertySection'
 import ToolbarSelector from './ToolbarSelector'
 
+import DIProvider from 'core/di/DIProvider';
+
 export default {
     name: 'StyledTable',
     props:["app", "value", "hasDataBinding"],
@@ -773,7 +775,8 @@ export default {
     mounted () {
 		this.logger = new Logger("StyledTable")
         if (this.app) {
-            this.setModel(this.app)
+			this.setModel(this.app)
+			DIProvider.setModel(this.app)
         }
         if (this.value) {
             this.setWidget(this.value)

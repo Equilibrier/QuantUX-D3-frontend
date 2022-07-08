@@ -169,6 +169,8 @@ import lang from 'dojo/_base/lang'
 import ToolbarColor from './ToolbarColor'
 import CheckBox from 'common/CheckBox'
 
+import DIProvider from 'core/di/DIProvider';
+
 export default {
     name: 'TableSettings',
     mixins:[DojoWidget],
@@ -301,6 +303,7 @@ export default {
         this.logger = new Logger("TableSettings")
          if (this.app) {
             this.setModel(this.app)
+            DIProvider.setModel(this.app)
         }
         if (this.value) {
             this.setWidget(this.value)

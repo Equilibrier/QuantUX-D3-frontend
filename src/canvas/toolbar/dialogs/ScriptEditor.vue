@@ -55,6 +55,8 @@ import Simulator from 'core/Simulator'
 import ScrollContainer from 'common/ScrollContainer'
 import Core from 'core/Core'
 
+import DIProvider from 'core/di/DIProvider';
+
 export default {
     name: 'ScriptEditor',
     mixins:[Util, DojoWidget],
@@ -265,6 +267,7 @@ return "myScreen"
 
         if (this.app) {
             this.setModel(this.app)
+            DIProvider.setModel(this.app)
         }
        
     }
