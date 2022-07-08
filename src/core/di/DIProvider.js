@@ -7,9 +7,13 @@ class DIProvider {
         this._model = null;
 
         const f = async () => {
+            console.error("Evrika1");
             const modelService = Services.getModelService(this.$route);
+            console.error("Evrika2: '", modelService, "'");
             let id = this.$route.params.id;
+            console.error("Evrika3: '", id, "'");
             this._model = await modelService.findApp(id);
+            console.error("Evrika4: '", this._model, "'");
         };
         f();
     }
