@@ -55,8 +55,7 @@ class DIProvider {
                     return
                 }
                 clearInterval(interval)
-                console.warn(`DIProvider -> getField ${checkedField}: '`, this[checkedField], "'");
-                resolve(this['checkedField'])
+                resolve(this[checkedField])
             }, periodMs);
         })
     }
