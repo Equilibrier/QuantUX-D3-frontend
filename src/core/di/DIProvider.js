@@ -8,7 +8,7 @@ class DIProvider {
         this._route = null;
 
         const f = async () => {
-            await this.__waitUntil(() => this._route !== null, this._route, 5000);
+            await this.__waitUntil(() => '_route', 5000);
             if (this._route !== null) {
                 const modelService = Services.getModelService(this._route);
                 let id = this._route.params.id;
