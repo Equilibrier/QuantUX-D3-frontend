@@ -64,6 +64,8 @@ import Prototyping from 'canvas/Prototyping'
 
 import FastDomUtil from 'core/FastDomUtil'
 
+import Services from 'services/Services'
+
 import DIProvider from 'core/di/DIProvider'
 
 export default {
