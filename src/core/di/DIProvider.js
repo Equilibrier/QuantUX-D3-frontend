@@ -42,6 +42,7 @@ class DIProvider {
         this.__set("_canvas")(canvas);
     }
     setModel(model) {
+        console.error("Am setat modelul");
         this.__set("_model")(model);
     }
 
