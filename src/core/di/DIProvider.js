@@ -1,8 +1,16 @@
 
+import Services from "services/Services"
+
 class DIProvider {
     constructor() {
         this._canvas = null;
         this._model = null;
+
+        const f = async () => {
+            let id = this.$route.params.id;
+            this._model = await this.modelService.findApp(id);
+        };
+        f();
     }
 
     __set(fieldName) {
