@@ -6,7 +6,7 @@ class DIProvider {
     }
 
     __set(fieldName) {
-        return function(value) {
+        return (value) => {
             if (this[fieldName] === null) {
                 this[fieldName] = value;
             }
