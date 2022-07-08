@@ -7,8 +7,9 @@ class DIProvider {
         this._model = null;
 
         const f = async () => {
+            const modelService = Services.getModelService(this.$route);
             let id = this.$route.params.id;
-            this._model = await this.modelService.findApp(id);
+            this._model = await modelService.findApp(id);
         };
         f();
     }
