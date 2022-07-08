@@ -122,8 +122,6 @@ return "myScreen"
 
 
         setModel (m){
-            console.error("HEEEY   ...");
-            console.trace();
             Logger.log(-1,"ScriptEditor.setModel","enter");
             this.orgModel = lang.clone(m);
             this.model = this.createInheritedModel(m);
