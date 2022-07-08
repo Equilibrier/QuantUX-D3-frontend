@@ -619,7 +619,6 @@ export default {
 			db.label("MatcMarginTop", "JS global scripts - switches just for debugging purposes (just add screen comments with JS_GLOBAL: as prefix and followed by the url):").build(cntr);
 			var urlCntr = db.div("form-group").build(cntr);
 
-			let comments = await Services.getCommentService().find(this.model.id, 'ScreenComment')
 			var globalScriptsCBs = {};
 			for (let url of Object.keys(settings.globalScriptUrlsEnabled)) {
 				let urlCB = this.$new(CheckBox);
