@@ -176,6 +176,8 @@ export default {
     }
   },
   async mounted() {
+    DIProvider.setRoute(this.$route);
+
     this.logger = new Logger("Design");
     css.add(win.body(), "MatcVisualEditor");
     this.user = await Services.getUserService().load();
