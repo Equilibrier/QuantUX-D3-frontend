@@ -30,6 +30,8 @@ import Services from "services/Services";
 import Logger from "common/Logger";
 import CollabSession from '../../canvas/controller/CollabSession'
 
+import DIProvider from 'core/di/DIProvider'
+
 export default {
   name: "Design",
   mixins: [DojoWidget],
