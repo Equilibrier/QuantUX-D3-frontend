@@ -357,6 +357,7 @@ export default {
 
 		async initGlobalScripts() {
 			let model = await DIProvider.modelAsync();
+			console.error("MOdel: ...'", model, "'")
 
 			var globalScriptsActivates = {};
 
