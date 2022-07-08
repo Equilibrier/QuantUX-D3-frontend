@@ -356,13 +356,21 @@ export default {
 
 
 		async initGlobalScripts() {
-			let comments = await Services.getCommentService().find(this.model.id, 'ScreenComment')
+			let model = await DIProvider.modelAsync();
+
 			var globalScriptsCBs = {};
-			for (let c of comments) {
-				if (c.message.toLowerCase().trim().startsWith("js_global:")) {
-						const url = c.message.substring(c.message.toLowerCase().indexOf("js_global:") + "js_global:".length).trim();
-						globalScriptsCBs[url] = true;
+
+			if (model !== null) {
+				let comments = await Services.getCommentService().find(model.id, 'ScreenComment')
+				for (let c of comments) {
+					if (c.message.toLowerCase().trim().startsWith("js_global:")) {
+							const url = c.message.substring(c.message.toLowerCase().indexOf("js_global:") + "js_global:".length).trim();
+							globalScriptsCBs[url] = true;
+					}
 				}
+			}
+			else {
+				// should write err, but DIProvider will write this error itself...
 			}
 			return globalScriptsCBs;
 		},
