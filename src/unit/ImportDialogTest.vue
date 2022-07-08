@@ -26,6 +26,8 @@
 import ImportDialog from 'canvas/toolbar/dialogs/ImportDialog'
 import app from './data/export_snack.json'
 
+import DIProvider from 'core/di/DIProvider';
+
 export default {
   name: "FigmaTest",
   mixins: [],
@@ -75,6 +77,7 @@ export default {
   },
   mounted() {
     this.$refs.importDialog.setModel(app)
+    DIProvider.setModel(app);
     this.$refs.importDialog.setJwtToken('lalal')
   }
 };

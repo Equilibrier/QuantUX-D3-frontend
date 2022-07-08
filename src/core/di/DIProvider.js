@@ -1,10 +1,8 @@
 
-import app from './data/conditonal_style.json'
-
 class DIProvider {
     constructor() {
         this._canvas = null;
-        this._model = app;
+        this._model = null;
     }
 
     __set(fieldName) {
@@ -43,9 +41,9 @@ class DIProvider {
     setCanvas(canvas) {
         this.__set("_canvas")(canvas);
     }
-    // setModel(model) {
-    //     this.__set("_model")(model);
-    // }
+    setModel(model) {
+        this.__set("_model")(model);
+    }
 
     canvas() { return this._canvas; }
     canvasAsync() { return this.__waitUntil(() => this._canvas !== null, this._canvas, 3000); }

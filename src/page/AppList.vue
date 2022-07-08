@@ -30,6 +30,8 @@ import Plan from "page/Plan";
 import Preview from "page/Preview";
 import Services from "services/Services";
 
+import DIProvider from 'core/di/DIProvider';
+
 export default {
   name: "AppList",
   mixins: [DojoWidget, List, Plan],
@@ -221,6 +223,7 @@ export default {
         if (this.widgets[i]) {
           this.widgets[i].loadingMessage = "No Start Screen!";
           this.widgets[i].setModel(app);
+          DIProvider.setModel(app);
         }
       }
       css.remove(this.domNode, "MatcAppListLoading");
@@ -409,6 +412,7 @@ export default {
         var app = value[i];
         if (this.widgets[i]) {
           this.widgets[i].setModel(app);
+          DIProvider.setModel(app);
         }
       }
     }

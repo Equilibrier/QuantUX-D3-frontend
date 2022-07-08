@@ -128,6 +128,7 @@ import Analytics from 'dash/Analytics'
 import DataFrame from 'common/DataFrame'
 import * as ScrollUtil from '../../util/ScrollUtil'
 
+import DIProvider from 'core/di/DIProvider';
 
 export default {
     name: 'TestPage',
@@ -259,6 +260,7 @@ export default {
 			if(hash){
 				let app = await Services.getModelService().findAppByHash(hash)
 				this.setModel(app)
+				DIProvider.setModel(app);
 			} else {
 				console.debug("loadModel() > Hash is missing in url")
 			}

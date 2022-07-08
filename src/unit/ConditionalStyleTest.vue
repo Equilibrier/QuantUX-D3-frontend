@@ -33,6 +33,7 @@ import Logger from '../core/Logger'
 import ConditionalStyleSettings from 'canvas/toolbar/dialogs/ConditionalStyleSettings'
 import app from './data/conditonal_style.json'
 
+import DIProvider from 'core/di/DIProvider';
 
 export default {
   name: "CondStyleTest",
@@ -54,6 +55,7 @@ export default {
   mounted() {
     Logger.setLogLevel(4)
     this.$refs.dialog.setModel(app)
+    DIProvider.setModel(app);
     const w = app.widgets.w10001_42249
     w.conditional = {
         styles: [
