@@ -5,15 +5,23 @@ class DIProvider {
     constructor() {
         this._canvas = null;
         this._model = null;
+        this._route = null;
 
         const f = async () => {
-            console.error("Evrika1");
-            const modelService = Services.getModelService(this.$route);
-            console.error("Evrika2: '", modelService, "'");
-            let id = this.$route.params.id;
-            console.error("Evrika3: '", id, "'");
-            this._model = await modelService.findApp(id);
-            console.error("Evrika4: '", this._model, "'");
+            console.error("Evrika0");
+            await this.__waitUntil(() => this._route !== null, this._route, 5000);
+            if (this._route !== null) {
+                console.error("Evrika1");
+                const modelService = Services.getModelService(this._route);
+                console.error("Evrika2: '", modelService, "'");
+                let id = this._route.params.id;
+                console.error("Evrika3: '", id, "'");
+                this._model = await modelService.findApp(id);
+                console.error("Evrika4: '", this._model, "'");
+            }
+            else {
+                console.error("DIProvider: _route was not properly fed in 5 secs");
+            }
         };
         f();
     }
@@ -58,12 +66,15 @@ class DIProvider {
         console.error("Am setat modelul");
         this.__set("_model")(model);
     }
+    setRoute(route) {
+        this.__set("_route")(route);
+    }
 
     canvas() { return this._canvas; }
-    canvasAsync() { return this.__waitUntil(() => this._canvas !== null, this._canvas, 3000); }
+    async canvasAsync() { return await this.__waitUntil(() => this._canvas !== null, this._canvas, 3000); }
     
     model() { return this._model; }
-    modelAsync() { return this.__waitUntil(() => this._model !== null, this._model, 3000); }
+    async modelAsync() { return await this.__waitUntil(() => this._model !== null, this._model, 3000); }
 }
 
 export default new DIProvider();
