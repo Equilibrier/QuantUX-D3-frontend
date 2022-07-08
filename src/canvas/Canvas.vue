@@ -353,7 +353,7 @@ export default {
 		},
 
 
-		initGlobalScripts() {
+		async initGlobalScripts() {
 			let comments = await Services.getCommentService().find(this.model.id, 'ScreenComment')
 			var globalScriptsCBs = {};
 			for (let c of comments) {
@@ -370,7 +370,7 @@ export default {
 		 * Settings
 		 ***************************************************************************/
 
-		initSettings (){
+		async initSettings (){
 			this.logger.log(0, "initSettings", "enter > " );
 			/**
 			 * default settings.
@@ -394,7 +394,7 @@ export default {
 				zoomSnapp: true,
 				selectMove: true,
 				hasDesignToken: true,
-				globalScriptUrlsEnabled: this.initGlobalScripts()
+				globalScriptUrlsEnabled: await this.initGlobalScripts()
 			};
 
 			var s = this._getStatus("matcSettings");
