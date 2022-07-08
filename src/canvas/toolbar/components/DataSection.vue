@@ -80,8 +80,6 @@ export default {
 		},
 
 		setModel (model){
-			console.error("HEEEY2   ...");
-            console.trace();
 			this.model = model;
 		},
 
