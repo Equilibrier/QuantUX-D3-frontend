@@ -114,6 +114,8 @@ import ModelUtil from 'core/ModelUtil'
 
 import Gestures from 'core/Gestures'
 
+import DIProvider from 'core/di/DIProvider';
+
 export default {
 	name: 'Simulator',
 	props: ['mode', 'app'],
@@ -1171,6 +1173,7 @@ export default {
     mounted () {
 			if (this.app) {
 				this.setModel(this.app)
+				DIProvider.setModel(this.app);
 			}
     }
 }

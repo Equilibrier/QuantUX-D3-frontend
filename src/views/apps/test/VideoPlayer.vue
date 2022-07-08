@@ -42,6 +42,8 @@ import Preview from 'page/Preview'
 import Core from 'core/Core'
 import Services from 'services/Services'
 
+import DIProvider from 'core/di/DIProvider';
+
 export default {
     name: 'Player',
 	mixins:[DojoWidget, Util],
@@ -82,6 +84,7 @@ export default {
 		init () {
 			if (this.app) {
 				this.setModel(this.app)
+				DIProvider.setModel(this.app);
 				let events = this.analytics.nornalizeContainerChildEvents(this.eventsWithAnnimations)
 				var df = new DataFrame(events);
 				var sessionGroup = df.groupBy("session");

@@ -68,6 +68,8 @@ import CheckBox from 'common/CheckBox'
 import Input from 'common/Input'
 import DataBindingService from 'services/DataBindingService'
 
+import DIProvider from 'core/di/DIProvider';
+
 export default {
     name: 'DataBinding',
     mixins:[DojoWidget, Util],
@@ -201,6 +203,7 @@ export default {
         this.logger = new Logger("DataBindingTree")
         if (this.app) {
             this.setModel(this.app)
+            DIProvider.setModel(this.app)
         }
         if (this.value) {
             this.setWidget(this.value)
