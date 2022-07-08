@@ -31,6 +31,8 @@ import ExportDialog from 'canvas/toolbar/dialogs/ExportDialog'
 import app from './data/export_snack.json'
 import Services from 'services/Services'
 
+import DIProvider from 'core/di/DIProvider';
+
 export default {
   name: "FigmaTest",
   mixins: [],
@@ -53,6 +55,7 @@ export default {
     this.$refs.dialog.setJwtToken(Services.getUserService().getToken())
     app.lastUpdate = new Date().getTime()
     this.$refs.dialog.setModel(app)
+    DIProvider.setModel(app);
   }
 };
 </script>
