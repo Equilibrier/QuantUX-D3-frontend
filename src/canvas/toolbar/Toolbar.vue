@@ -297,6 +297,8 @@ export default {
 		},
 
 		setModel (m){
+			console.error("HEEEY3   ...");
+            console.trace();
 			this.model = m;
 			this.renderToolbar();
 			this.renderProperties()
