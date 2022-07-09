@@ -3,7 +3,6 @@ import Logger from '../Logger'
 export function applyChange(model, change, renderFactory) {
     Logger.log(4, 'ScriptToModel.applyChange()', change, renderFactory)
 
-
     let element = getElementByChange(model, change)
     if (element) {
         let old = change.key === 'style' ? element.style : element.props

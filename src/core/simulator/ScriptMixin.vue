@@ -6,7 +6,7 @@
 import ScriptEngine from '../../core/engines/ScriptEngine'
 import * as ScriptToModel from '../../core/engines/ScriptToModel'
 
-import DIProvider from 'core/di/DIProvider'
+import DIProvider from '../../core/di/DIProvider'
 
 export default {
   name: 'ScriptMixin',

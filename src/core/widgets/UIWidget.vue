@@ -40,7 +40,8 @@ export default {
       lastValidation: true,
       hoverAnimationDuration: 150,
       erroAnimationDuration: 0,
-      isPublic: false
+      isPublic: false,
+      visible: true
     };
   },
   components: {},
@@ -79,6 +80,10 @@ export default {
 
     setPublic(p) {
       this.isPublic = p
+    },
+
+    isHidden() {
+      return this.style.display === undefined || this.style.display === 'none';
     },
 
     /**

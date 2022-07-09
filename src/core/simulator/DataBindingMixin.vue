@@ -227,6 +227,7 @@ export default {
 			// update all visible widgets
 			const screenID = this.currentScreen.id
 			const widgets = this.renderFactory.getAllUIWidgets();
+
 			for(let id in widgets){
                 const uiWidget = widgets[id];
 				if (!this.isRepaterChild(uiWidget)) {
@@ -235,11 +236,19 @@ export default {
 						for (let key in databinding) {
 							const variable = databinding[key]
 							const value = JSONPath.get(this.dataBindingValues, variable)
-							this.logger.log(4,"replaceDataBinding","set  > " +  variable + ': ' , value);
-							const changed = uiWidget.setDataBinding(variable, value, this);
-							if(changed){
-								const state = uiWidget.getState();
-								this.log("WidgetInit", screenID, id, null, state);
+
+							if (!uiWidget.isHidden()) {
+								if (value !== undefined && value !== null) {
+									this.logger.log(4,"replaceDataBinding","set  > " +  variable + ': ' , value);
+									const changed = uiWidget.setDataBinding(variable, value, this);
+									if(changed){
+										const state = uiWidget.getState();
+										this.log("WidgetInit", screenID, id, null, state);
+									}
+								}
+								else {
+									console.warn(`Data binding (${variable}) for widget ${uiWidget.$options.name} is corrupt (null/undefined) !`);
+								}
 							}
 						}
 					}
