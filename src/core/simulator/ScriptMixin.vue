@@ -7,6 +7,7 @@ import ScriptEngine from '../../core/engines/ScriptEngine'
 import * as ScriptToModel from '../../core/engines/ScriptToModel'
 
 import DIProvider from '../../core/di/DIProvider'
+import ElementsLookup from '../../core/project/ElementsLookup'
 
 export default {
   name: 'ScriptMixin',
@@ -59,11 +60,19 @@ export default {
 
     async executeScript (widgetID, orginalLine) {
         this.logger.log(-2,"executeScript","enter >" + widgetID);
-    
 
         if (this.doNotExecuteScripts) {
             return
         }
+
+        // console.error("Original line: ", orginalLine);
+        // console.error("screen[from]: '", ElementsLookup.screenOf(orginalLine.from)?.name, "'");
+        // console.error("screen[to]: '", ElementsLookup.screenOf(orginalLine.to)?.name, "'");
+        // console.error("from[name]: '", ElementsLookup.getObjectFromId(orginalLine.from).name, "'");
+        // console.error("from[to]: '", ElementsLookup.getObjectFromId(orginalLine.to).name, "'");
+
+        this.dataBindingValues.__sourceScreen = ElementsLookup.screenOf(orginalLine.from)?.name;
+        this.dataBindingValues.__sourceElement = ElementsLookup.getObjectFromId(orginalLine.from)?.name;
 
         let widget = this.model.widgets[widgetID]
         if (widget && widget.props.script) {

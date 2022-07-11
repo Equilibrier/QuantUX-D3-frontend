@@ -6,13 +6,16 @@ class DIProvider {
         this._canvas = null;
         this._model = null;
         this._route = null;
+        this._listeners = {};
 
         const f = async () => {
             await this.__waitUntil(() => '_route', 5000);
             if (this._route !== null) {
+                console.error("Setez model-ul")
                 const modelService = Services.getModelService(this._route);
                 let id = this._route.params.id;
-                this._model = await modelService.findApp(id);
+                this.setModel(await modelService.findApp(id));
+                console.error("Am setat modelul: ", this._model)
             }
             else {
                 console.error("DIProvider: _route was not properly fed in 5 secs");
@@ -25,6 +28,13 @@ class DIProvider {
         return (value) => {
             if (this[fieldName] === null) {
                 this[fieldName] = value;
+
+                const lkey = fieldName.toLowerCase().slice(1);
+                if (this._listeners[lkey] !== undefined) {
+                    for (let l of this._listeners[lkey]) {
+                        l(lkey, value);
+                    }
+                }
             }
             else {
                 console.warn(`DIProvider: ${fieldName} was already set...`);
@@ -55,11 +65,21 @@ class DIProvider {
         })
     }
 
+    listenFor(data, callback) {
+        data = data.toLowerCase();
+        if (this["_" + data] !== null) {
+            callback(data, this["_" + data]);
+        }
+        else {
+            this._listeners[data] = this._listeners[data] === undefined ? [] : this._listeners[data];
+            this._listeners[data].push(callback);
+        }
+    }
+
     setCanvas(canvas) {
         this.__set("_canvas")(canvas);
     }
     setModel(model) {
-        console.error("Am setat modelul");
         this.__set("_model")(model);
     }
     setRoute(route) {
