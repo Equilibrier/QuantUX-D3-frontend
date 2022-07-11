@@ -13,11 +13,21 @@ export default {
   name: 'ScriptMixin',
   methods: {
 
+    __resetSourceMetadata() {
+        this.dataBindingValues.__sourceScreen = undefined;
+        this.dataBindingValues.__sourceElement = undefined;
+        this.dataBindingValues.__sourceData = undefined;
+        this.dataBindingValues.__sourceOldValue = undefined;
+        this.dataBindingValues.__sourceNewValue = undefined;
+    },
+
     async initLoadScripts () {
         this.logger.log(-2,"initLoadScripts","enter >" );
         if (this.doNotExecuteScripts) {
             return
         }
+        this.__resetSourceMetadata();
+
         const widgets = this.getLoadScripts()
         for (let i=0; i< widgets.length; i++) {
             const widget = widgets[i]
@@ -34,11 +44,16 @@ export default {
             .filter(w => w.type === 'Script' && w.props.trigger === 'load')
     },
 
-    async executeDataScripts () {
+    async executeDataScripts (databind, oldVal, newVal) {
         this.logger.log(-2,"executeDataScripts","enter >" );
         if (this.doNotExecuteScripts) {
             return
         }
+        this.__resetSourceMetadata();
+        this.dataBindingValues.__sourceData = databind;
+        this.dataBindingValues.__sourceOldValue = oldVal;
+        this.dataBindingValues.__sourceNewValue = newVal;
+
         const widgets = this.getDataBindingScripts()
         for (let i=0; i< widgets.length; i++) {
             const widget = widgets[i]
@@ -65,12 +80,7 @@ export default {
             return
         }
 
-        // console.error("Original line: ", orginalLine);
-        // console.error("screen[from]: '", ElementsLookup.screenOf(orginalLine.from)?.name, "'");
-        // console.error("screen[to]: '", ElementsLookup.screenOf(orginalLine.to)?.name, "'");
-        // console.error("from[name]: '", ElementsLookup.getObjectFromId(orginalLine.from).name, "'");
-        // console.error("from[to]: '", ElementsLookup.getObjectFromId(orginalLine.to).name, "'");
-
+        this.__resetSourceMetadata();
         this.dataBindingValues.__sourceScreen = ElementsLookup.screenOf(orginalLine.from)?.name;
         this.dataBindingValues.__sourceElement = ElementsLookup.getObjectFromId(orginalLine.from)?.name;
 

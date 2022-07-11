@@ -3,7 +3,9 @@
   </div>
 </template>
 <script>
+
 import RestEngine from 'core/RestEngine'
+import JSONPath from 'core/JSONPath'
 
 export default {
 	name: 'RestMixin',
@@ -26,9 +28,10 @@ export default {
       try {
         const result = await RestEngine.run(rest, data)
         if (rest.output.databinding) {
+          const oldVal = JSONPath.get(this.dataBindingValues, rest.output.databinding);
           this.setDataBindingByKey(rest.output.databinding, result)
           // since 4.0.70 we also can the data binding...
-          this.updateAllDataBindings(this.currentScreen.id, rest.output.databinding, result)
+          this.updateAllDataBindings(this.currentScreen.id, rest.output.databinding, oldVal, result)
           this.logger.log(-1, "executeRest","set data " + rest.output.databinding, this.dataBindingValues);
         }
         return true

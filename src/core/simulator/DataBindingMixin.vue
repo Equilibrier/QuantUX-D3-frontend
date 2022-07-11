@@ -78,7 +78,7 @@ export default {
 			 * Once we introduce default values via a UI configuration, we
 			 * should add that here!
 			 */
-			await this.executeDataScripts()
+			await this.executeDataScripts(null, null); // it means "on initialization"
 		},
 
 
@@ -130,13 +130,13 @@ export default {
 			if (oldValue !== value) {
 				this.dataBindingValues = JSONPath.set(this.dataBindingValues, variable, value)
 				this.emit('onDataBindingChange', this.dataBindingValues)
-				this.updateAllDataBindings(screenID, variable, value, runDataScripts)
+				this.updateAllDataBindings(screenID, variable, oldValue, value, runDataScripts)
 			} else {
 				this.logger.log(1, "onUIWidgetDataBinding","exit > No change");
 			}
 		},
 
-		updateAllDataBindings (screenID, variable, value, runDataScripts = true) {
+		updateAllDataBindings (screenID, variable, oldValue, newValue, runDataScripts = true) {
 			/**
 			 * Find all widgets that are bound to this variable then
 			 *
@@ -151,14 +151,14 @@ export default {
 			const widgets = this.renderFactory.getAllUIWidgets();
 			for(let id in widgets){
 				const uiWidget = widgets[id];
-				const changed = uiWidget.setDataBinding(variable, value, this);
+				const changed = uiWidget.setDataBinding(variable, newValue, this);
 				if(changed){
 					const state = uiWidget.getState();
 					this.log("WidgetInit", screenID, id, null, state);
 				}
 			}
 			if (runDataScripts) {
-				this.executeDataScripts()
+				this.executeDataScripts(variable, oldValue, newValue);
 			} else {
 				this.logger.log(-1, "updateAllDataBindings","exit > Do not run scripts");
 			}
