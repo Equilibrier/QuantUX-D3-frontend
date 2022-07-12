@@ -1,8 +1,9 @@
 import DIProvider from '../di/DIProvider';
 
-class ElementsLookup {
+export class ElementsLookup {
     constructor() {
         this.model = null;
+        
         DIProvider.listenFor("model", (fieldName, value) => {
             this.model = value;
         });
@@ -66,6 +67,17 @@ class ElementsLookup {
             return screens.length > 0 ? screens[0] : null;
         }
     }
+
+
+    loadScriptWidgets() { // TODO you can cache these, if you can ack widgets-modification events (adding/removing/editing) in this class...
+        return Object.values(this.model.widgets).filter(w => w.type === 'Script' && w.props.trigger === 'load');
+    }
+    dataBindingScriptWidgets() { // likewise, cache-ing is not a bad idea...
+        return Object.values(this.model.widgets).filter(w => w.type === 'Script' && w.props.trigger === 'databinding')
+    }
+    keyupScriptWidgets() { // likewise, cache-ing is not a bad idea...
+        return Object.values(this.model.widgets).filter(w => w.type === 'Script' && w.props.trigger === 'keyup')
+    }
 }
 
-export default new ElementsLookup();
+//export default new ElementsLookup();

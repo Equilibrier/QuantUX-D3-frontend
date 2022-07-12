@@ -501,6 +501,17 @@ export default {
 				this.logMouse = false;
 			}
 
+			const keyScripts = DIProvider.elementsLookup().keyupScriptWidgets();
+			DIProvider.keyInputHandler().resetListeners('sim');
+			DIProvider.keyInputHandler().listenForKeyUp("shift,a", async (ev) => {
+				//console.error("shift-a detectat***");
+				console.log(ev);
+				console.log(`keyScripts: ${JSON.stringify(keyScripts)}`);
+				for (let w of keyScripts) {
+					await this.runScript(w.props.script, w, {from: w.id});
+				}
+			}, 'sim');
+
 			if (this.model.fonts) {
 				this.attachFontsToDom(this.model.fonts)
 			}

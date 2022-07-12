@@ -7,7 +7,6 @@ import ScriptEngine from '../../core/engines/ScriptEngine'
 import * as ScriptToModel from '../../core/engines/ScriptToModel'
 
 import DIProvider from '../../core/di/DIProvider'
-import ElementsLookup from '../../core/project/ElementsLookup'
 
 export default {
   name: 'ScriptMixin',
@@ -28,7 +27,7 @@ export default {
         }
         this.__resetSourceMetadata();
 
-        const widgets = this.getLoadScripts()
+        const widgets = DIProvider.elementsLookup().loadScriptWidgets()
         for (let i=0; i< widgets.length; i++) {
             const widget = widgets[i]
             if (widget.props.script) {
@@ -36,12 +35,6 @@ export default {
             }
         }
         this.logger.log(2,"initLoadScripts","exit" );
-    },
-
-    getLoadScripts () {
-        return Object
-            .values(this.model.widgets)
-            .filter(w => w.type === 'Script' && w.props.trigger === 'load')
     },
 
     async executeDataScripts (databind, oldVal, newVal) {
@@ -54,7 +47,7 @@ export default {
         this.dataBindingValues.__sourceOldValue = oldVal;
         this.dataBindingValues.__sourceNewValue = newVal;
 
-        const widgets = this.getDataBindingScripts()
+        const widgets = DIProvider.elementsLookup().dataBindingScriptWidgets();
         for (let i=0; i< widgets.length; i++) {
             const widget = widgets[i]
             if (widget.props.script) {
@@ -62,15 +55,6 @@ export default {
             }
         }
         this.logger.log(-2,"executeDataScripts","exit");
-    },
-
-    getDataBindingScripts () {
-        if (!this._scriptsDataBinding) {
-            this._scriptsDataBinding = Object
-                .values(this.model.widgets)
-                .filter(w => w.type === 'Script' && w.props.trigger === 'databinding')
-        }
-        return this._scriptsDataBinding
     },
 
     async executeScript (widgetID, orginalLine) {
@@ -81,8 +65,8 @@ export default {
         }
 
         this.__resetSourceMetadata();
-        this.dataBindingValues.__sourceScreen = ElementsLookup.screenOf(orginalLine.from)?.name;
-        this.dataBindingValues.__sourceElement = ElementsLookup.getObjectFromId(orginalLine.from)?.name;
+        this.dataBindingValues.__sourceScreen = DIProvider.elementsLookup().screenOf(orginalLine.from)?.name;
+        this.dataBindingValues.__sourceElement = DIProvider.elementsLookup().getObjectFromId(orginalLine.from)?.name;
 
         let widget = this.model.widgets[widgetID]
         if (widget && widget.props.script) {
@@ -130,6 +114,8 @@ export default {
         return new Promise(async(resolve) => {
             const engine = new ScriptEngine()
             let glbJS = await this._prefetchGlobalJS();
+
+            //console.log("Running script: \n", script);
             let result = await engine.run(glbJS + script, this.model, this.dataBindingValues).then()
     
             if (result.status === 'ok') {     

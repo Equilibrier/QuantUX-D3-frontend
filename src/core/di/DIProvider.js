@@ -1,11 +1,18 @@
 
 import Services from "services/Services"
 
+import { KeyboardInputHandler } from 'core/input/KeyboardInputHandler'
+import { ElementsLookup } from '../../core/project/ElementsLookup'
+
 class DIProvider {
+
     constructor() {
         this._canvas = null;
         this._model = null;
         this._route = null;
+        this._keyhandler = new KeyboardInputHandler();
+        this._elLookup = null;
+
         this._listeners = {};
 
         const f = async () => {
@@ -91,6 +98,14 @@ class DIProvider {
     
     model() { return this._model; }
     async modelAsync() { return await this.__waitUntil('_model', 3000); }
+
+    keyInputHandler() { return this._keyhandler; }
+    elementsLookup() { // lazy inst because there is a circular dep between DIProvider<->ElementsLookup, and this is how we break it
+        if (this._elLookup === null) {
+            this._elLookup = new ElementsLookup();
+        }
+        return this._elLookup; 
+    }
 }
 
 export default new DIProvider();

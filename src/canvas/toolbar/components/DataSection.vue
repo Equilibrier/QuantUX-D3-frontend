@@ -420,7 +420,8 @@ export default {
 			this._renderLabelDropDown("Icon", model, "trigger",[
 				{ value:null, icon:"mdi mdi-cursor-default-click-outline", label : "Click Trigger"},
 				{ value:"databinding", icon:"mdi mdi-database-edit-outline", label : "Data Trigger"},
-				{ value:"load", icon:"mdi mdi mdi-progress-download", label : "Loaded Trigger"}
+				{ value:"load", icon:"mdi mdi mdi-progress-download", label : "Loaded Trigger"},
+				{ value:"keyup", icon:"mdi mdi mdi-progress-download", label : "Keyup Trigger"}
 			]);
 
 		},
