@@ -1,0 +1,71 @@
+import DIProvider from '../di/DIProvider';
+
+class ElementsLookup {
+    constructor() {
+        this.model = null;
+        DIProvider.listenFor("model", (fieldName, value) => {
+            this.model = value;
+        });
+    }
+
+    available() {
+        return this.model !== null;
+    }
+
+    __checkPreconditions() {
+        if (!this.available()) throw new "ElementsLookup: model not yet available or it is invalid (null)";
+    }
+
+    groupFromId(id) {
+        this.__checkPreconditions();
+        const res = Object.values(this.model.groups).filter(e => e.id === id);
+        return res.length > 0 ? res[0] : null;
+    }
+    widgetFromId(id) {
+        this.__checkPreconditions();
+        const res = Object.values(this.model.widgets).filter(e => e.id === id);
+        return res.length > 0 ? res[0] : null;
+    }
+    screenFromId(id) {
+        this.__checkPreconditions();
+        const res = Object.values(this.model.screens).filter(e => e.id === id);
+        return res.length > 0 ? res[0] : null;
+    }
+    isGroup(id) {
+        this.__checkPreconditions();
+        return this.groupFromId(id) !== null;
+    }
+    isWidget(id) {
+        this.__checkPreconditions();
+        return this.widgetFromId(id) !== null;
+    }
+    isScreen(id) {
+        this.__checkPreconditions();
+        return this.screenFromId(id) !== null;
+    }
+    getObjectFromId(id) {
+        this.__checkPreconditions();
+        let res = this.groupFromId(id);
+        if (res !== null) {
+            return res;
+        }
+        res = this.widgetFromId(id);
+        if (res !== null) {
+            return res;
+        }
+        return this.screenFromId(id);
+    }
+    screenOf(id) {
+        this.__checkPreconditions();
+        if (!this.isGroup(id)) {
+            const screens = Object.values(this.model.screens).filter(screen => screen.children.indexOf(id) >= 0)
+            return screens.length > 0 ? screens[0] : null;
+        }
+        else {
+            const screens = Object.values(this.model.screens).filter(screen => Object.values(this.groupFromId(id).children).filter(childId => screen.children.indexOf(childId) >= 0).length > 0);
+            return screens.length > 0 ? screens[0] : null;
+        }
+    }
+}
+
+export default new ElementsLookup();
