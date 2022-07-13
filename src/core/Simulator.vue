@@ -469,6 +469,18 @@ export default {
 		async startSimilator (model){
 			this.logger.log(2,"startSimilator","enter >" + model.id);
 
+			// this.watch("currentScreen", (ov, nv) => {
+			// 	console.error(`cscreen se schimba de la ${ov} la ${nv}`);
+			// });
+			Object.observe(this, function(changes) {
+				console.error(changes);
+			});
+			if (this.currentScreen === undefined) {
+				this.currentScreen = this._selectedScreen !== undefined ? this._selectedScreen : this.model.screens[0];
+			}
+			console.error('DAA')
+			console.error(this)
+
 			this.initScale();
 			this.initLiveUpdate();
 			this.initScroll();
@@ -503,14 +515,17 @@ export default {
 
 			const keyScripts = DIProvider.elementsLookup().keyupScriptWidgets();
 			DIProvider.keyInputHandler().resetListeners('sim');
-			DIProvider.keyInputHandler().listenForKeyUp("shift,a", async (ev) => {
-				//console.error("shift-a detectat***");
-				console.log(ev);
-				console.log(`keyScripts: ${JSON.stringify(keyScripts)}`);
-				for (let w of keyScripts) {
+
+			keyScripts.forEach(w => {
+				DIProvider.keyInputHandler().listenForKeyUp(`${w.props['key']},${w.props['ext-key']}`, async (ev) => {
+					//console.error("shift-a detectat***");
+					ev = null // dummy param
+					//console.log(`keyScripts: ${JSON.stringify(keyScripts)}`);
+					console.error(`ev: ${ev}`)
+					console.error(`w.props: ${JSON.stringify(w.props)}`);
 					await this.runScript(w.props.script, w, {from: w.id});
-				}
-			}, 'sim');
+				}, 'sim');
+			});
 
 			if (this.model.fonts) {
 				this.attachFontsToDom(this.model.fonts)

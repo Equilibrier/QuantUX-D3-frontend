@@ -2,7 +2,7 @@
 <template>
      <div :class="['VommondInput', {'VommondInputOpenTop': top}]">
 		<!-- removed form because entremight trigger reloead -->
-		<input
+		<input v-if="isVisible"
 			type="text"
 			:class="['MatcIgnoreOnKeyPress', {'form-control': formControl}, {'vommondInlineEdit': inline}, {'MatcToobarInput MatcToobarInlineEdit': toolbar}]"
 			data-dojo-attach-point="input"
@@ -33,12 +33,12 @@ export default {
 	props:['fireOnBlur', 'top', 'placeholder', 'inline', 'formControl', 'hints', 'value', 'isDropDown', 'toolbar', 'actions', 'magicChar'],
     data: function () {
         return {
-
+			isVisible: true
         }
     },
     components: {},
     methods: {
-      postCreate: function(){
+      		postCreate: function(){
 				this.own(on(this.input, "keyup", lang.hitch(this, "onKey")));
 				if (this.fireOnBlur) {
 					this.own(on(this.input, "blur", lang.hitch(this, "onBlur")));
@@ -72,7 +72,17 @@ export default {
 				}
 			},
 
+			hide() { // BUG: doesn't work, I really don't know why
+				this.isVisible = false;
+			},
+			show() {
+				this.isVisible = true;
+			},
+
 			onKey (e){
+
+				this.emit('change-text', this.input.value);
+
 				if(!this.hints){
 					return;
 				}

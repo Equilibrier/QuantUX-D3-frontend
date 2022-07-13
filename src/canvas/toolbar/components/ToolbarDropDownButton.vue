@@ -1,7 +1,7 @@
 
 <template>
      <div class=" MatcToolbarItem MatcToolbarDropDownButton">
-	<div type="button" data-dojo-attach-point="button">
+	<div v-if="isVisible" type="button" data-dojo-attach-point="button">
 		<label data-dojo-attach-point="label" class="MatcToolbarItemIcon"></label>
 		<span class="caret" ref="caret"></span>
 		</div>
@@ -34,7 +34,8 @@ export default {
             hasLabelTxt: true,
             updateSelection: true,
 			arrowPosition: "right",
-			currentLabel: ''
+			currentLabel: '',
+			isVisible: true
         }
     },
     components: {},
@@ -77,7 +78,9 @@ export default {
 		render (list, ul){
 			var selectedValue = null
 			for(var i=0; i < list.length; i++){
+
 				var o = list[i];
+
 				var li = document.createElement("li");
 
 				if((o.label || o.icon || o.css || o.value!=null)) {
@@ -339,6 +342,18 @@ export default {
 			if (this.$refs.caret) {
 				css.add(this.$refs.caret, 'MatcHidden')
 			}
+		},
+
+		hide() {
+			//this.button.style = {display: 'none'};
+			this.isVisible = false;
+		},
+		show() {
+			this.isVisible = true;
+		},
+
+		somedata() {
+			return this.isVisible;
 		}
 	},
 	watch: {
@@ -349,6 +364,7 @@ export default {
 			this.setValue(v)
 		}
 	},
+
     mounted () {		
 		if (this.qUpdateLabel === true) {
 			this.updateLabel = true

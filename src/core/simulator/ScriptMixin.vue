@@ -154,6 +154,8 @@ export default {
             let targetScreen = Object.values(this.model.screens).find(s => s.name === result.to)
             if (targetScreen) {
                 const tempLine = this.createTempLine(targetScreen.id, orginalLine)
+                console.error(`cscreen: '${this.currentScreen}'`)
+                console.error(this)
                 this.renderTransition(tempLine,this.currentScreen.id);
             } else {
                 this.logger.log(1,"runScript","No screen with name  >" + result.to);

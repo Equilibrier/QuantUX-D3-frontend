@@ -11,6 +11,8 @@
 </template>
 <script>
 import DojoWidget from 'dojo/DojoWidget'
+import UIWidget from "core/widgets/UIWidget";
+
 import css from 'dojo/css'
 import lang from 'dojo/_base/lang'
 import on from 'dojo/on'
@@ -22,18 +24,19 @@ import win from 'dojo/win'
 
 export default {
     name: 'DropDown',
-    mixins:[DojoWidget],
+    mixins:[DojoWidget, UIWidget],
     data: function () {
         return {
             reposition: false,
             isOpen: false,
             arrowSize: 10,
             chevron: true,
-						isChildDropDown: false
+			isChildDropDown: false
         }
     },
     components: {},
     methods: {
+
 			postCreate (){
 				this.logger = new Logger("_DropDown");
 				this.own(on(this.domNode, touch.press, lang.hitch(this, "showDropDown")));

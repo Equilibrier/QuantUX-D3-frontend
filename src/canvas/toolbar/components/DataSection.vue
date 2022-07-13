@@ -19,6 +19,7 @@ import Util from 'core/Util'
 import ToolbarColor from './ToolbarColor'
 import InputDropDownButton from './InputDropDownButton'
 import ToolbarDropDownButton from './ToolbarDropDownButton'
+import Input from 'common/Input'
 import ToolbarSlider from './ToolbarSlider'
 import ToolbarImage from './ToolbarImage'
 import Table from './Table'
@@ -424,6 +425,61 @@ export default {
 				{ value:"keyup", icon:"mdi mdi mdi-progress-download", label : "Keyup Trigger"}
 			]);
 
+			let kddown = this._renderLabelDropDown("Icon", model, "trigger-extkey",[
+				{ value: 'alt', icon:"mdi mdi-cursor-default-click-outline", label : "ALT"},
+				{ value:"shift", icon:"mdi mdi-database-edit-outline", label : "SHIFT"},
+				{ value:"ctrl", icon:"mdi mdi mdi-progress-download", label : "CTRL"}
+			]);
+
+			const input = this._renderTextInput(model, 'trigger-key', 'key, e.g. A, *, 9... or any');
+
+		
+			this.on("propertyChange", (key, value) => {
+				if (key === "trigger") {
+					if (value === "keyup") {
+						console.error("showing dropdown");
+						kddown.show();
+						input.show();
+					}
+					else {
+						console.error("hiding dropdown");
+						kddown.hide();
+						input.hide();
+
+						// this.$nextTick(() => { // TODO doesn't work, I cannot make Vue re-render the component, something is disabled...
+						// 	this.$set(input, 'isVisible', false)
+						// 	input.isVisible = false;
+						// })	
+					}
+				}
+			});
+		},
+
+		_renderTextInput(model, prop, placeholder) {
+
+			var row = this.db.div("MatcToobarRow").build(this.cntr);
+			const input = this.$new(Input)
+
+			css.add(input.domNode, " MatcToolbarItem MatcToolbarGridFull");
+
+			if(placeholder){
+				input.placeholder = placeholder;
+			}
+
+			const onChange = (value) => {
+				value = value.toUpperCase();
+				value = value.length > 1 ? value.charAt(value.length - 1) : value;
+				input.setValue(value);
+				this.onProperyChanged(prop, value);
+			}
+
+			input.setValue(model.props[prop] !== undefined ? model.props[prop] : "");
+			this.own(on(input, "change-text", onChange));
+
+			input.placeAt(row);
+			this._addChildWidget(input);
+
+			return input;
 		},
 
 		_showLogicOr (model){
@@ -1860,6 +1916,8 @@ export default {
 
 			drpDwn.placeAt(row);
 			this._addChildWidget(drpDwn);
+
+			return drpDwn;
 		},
 
 		_renderImagesDropDown (widget){
@@ -1958,6 +2016,8 @@ export default {
 				this.tempOwn(on(dropDown, "change", lang.hitch(this, "onStyleChanged", property)));
 			}
 			this._addChildWidget(dropDown);
+
+			return dropDown;
 		},
 
 		_renderBoxColor (lbl, model, propertyBack, propertyColor, propertyBorder){
