@@ -691,6 +691,9 @@ export default {
 		}
 	},
 	mounted () {
+		// setInterval(() => {
+		// 	DIProvider.forceUpdateModel(this.model);
+		// }, 500);
 	},
 	beforeDestroy () {
 		this.logger.log(3,"beforeDestroy", "enter > ");

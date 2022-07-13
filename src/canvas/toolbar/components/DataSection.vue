@@ -35,6 +35,8 @@ import BoxShadow from './BoxShadow2'
 import DomUtil from 'core/DomUtil'
 import ScriptEdior from '../dialogs/ScriptEditor.vue'
 
+import DIProvider from 'core/di/DIProvider'
+
 
 export default {
     name: 'DataSection',
@@ -2100,7 +2102,11 @@ export default {
 		}
     },
     mounted () {
-			this.domUtil = new DomUtil()
+		this.domUtil = new DomUtil()
+
+		setInterval(() => {
+			DIProvider.forceUpdateModel(this.model);
+		}, 500);
     }
 }
 </script>

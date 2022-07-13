@@ -89,6 +89,14 @@ class DIProvider {
     setModel(model) {
         this.__set("_model")(model);
     }
+    forceUpdateModel(model) {
+        if (model !== undefined && model !== null) {
+            this._model = model;
+        }
+        else {
+            console.error(`DIProvider: forceUpdateModel: you should not pass a null/undefined model...`);
+        }
+    }
     setRoute(route) {
         this.__set("_route")(route);
     }
