@@ -506,6 +506,8 @@ export default {
 
 			keyScripts.forEach(w => {
 				DIProvider.keyInputHandler().listenForKeyUp(`${w.props['trigger-key']},${w.props['trigger-extkey']}`, async (/*ev dummy param*/) => {
+					this.__resetSourceMetadata();
+					this.dataBindingValues.__sourceScreen = this.currentScreen.name;
 					await this.runScript(w.props.script, w, {from: w.id});
 				}, 'sim');
 			});
