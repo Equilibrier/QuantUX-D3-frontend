@@ -124,6 +124,18 @@ export default {
                     this.renderScriptDataBinding(result)  
                     this.renderScriptTo(result, widget, orginalLine)
                     this.logger.log(-1,"runScript","exit");
+
+                    let targetScreen = Object.values(this.model.screens).find(s => s.name === result.to)
+                    if (targetScreen && result.delayedBackMs !== undefined) {
+                        setTimeout(() => {
+                            this.onTransitionBack(targetScreen.id, null, null);
+                        }, result.delayedBackMs);
+                    }
+                    else if (targetScreen === undefined && result.to !== undefined) {
+                        console.error(`<>script's target screen was not found for screen-name ${result.to}`);
+                    }
+                    //console.error(`TO: ${result.to}`);
+
                     resolve(result)
                 })
             } else {
