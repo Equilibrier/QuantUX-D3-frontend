@@ -168,6 +168,7 @@ export default {
                 const tempLine = this.createTempLine(targetScreen.id, orginalLine)
                 console.error(`cscreen: '${this.currentScreen}'`)
                 console.error(this)
+                this.logLine(tempLine, this.currentScreen.id);
                 this.renderTransition(tempLine,this.currentScreen.id);
             } else {
                 this.logger.log(1,"runScript","No screen with name  >" + result.to);
@@ -180,6 +181,7 @@ export default {
             const lines = this.getLinesForWidget(widget);
             if (lines && lines.length === 1) {
                 const tempLine = this.createTempLine(lines[0].to, orginalLine)
+                this.logLine(tempLine, this.currentScreen.id);
                 this.renderTransition(tempLine,this.currentScreen.id);
             }
         }

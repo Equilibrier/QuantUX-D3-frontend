@@ -35,8 +35,8 @@ export default {
 			};
     },
 
-		logLine (line, screenID){
-			this.screenHistory.push({screenID:screenID, line:line});
+		logLine (line, prevScreenID){
+			this.screenHistory.push({screenID:prevScreenID, line:line});
 		},
 
     logSessionStart (screenID){
