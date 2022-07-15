@@ -118,6 +118,7 @@ class QScreen extends QModel {
         return false;
     }
 
+    
     getGroup (name) {
         Logger.log(2, "QScreen.getGroup() ", name)
         if (this.api.app.groups) {
