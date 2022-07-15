@@ -165,7 +165,7 @@ export default {
 		* Screen Rendering
 		* screen: the screen
 		* isOverLay: if the screen is an overlay
-		* line: The line that triggered the rendering. Might by null on start!
+		* line: The line that triggered the rendering. Might be null on start!
 		* **********************************************************/
 		createScreen (screen, isOverlay){
 			this.logger.log(2,"createScreen","enter > " + screen.id + " > overlay : " + isOverlay);

@@ -216,7 +216,7 @@ export default {
 				'<span class="mdi mdi-view-grid-outline MatcIcon45"></span>',
 				lang.hitch(this,"onToolCreateTemplate"), null, this.templateDiv
 			);			
-			this.addTooltip(this.template, "Create a reusable component. You can find it in the widget menu.");	
+			this.addTooltip(this.template, "Create a reusable component. You will find it in the widget menu.");	
 
 			this.templateDropBox = this.$new(ToolbarDropDownButton, {arrowPosition:false, hasCaret: true});
 			this.templateDropBox.setLabel('<span class="mdi mdi-view-grid MatcIcon45"></span>');

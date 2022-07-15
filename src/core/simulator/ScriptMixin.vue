@@ -125,7 +125,11 @@ export default {
                     this.renderScriptTo(result, widget, orginalLine)
                     this.logger.log(-1,"runScript","exit");
 
-                    let targetScreen = Object.values(this.model.screens).find(s => s.name === result.to)
+                    if (result.to !== undefined) {
+                        console.error(`TRANSITION to screen ${result.to}`);
+                    }
+
+                    let targetScreen = Object.values(this.model.screens).find(s => result.to !== undefined && s.name.toLowerCase() === result.to.toLowerCase())
                     if (targetScreen && result.delayedBackMs !== undefined) {
                         setTimeout(() => {
                             this.onTransitionBack(targetScreen.id, null, null);
@@ -163,12 +167,13 @@ export default {
     renderScriptTo (result, widget, orginalLine) {
         this.logger.log(2,"renderScriptResult","enter >" ,  orginalLine);
         if (result.to) {
-            let targetScreen = Object.values(this.model.screens).find(s => s.name === result.to)
+            let targetScreen = Object.values(this.model.screens).find(s => result.to !== undefined && s.name.toLowerCase() === result.to.toLowerCase())
             if (targetScreen) {
                 const tempLine = this.createTempLine(targetScreen.id, orginalLine)
                 console.error(`cscreen: '${this.currentScreen}'`)
                 console.error(this)
                 this.logLine(tempLine, this.currentScreen.id);
+                console.error(`rendering transition from ${this.currentScreen.name} to ${this.model.screens[tempLine.to].name}`);
                 this.renderTransition(tempLine,this.currentScreen.id);
             } else {
                 this.logger.log(1,"runScript","No screen with name  >" + result.to);

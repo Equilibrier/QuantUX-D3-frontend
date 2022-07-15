@@ -1013,6 +1013,8 @@ export default class Core extends Evented {
              */
             let inScreen = inModel.screens[screenID]
             let screen = model.screens[screenID];
+
+            
             if (screen.parents && screen.parents.length > 0) {
                 /**
                  * add widgets from parent screens
@@ -1026,7 +1028,7 @@ export default class Core extends Evented {
                              * issues in the loop as we change the screen!
                              */
                             let parentScreen = model.screens[parentID];
-
+                            
                             /**
                              * Also copy rulers
                              */

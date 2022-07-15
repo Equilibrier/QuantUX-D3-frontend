@@ -114,8 +114,12 @@ class QScreen extends QModel {
             const groups = this.api.app.groups
             const screenChildren = this.qModel.children
             let group = Object.values(groups).find(g => { 
-                if (g.name === name) {
+                console.error(`looking for ${name}: ${g.name}`);
+                if (name && g.name.toLowerCase() === name.toLowerCase()) {
+                    console.error(`EVRIKA: found group with name ${name}, let's see it's children`);
                     const groupChildren = g.children
+                    console.error(`groupChildren: ${JSON.stringify(groupChildren)}`);
+                    console.error(`screenChildren: ${JSON.stringify(screenChildren)}`);
                     const contained = groupChildren.filter(groupChild => screenChildren.indexOf(groupChild) >=0)
                     return contained.length === groupChildren.length
                 }
@@ -125,7 +129,7 @@ class QScreen extends QModel {
                 return new QGroup(group, this.api)
             }
         } 
-        throw new Error(`Widget "${name}" in screen "${this.qModel.name}" not found.`)
+        throw new Error(`Group "${name}" in screen "${this.qModel.name}" not found.`)
     }
 
     getWidget(name) {
@@ -134,7 +138,7 @@ class QScreen extends QModel {
         for (let i =0; i < children.length; i++) {
             const widgetId = children[i]
             const widget = this.api.app.widgets[widgetId]
-            if (widget && widget.name === name) {
+            if (widget && name && widget.name.toLowerCase() === name.toLowerCase()) {
                 return new QWidget(widget, this.api)
             }
         }
@@ -152,7 +156,7 @@ export default class ScriptAPI {
     }
 
     getScreen(name) {
-        const found = Object.values(this.app.screens).filter(s => s.name === name)
+        const found = Object.values(this.app.screens).filter(s => name !== undefined && s.name.toLowerCase() === name.toLowerCase())
         if (found.length === 1) {
             return new QScreen(found[0], this)
         }
