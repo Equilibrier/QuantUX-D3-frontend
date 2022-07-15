@@ -3,6 +3,7 @@ import css from 'dojo/css'
 import topic from 'dojo/topic'
 import Logger from 'common/Logger'
 import Core from 'core/Core'
+import DIProvider from '../core/di/DIProvider';
 
 export default class GridAndRuler extends Core {
 
@@ -2498,8 +2499,7 @@ export default class GridAndRuler extends Core {
 	getParentScreen(widget) {
 		for (let id in this.model.screens) {
 			const screen = this.model.screens[id];
-			const i = screen.children.indexOf(widget.id);
-			if (i > -1) {
+			if (DIProvider.elementsLookup().isChildOfScreen(widget.id, screen)) {
 				return screen;
 			}
 		}

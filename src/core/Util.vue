@@ -10,6 +10,7 @@ import Layout from "core/Layout";
 import ModelGeom from 'core/ModelGeom'
 import ModelResizer from 'core/ModelResizer'
 import SlideLeftButton from 'common/SlideLeftButton'
+import DIProvider from 'core/di/DIProvider';
 
 var Ring = {};
 var ProgressBar = {};
@@ -1243,8 +1244,7 @@ export default {
       var result = [];
 
       for (let id in this.model.widgets) {
-        let pos = screen.children.indexOf(id);
-        if (pos >= 0) {
+        if (DIProvider.elementsLookup().isChildOfScreen(id, screen)) {
           result.push(this.model.widgets[id]);
         }
       }

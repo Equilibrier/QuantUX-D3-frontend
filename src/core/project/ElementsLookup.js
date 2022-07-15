@@ -59,13 +59,46 @@ export class ElementsLookup {
     screenOf(id) {
         this.__checkPreconditions();
         if (!this.isGroup(id)) {
-            const screens = Object.values(this.model.screens).filter(screen => screen.children.indexOf(id) >= 0)
+            const screens = Object.values(this.model.screens).filter(screen => this.isChildOfScreen(id, screen))
             return screens.length > 0 ? screens[0] : null;
         }
         else {
-            const screens = Object.values(this.model.screens).filter(screen => Object.values(this.groupFromId(id).children).filter(childId => screen.children.indexOf(childId) >= 0).length > 0);
+            const screens = Object.values(this.model.screens).filter(screen => Object.values(this.groupFromId(id).children).filter(childId => this.isChildOfScreen(childId, screen)).length > 0);
             return screens.length > 0 ? screens[0] : null;
         }
+    }
+
+    __childLookup(id, group, clbk, childGetterClbkOrValue) {
+        if (!group) {
+            return false;
+        }
+        if (!childGetterClbkOrValue) {
+            childGetterClbkOrValue = (group) => group.children;
+        }
+        const children = typeof childGetterClbkOrValue === 'function' ? childGetterClbkOrValue(group) : childGetterClbkOrValue;
+        let idx = 0;
+        for (let ch of children) {
+            if (ch.split("@")[0] === id) {
+                if (clbk) clbk(idx);
+                return true;
+            }
+            idx ++;
+        }
+        return false;
+    }
+
+    isChildOfGroup(id, group, childGetterClbkOrValue) { // childrenGetterClbk receives one param: the group ref and returns the children refs
+        return this.__childLookup(id, group, null, childGetterClbkOrValue);
+    }
+    isChildOfScreen(id, screen, childGetterClbkOrValue) {
+        return this.isChildOfGroup(id, screen, childGetterClbkOrValue); // the very same field ('children') and same logic... (actually a screen is a group)
+    }
+
+    removeChildFromGroup(id, group, childGetterClbkOrValue) {
+        return this.__childLookup(id, group, (idx) => group.children.splice(idx, 1), childGetterClbkOrValue);
+    }
+    removeChildFromScreen(id, screen, childGetterClbkOrValue) {
+        return this.removeChildFromGroup(id, screen, childGetterClbkOrValue);
     }
 
 

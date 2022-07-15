@@ -4,6 +4,7 @@ import lang from "dojo/_base/lang";
 import css from "dojo/css";
 import CoreUtil from 'core/CoreUtil'
 import ModelUtil from 'core/ModelUtil'
+import DIProvider from 'core/di/DIProvider';
 
 const _mactImportedFonts = {}
 
@@ -53,8 +54,7 @@ export default {
     getParentScreen: function(widget) {
       for (var id in this.model.screens) {
         var screen = this.model.screens[id];
-        var i = screen.children.indexOf(widget.id);
-        if (i > -1) {
+        if (DIProvider.elementsLookup().isChildOfScreen(widget.id, screen)) {
           return screen;
         }
       }
@@ -484,8 +484,7 @@ export default {
       if (this.model.groups) {
         for (let id in this.model.groups) {
           const group = this.model.groups[id];
-          const indexChildren = group.children.indexOf(widgetID);
-          if (indexChildren > -1) {
+          if (DIProvider.elementsLookup().isChildOfGroup(widgetID, group)) {
             return group;
           }
           /**

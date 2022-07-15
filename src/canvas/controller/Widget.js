@@ -1,6 +1,7 @@
 import Snapp from './Snapp'
 import lang from '../../dojo/_base/lang'
 import * as TextUtil from '../../core/TextUtil'
+import DIProvider from 'core/di/DIProvider';
 
 
 export default class Widget extends Snapp {
@@ -638,10 +639,9 @@ export default class Widget extends Snapp {
 	cleanUpParent (widget){
 		let currentParent = this.getParentScreen(widget);
 		if(currentParent){
-			let i = currentParent.children.indexOf(widget.id);
-			if(i != -1) {
+			if(DIProvider.elementsLookup().isChildOfScreen(widget.id, currentParent)) {
 				this.logger.log(2,"cleanUpParent", "remove Screen " + widget.id  +" from " + currentParent.id);
-				currentParent.children.splice(i, 1);
+				DIProvider.elementsLookup().removeChildOfScreen(widget.id, currentParent);
 			}
 		}
 	}
@@ -650,10 +650,9 @@ export default class Widget extends Snapp {
 
 		var currentGroup = this.getParentGroup(widget.id);
 		if(currentGroup){
-			var i = currentGroup.children.indexOf(widget.id);
-			if(i != -1) {
+			if(DIProvider.elementsLookup().isChildOfGroup(widget.id, currentGroup)) {
 				this.logger.log(2,"cleanUpGroup", "remove " + widget.id  +" from " + currentGroup.id);
-				currentGroup.children.splice(i, 1);
+				DIProvider.elementsLookup().removeChildFromGroup(widget.id, currentGroup);
 			}
 		}
 	}

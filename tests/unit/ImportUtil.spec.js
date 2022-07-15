@@ -2,6 +2,7 @@ import * as ImportUtil from '../../src/canvas/controller/ImportUtil'
 import app from './data/importTest.json'
 import importApp from './data/importTestAdd.json'
 import importAppLines from './data/importTestAddWithLines.json'
+import DIProvider from 'core/di/DIProvider';
 
 test('Test ImportUtil', async () => {
 
@@ -57,7 +58,7 @@ test('Test ImportUtil', async () => {
   let newScreenId = changes.find(c => c.type === 'screen').id
   let newScreen = updatedScreens.find(s => s.id === newScreenId)
   let newWidgetIds = changes.filter(c => c.type === 'widget').map(c => c.id)
-  newWidgetIds.forEach(id => expect(newScreen.children.indexOf(id) >=0).toBe(true))
+  newWidgetIds.forEach(id => expect(DIProvider.elementsLookup().isChildOfScreen(id, newScreen)).toBe(true))
 
 });
 

@@ -4,6 +4,7 @@ import Vue from "vue"
 import ModelGeom from 'core/ModelGeom'
 import lang from 'dojo/_base/lang'
 import CoreUtil from 'core/CoreUtil'
+import DIProvider from 'core/di/DIProvider';
 // import HelloWorld from 'examples/HelloWorld'
 
 /**
@@ -274,9 +275,8 @@ class SymbolService extends AbstractService{
 			if (model.groups) {
 				for (var id in model.groups) {
 					var group = model.groups[id];
-					var i = group.children.indexOf(widgetID);
-					if (i > -1) {
-						return group;
+					if (DIProvider.elementsLookup().isChildOfGroup(widgetID, group)) {
+					    return group;
 					}
 				}
 			}

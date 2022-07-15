@@ -1,4 +1,5 @@
 import Logger from '../Logger'
+//import DIProvider from 'core/di/DIProvider'
 
 class QModel {
 
@@ -108,19 +109,23 @@ class QScreen extends QModel {
         super(model, api, 'Screen')
     }
 
+    __childLookup(id, children) {
+        for (let ch of children) {
+            if (ch.split("@")[0] === id) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     getGroup (name) {
         Logger.log(2, "QScreen.getGroup() ", name)
         if (this.api.app.groups) {
             const groups = this.api.app.groups
-            const screenChildren = this.qModel.children
             let group = Object.values(groups).find(g => { 
-                console.error(`looking for ${name}: ${g.name}`);
                 if (name && g.name.toLowerCase() === name.toLowerCase()) {
-                    console.error(`EVRIKA: found group with name ${name}, let's see it's children`);
                     const groupChildren = g.children
-                    console.error(`groupChildren: ${JSON.stringify(groupChildren)}`);
-                    console.error(`screenChildren: ${JSON.stringify(screenChildren)}`);
-                    const contained = groupChildren.filter(groupChild => screenChildren.indexOf(groupChild) >=0)
+                    const contained = groupChildren.filter(groupChild => this.__childLookup(groupChild, this.qModel.children))
                     return contained.length === groupChildren.length
                 }
                 return false

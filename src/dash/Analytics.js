@@ -1,6 +1,7 @@
 import lang from '../dojo/_base/lang'
 import DataFrame from '../common/DataFrame'
 import Grouping from '../common/Grouping'
+import DIProvider from 'core/di/DIProvider';
 
 export default class {
 
@@ -1080,8 +1081,7 @@ export default class {
 	_getParentScreenID(model, widgetID) {
 		for (var id in model.screens) {
 			var screen = model.screens[id];
-			var i = screen.children.indexOf(widgetID);
-			if (i > -1) {
+			if (DIProvider.elementsLookup().isChildOfScreen(widgetID, screen)) {
 				return screen.id;
 			}
 		}

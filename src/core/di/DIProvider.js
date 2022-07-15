@@ -15,8 +15,7 @@ class DIProvider {
 
         this._listeners = {};
 
-        const f = async () => {
-            await this.__waitUntil(() => '_route', 5000);
+        this.__waitUntil(() => '_route', 5000, async () => {
             if (this._route !== null) {
                 console.error("Setez model-ul")
                 const modelService = Services.getModelService(this._route);
@@ -27,8 +26,7 @@ class DIProvider {
             else {
                 console.error("DIProvider: _route was not properly fed in 5 secs");
             }
-        };
-        f();
+        });
     }
 
     __set(fieldName) {
@@ -49,7 +47,7 @@ class DIProvider {
         }
     }
 
-    __waitUntil = (checkedField, timeoutMs = -1) => {
+    __waitUntil = (checkedField, timeoutMs = -1, timeoutClbk = () => {}) => {
         let periodMs = 100;
         const condition = () => this[checkedField] !== null;
 
@@ -60,6 +58,7 @@ class DIProvider {
                     console.error(`DIProvider: timeout of ${timeoutMs} ms reached trying to wait for condition ${condition}`);
 
                     clearInterval(interval)
+                    timeoutClbk();
                     resolve(null);
                 }
                 if (!condition()) {
@@ -98,6 +97,7 @@ class DIProvider {
         }
     }
     setRoute(route) {
+        console.error(`Cosmin: setRoute`);
         this.__set("_route")(route);
     }
 

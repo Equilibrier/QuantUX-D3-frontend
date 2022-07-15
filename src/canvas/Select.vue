@@ -3,6 +3,7 @@ import lang from 'dojo/_base/lang'
 import css from 'dojo/css'
 
 import topic from 'dojo/topic'
+import DIProvider from '../core/di/DIProvider';
 
 
  export default {
@@ -36,7 +37,7 @@ import topic from 'dojo/topic'
 					return this._selectMulti.indexOf(id) > -1
 				}
 				if (this._selectGroup && this._selectGroup.children) {
-					return this._selectGroup.children.indexOf(id) > -1
+					return DIProvider.elementsLookup().isChildOfGroup(id, this._selectGroup);
 				}
 				return false
 			},

@@ -1,3 +1,5 @@
+import DIProvider from 'core/di/DIProvider';
+
 /**
  * A class that should in the long run contain all the geometric functions
  * that are somehow scattered around, Core.js and Util.vue
@@ -131,9 +133,8 @@ class ModelGeom {
     getParentScreen (widget, model) {
         for (var id in model.screens) {
             var screen = model.screens[id];
-            var i = screen.children.indexOf(widget.id);
-            if (i > -1) {
-            return screen;
+            if (DIProvider.elementsLookup().isChildOfScreen(widget.id, screen)) {
+                return screen;
             }
         }
         return null;

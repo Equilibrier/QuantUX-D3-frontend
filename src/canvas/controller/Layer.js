@@ -1,6 +1,8 @@
 import Templates from './Templates'
 import LayerUtil from '../../core/LayerUtil'
 import ModelUtil from '../../core/ModelUtil';
+import DIProvider from 'core/di/DIProvider';
+
 export default class Layer extends Templates {
 
 	/**********************************************************************
@@ -154,10 +156,7 @@ export default class Layer extends Templates {
 					this.addNewWidgetInTemplateGroup(delta.widgetID, group)
 				}
 				if (delta.type == "remove") {
-					let index = group.children.indexOf(delta.widgetID);
-					if (index > -1) {
-						group.children.splice(index, 1);
-					}
+					DIProvider.elementsLookup().removeChildFromGroup(delta.widgetID, group);
 					this.removeNewWidgetInTemplateGroup(delta.widgetID, group)
 				}
 				if (delta.type == "addSubGroup") {

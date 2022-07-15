@@ -3,6 +3,7 @@ import Evented from '../dojo/Evented'
 import ModelGeom from './ModelGeom'
 import ModelResizer from './ModelResizer'
 import ModelUtil from './ModelUtil'
+import DIProvider from 'core/di/DIProvider';
 
 export default class Core extends Evented {
 
@@ -176,8 +177,7 @@ export default class Core extends Evented {
         }
         for (var id in model.screens) {
             var screen = model.screens[id];
-            var i = screen.children.indexOf(widget.id);
-            if (i > -1) {
+            if (DIProvider.elementsLookup().isChildOfScreen(widget.id, screen)) {
                 return screen;
             }
         }
@@ -789,8 +789,7 @@ export default class Core extends Evented {
         if (this.model.groups) {
             for (let id in this.model.groups) {
                 const group = this.model.groups[id];
-                const i = group.children.indexOf(widgetID);
-                if (i > -1) {
+                if (DIProvider.elementsLookup().isChildOfGroup(widgetID, group)) {
                     return group;
                 }
                 /**
@@ -1585,8 +1584,7 @@ export default class Core extends Evented {
         var result = [];
 
         for (let id in this.model.widgets) {
-            let pos = screen.children.indexOf(id);
-            if (pos >= 0) {
+            if (DIProvider.elementsLookup().isChildOfScreen(id, screen)) {
                 result.push(this.model.widgets[id]);
             }
         }
