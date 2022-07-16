@@ -118,8 +118,16 @@ class QScreen extends QModel {
         return false;
     }
 
-    
+
     getGroup (name) {
+        const res = this.__groupFromName(name);
+        if (!res) { 
+            throw new Error(`Group "${name}" in screen "${this.qModel.name}" not found.`)
+        }
+        return res;
+    }
+
+    __groupFromName(name) {
         Logger.log(2, "QScreen.getGroup() ", name)
         if (this.api.app.groups) {
             const groups = this.api.app.groups
@@ -135,10 +143,14 @@ class QScreen extends QModel {
                 return new QGroup(group, this.api)
             }
         } 
-        throw new Error(`Group "${name}" in screen "${this.qModel.name}" not found.`)
+        return null;
     }
 
-    getWidget(name) {
+    groupExists(name) {
+        return this.__groupFromName(name) !== null;
+    }
+
+    __widgetFromName(name) {
         Logger.log(2, "QScreen.getWidget() ", name)
         const children = this.qModel.children
         for (let i =0; i < children.length; i++) {
@@ -148,8 +160,23 @@ class QScreen extends QModel {
                 return new QWidget(widget, this.api)
             }
         }
-        throw new Error(`Widget "${name}" in screen "${this.qModel.name}" not found.`)
-        
+        return null;
+    }
+
+    getWidget(name) {
+        const res = this.__widgetFromName(name);
+        if (!res) { 
+            throw new Error(`Widget "${name}" in screen "${this.qModel.name}" not found.`)
+        }
+        return res;
+    }
+
+    widgetExists(name) {
+        return this.__widgetFromName(name) !== null;
+    }
+
+    elementExists(name) {
+        return this.widgetExists(name) || this.groupExists(name)
     }
 }
 
