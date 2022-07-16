@@ -426,6 +426,7 @@ export default {
 		},
 
 		wireContainer (widget, screenId) {
+			// it will additionaly wire the children as well, if this is a group; so the hovering on groups should work by redirecting the hovering logic to its children (but it does not work, it's buggy still, why??!)
 			if (widget.isContainer){
 				let cntrWidget = this.renderFactory.getUIWidget(widget);
 				if (cntrWidget){
