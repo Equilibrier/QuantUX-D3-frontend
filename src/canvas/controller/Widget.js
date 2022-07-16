@@ -641,7 +641,7 @@ export default class Widget extends Snapp {
 		if(currentParent){
 			if(DIProvider.elementsLookup().isChildOfScreen(widget.id, currentParent)) {
 				this.logger.log(2,"cleanUpParent", "remove Screen " + widget.id  +" from " + currentParent.id);
-				DIProvider.elementsLookup().removeChildOfScreen(widget.id, currentParent);
+				DIProvider.elementsLookup().removeChildFromScreen(widget.id, currentParent);
 			}
 		}
 	}
