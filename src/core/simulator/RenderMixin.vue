@@ -571,6 +571,7 @@ export default {
 				/**
 				* Hover Effects for DOM nodes
 				*/
+				// aici este markerul pentru bugul cu hovering pe grup
 				this.tempOwn(on(w, touch.over, lang.hitch(this, "onDomMouseOver", screenId, widget.id)));
 				this.tempOwn(on(w, touch.out, lang.hitch(this, "onDomMouseOut", screenId, widget.id)));
 			}
