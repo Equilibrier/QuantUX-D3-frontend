@@ -452,6 +452,8 @@ export default {
 		},
 
 		wireWidget (widget, screen, screenId, w) {
+			// actually it gets the first line it finds, in the concrete->abstract order (the widget itself; the immediate parent-group; the most top parent-group (root-group))
+			// so in case this is called in a more "colourfull" scenario (wiring all children of a group) this works simply because the hovering logic is inherited on each widget, but the line itself is shared (the one from the group)
 			const lines = this.getLinesForWidget(widget);
 
 			const action = this.getActionsForWidget(widget);
