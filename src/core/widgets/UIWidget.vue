@@ -12,6 +12,8 @@ import Layout from "core/Layout";
 import Gestures from "core/Gestures";
 import Logger from 'common/Logger'
 
+import {cssGetPxValue} from 'core/utils/generics'
+
 const styleKeysForResize = [
 			'fontSize',
 			"borderTopLeftRadius", "borderTopRightRadius", "borderBottomRightRadius", "borderBottomLeftRadius",
@@ -1262,17 +1264,9 @@ export default {
     getCanvasPosition: function(node) {
       var s = domStyle.get(node);
       return {
-        x: this.removePx(s.left),
-        y: this.removePx(s.top)
+        x: cssGetPxValue(s.left),
+        y: cssGetPxValue(s.top)
       };
-    },
-
-    removePx: function(v) {
-      var pos = v.indexOf("px");
-      if (pos >= 0) {
-        v = v.substring(0, pos);
-      }
-      return v * 1;
     },
 
     inherited () {
