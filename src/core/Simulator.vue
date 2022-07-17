@@ -694,6 +694,8 @@ export default {
 		},
 
 		onTransition (screenID, widgetID, line, e){
+			console.error(`--- WIDGET click ${widgetID}: ${JSON.stringify(this.model.widgets[widgetID])}`)
+
 			this.logger.log(1,"onTransition","enter >  sreen:" + screenID + " > widget:" + widgetID);
 			this.stopEvent(e);
 			this.log("WidgetClick",screenID, widgetID, e);
