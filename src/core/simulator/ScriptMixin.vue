@@ -116,7 +116,7 @@ export default {
             let glbJS = await this._prefetchGlobalJS();
 
             //console.log("Running script: \n", script);
-            let result = await engine.run(glbJS + script, this.model, this.dataBindingValues).then()
+            let result = await engine.run(glbJS + script, this.model, this.dataBindingValues, this.renderFactory)
     
             if (result.status === 'ok') {     
                 requestAnimationFrame( () => {

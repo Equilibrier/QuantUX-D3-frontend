@@ -62,6 +62,8 @@ import Animation from 'core/Animation'
 import Core from 'core/Core'
 import SymbolService from 'services/SymbolService'
 
+import DIProvider from 'core/di/DIProvider'
+
 export default class RenderFactory extends Core {
 
 	constructor(mode) {
@@ -92,6 +94,8 @@ export default class RenderFactory extends Core {
 			'paddingTop', 'paddingRight', 'paddingBottom', 'paddingLeft',
 			'boxShadow', 'textShadow', 'letterSpacing', 'icon', 'backgroundImage']
 		this.logger.log(2, "constructor", "exit > " + this.mode);
+
+		DIProvider.uiWidgetsActionQueue().setRenderFactory(this)
 	}
 
 
@@ -218,6 +222,7 @@ export default class RenderFactory extends Core {
 	}
 
 	getUIWidget(widget) {
+		//console.error(`Searching ui widget by id ${widget.id}, result: '${this._uiWidgets[widget.id]}'`)
 		return this._uiWidgets[widget.id];
 	}
 
@@ -358,7 +363,8 @@ export default class RenderFactory extends Core {
 
 	createUIWidget(parent, model) {
 		this.createWidgetHTML(parent, model);
-		return this._uiWidgets[model.id];
+		const widg = this._uiWidgets[model.id];
+		return widg;
 	}
 
 	$new (cls) {
@@ -431,7 +437,11 @@ export default class RenderFactory extends Core {
 					}
 				}
 			}
+
+			console.error(`CREATE_UI_WIDGET...`)
+			DIProvider.uiWidgetsActionQueue().consumeActions(model.id, w);
 		}
+
 	}
 
 	createWidgetByClass (parent, model, cls) {

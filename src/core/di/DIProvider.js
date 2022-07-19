@@ -4,6 +4,8 @@ import Services from "services/Services"
 import { KeyboardInputHandler } from 'core/input/KeyboardInputHandler'
 import { ElementsLookup } from '../../core/project/ElementsLookup'
 
+import { UIWidgetsActionQueue } from 'core/di/UIWidgetsActionQueue'
+
 class DIProvider {
 
     constructor() {
@@ -12,6 +14,7 @@ class DIProvider {
         this._route = null;
         this._keyhandler = new KeyboardInputHandler();
         this._elLookup = null;
+        this.uwActionQueue = new UIWidgetsActionQueue();
 
         this._listeners = {};
 
@@ -86,6 +89,7 @@ class DIProvider {
         this.__set("_canvas")(canvas);
     }
     setModel(model) {
+        console.error(`model: \n\t${JSON.stringify(model)}`)
         this.__set("_model")(model);
     }
     forceUpdateModel(model) {
@@ -114,6 +118,8 @@ class DIProvider {
         }
         return this._elLookup; 
     }
+
+    uiWidgetsActionQueue() { return this.uwActionQueue; }
 }
 
 export default new DIProvider();

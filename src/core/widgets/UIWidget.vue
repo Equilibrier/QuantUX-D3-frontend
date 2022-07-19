@@ -605,6 +605,11 @@ export default {
       }
     },
 
+    postTransform(cssTransform) {
+        this.domNode.style.transform = cssTransform;
+        this.domNode.style.webkitTransform = cssTransform;
+    },
+
     setAnimatedPos (pos, style) {
       // FIXME: For rotate we ignore positioning!! This will
       // cause issues for transform things with onLoad.
@@ -1267,6 +1272,14 @@ export default {
         x: cssGetPxValue(s.left),
         y: cssGetPxValue(s.top)
       };
+    },
+
+    setPosition: function(x, y) {
+      domStyle.set(this.domNode, "left", x + " px")
+      domStyle.set(this.domNode, "top", y + " px")
+    },
+    getPosition: function() {
+      this.getCanvasPosition(this.domNode)
     },
 
     inherited () {

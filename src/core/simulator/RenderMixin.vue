@@ -168,6 +168,9 @@ export default {
 		* line: The line that triggered the rendering. Might be null on start!
 		* **********************************************************/
 		createScreen (screen, isOverlay){
+			console.error(`****CREATE_SCREEN...`)
+
+
 			this.logger.log(2,"createScreen","enter > " + screen.id + " > overlay : " + isOverlay);
 			/**
 			* Call live cycle methods

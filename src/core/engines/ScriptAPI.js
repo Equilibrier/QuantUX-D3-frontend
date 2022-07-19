@@ -3,10 +3,11 @@ import Logger from '../Logger'
 
 class QModel {
 
-    constructor (model, api, type) {
+    constructor (model, api, type, parent = null) {
         this.qModel = model
         this.api = api
         this.type = type
+        this.parent = parent
     }
 
     getName() {
@@ -50,20 +51,76 @@ class QModel {
             this.hide()
         }
     }
+
+    __childLookup(id, children) {
+        for (let ch of children) {
+            if (ch.split("@")[0] === id) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    __getParentScreen (widget, model) {
+        for (var id in model.screens) {
+            var screen = model.screens[id];
+            if (this.__childLookup(widget.id, screen.children)) {
+                return screen;
+            }
+        }
+        return null;
+    }
+
+    getPosition() {
+        
+        // console.error(`qmodel: ${JSON.stringify(this?.qModel)}`)
+        // console.error(`qmodel-attr: ${JSON.stringify(Object.getOwnPropertyNames(this.qModel))}`)
+        // //console.error(`api.app: ${JSON.stringify(this.api.app)}`)
+        // //this.qModel.x = this.qModel.x * 2
+        
+        // const pscr = this.__getParentScreen(this.qModel, this.api.app);
+        // console.error(`pscreen: ${JSON.stringify(pscr)}`);
+        // console.error(`parrent: ${JSON.stringify(this.parent.qModel)}`);
+
+        // console.error(`rel pos: x=${this.qModel.x - pscr.x}; y=${this.qModel.y - pscr.y}`)
+
+        // console.error(`widg: ${JSON.stringify(Object.getOwnPropertyNames(this.api.app.widgets[this.qModel.id]))}`)
+
+        // console.error(`worker: ${this.api.worker}`)
+        //console.error(`uiwidg: ${JSON.stringify(Object.getOwnPropertyNames(this.api.renderFactory.getUIWidget(this.qModel)))}`)
+        postMessage({
+            type: 'transform',
+            action_payload: `translate(${-10}px,${70}px) `,
+            widget: this.qModel
+        })
+
+        // let trans = "translate(" + pos.x + "px," + pos.y + "px) ";
+        // this.qModel.node.style.transform = trans;
+        // node.style.webkitTransform = trans;
+
+        // console.error(`new-w: ${this.qModel.w}`)
+        // const f = this?.qModel?.getPosition
+        // return f && typeof f === "function" ? f() : {}
+        return {}
+    }
+
+    setPosition(x, y) {
+        this?.qModel?.setPosition(x, y)
+    }
 }
 
 class QWidget extends QModel {
 
-    constructor (model, api) {
-        super(model, api, 'Widget')
+    constructor (model, api, parent) {
+        super(model, api, 'Widget', parent)
     }
 
 }
 
 class QGroup extends QModel {
 
-    constructor (model, api) {
-        super(model, api, 'Group')
+    constructor (model, api, parent) {
+        super(model, api, 'Group', parent)
     }
 
     forEachChild (callback) {
@@ -100,6 +157,35 @@ class QGroup extends QModel {
         return hidden.length === this.qModel.children.length
     }
 
+    getPosition() {
+        return {};
+    }
+
+    setPosition(x, y) {
+        console.log(x != x ? y : ""); // dummy write to get rid of the strict syntax checking 'x, y are never used'
+        return;
+    }
+
+    __getMeta(id) {
+        const widg = this.api.app.widgets[id]
+        const grp = this.api.app.groups[id]
+        return widg || grp
+    }
+
+    __isGroup(id) {
+        const grp = this.api.app.groups[id]
+        return grp !== undefined
+    }
+
+    getChild(name) {
+        const groupChildren = this.qModel.children
+        const elId = groupChildren.find(childId => {
+            //console.error(`groupChild: ${JSON.stringify(this.__getMeta(childId))}`)
+            const child = this.__getMeta(childId)
+            return child.name.toLowerCase() === name.toLowerCase()
+        })
+        return this.__isGroup(elId) ? new QGroup(this.__getMeta(elId), this.api, this) : new QWidget(this.__getMeta(elId), this.api, this)
+    }
 }
 
 
@@ -140,7 +226,7 @@ class QScreen extends QModel {
                 return false
             })
             if (group) {
-                return new QGroup(group, this.api)
+                return new QGroup(group, this.api, this)
             }
         } 
         return null;
@@ -153,11 +239,11 @@ class QScreen extends QModel {
     __widgetFromName(name) {
         Logger.log(2, "QScreen.getWidget() ", name)
         const children = this.qModel.children
-        for (let i =0; i < children.length; i++) {
+        for (let i = 0; i < children.length; i++) {
             const widgetId = children[i]
             const widget = this.api.app.widgets[widgetId]
             if (widget && name && widget.name.toLowerCase() === name.toLowerCase()) {
-                return new QWidget(widget, this.api)
+                return new QWidget(widget, this.api, this)
             }
         }
         return null;
@@ -182,10 +268,11 @@ class QScreen extends QModel {
 
 export default class ScriptAPI {
 
-    constructor(app, viewModel) {
+    constructor(app, viewModel, worker) {
         Logger.log(2, "ScriptAPI.constructor() ", viewModel)
         this.app = app
         this.appDeltas = []
+        this.worker = worker
     }
 
     getScreen(name) {
