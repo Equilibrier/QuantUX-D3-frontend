@@ -606,6 +606,7 @@ export default {
     },
 
     postTransform(cssTransform) {
+        console.error(`postTransform: ${JSON.stringify(cssTransform)}`)
         this.domNode.style.transform = cssTransform;
         this.domNode.style.webkitTransform = cssTransform;
     },

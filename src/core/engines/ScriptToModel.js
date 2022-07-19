@@ -1,3 +1,4 @@
+import DIProvider from '../di/DIProvider';
 import Logger from '../Logger'
 
 export function applyChange(model, change, renderFactory) {
@@ -5,12 +6,31 @@ export function applyChange(model, change, renderFactory) {
 
     let element = getElementByChange(model, change)
     if (element) {
-        let old = change.key === 'style' ? element.style : element.props
-        let overwrites = change.key === 'style' ? change.style : change.props
-        for (let key in overwrites) {
-            old[key] = overwrites[key]
+        if (change.key.toLowerCase() === "translate") {
+            const {tx, ty} = change.props;
+            DIProvider.uiWidgetsActionQueue().pushAction(element.id, "translate", `translate(${tx}px,${ty}px) `, (action, payload) => {
+                console.log(action ? "" : "") // dummy params, but err if I do not do this (strict-mode compilation)
+                console.log(payload ? "" : "")
+
+                console.error(`Am transformat widgetul ${element.id} cu ${payload}, ar fi trebuit ${JSON.stringify(change)}`)
+
+                // const model = DIProvider.tempModelContext().currentModel();
+                // const element = model.widgets[widget.id] || model.groups[widget.id]
+
+                // DIProvider.tempModelContext().update(widget.id, {
+                //     x: element.x + payload.x,
+                //     y: element.y + payload.y
+                // })
+            })
         }
-        renderFactory.updateWidget(element)
+        else {
+            let old = change.key === 'style' ? element.style : element.props
+            let overwrites = change.key === 'style' ? change.style : change.props
+            for (let key in overwrites) {
+                old[key] = overwrites[key]
+            }
+            renderFactory.updateWidget(element)
+        }
 
     } else {
         Logger.error('ScriptToModel.applyChanges() > Cannot find element', change)

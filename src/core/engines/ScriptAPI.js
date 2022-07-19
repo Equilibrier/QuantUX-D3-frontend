@@ -101,19 +101,31 @@ class QModel {
     setPosition(nx, ny) {
         
         const {x, y} = this.getPosition();
+        console.error(`old pos: ${x}-${y}`)
         const {tx, ty} = {
             tx: nx - x,
             ty: ny - y
         };
+        console.error(`new tx,ty: ${tx}-${ty}`)
 
-        postMessage( {
-            type: 'transform',
-            action_payload: `translate(${tx}px,${ty}px) `,
-            widget: this.qModel
+        // postMessage( {
+        //     type: 'transform',
+        //     action_payload: `translate(${tx}px,${ty}px) `,
+        //     widget: this.qModel
+        // })
+
+        this.api.appDeltas.push({
+            type: this.type,
+            key: 'translate',
+            id: this.qModel.id,
+            props: {tx, ty}
         })
+
         const pscr = this.__getParentScreen(this.qModel, this.api.app);
         this.qModel.x = nx + pscr.x;
         this.qModel.y = ny + pscr.y;
+
+        console.error(`new (remained) x,y: ${this.qModel.x}-${this.qModel.y}`)
     }
 }
 

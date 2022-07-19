@@ -33,7 +33,7 @@ export class UIWidgetsActionQueue {
     }
 
     __consumeAction(widget, action, payload, widgetId = -1) {
-        if (action.toLowerCase() === "transform") {
+        if (action.toLowerCase() === "translate") {
             widget.postTransform(payload);
         }
         else {
