@@ -59,7 +59,7 @@ export default class ScriptEngine {
     }
 
     onMessage (message, resolve, reject, start) {
-        if (message?.data?.type === "transform") {
+        if (message?.data?.type === "translate") {
             const widget = message.data.widget
             DIProvider.uiWidgetsActionQueue().pushAction(widget.id, message.data.type, message.data.action_payload, (action, payload) => {
                 console.log(action ? "" : "") // dummy params, but err if I do not do this (strict-mode compilation)

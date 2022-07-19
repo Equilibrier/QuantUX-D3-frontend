@@ -90,6 +90,8 @@ class QModel {
     getBoundingBox() {
         const pscr = this.__getParentScreen(this.qModel, this.api.app);
         
+        console.error(`pscr: ${JSON.stringify(pscr)}`)
+
         return {
             x: 0,
             y: 0,
@@ -108,24 +110,24 @@ class QModel {
         };
         console.error(`new tx,ty: ${tx}-${ty}`)
 
-        // postMessage( {
-        //     type: 'transform',
-        //     action_payload: `translate(${tx}px,${ty}px) `,
-        //     widget: this.qModel
-        // })
-
-        this.api.appDeltas.push({
-            type: this.type,
-            key: 'translate',
-            id: this.qModel.id,
-            props: {tx, ty}
+        postMessage( {
+            type: 'translate',
+            action_payload: `translate(${tx}px,${ty}px) `,
+            widget: this.qModel
         })
 
-        const pscr = this.__getParentScreen(this.qModel, this.api.app);
-        this.qModel.x = nx + pscr.x;
-        this.qModel.y = ny + pscr.y;
+        // this.api.appDeltas.push({
+        //     type: this.type,
+        //     key: 'translate',
+        //     id: this.qModel.id,
+        //     props: {tx, ty}
+        // })
 
-        console.error(`new (remained) x,y: ${this.qModel.x}-${this.qModel.y}`)
+        // const pscr = this.__getParentScreen(this.qModel, this.api.app);
+        // this.qModel.x = nx + pscr.x;
+        // this.qModel.y = ny + pscr.y;
+
+        // console.error(`new (remained) x,y: ${this.qModel.x}-${this.qModel.y}`)
     }
 }
 
