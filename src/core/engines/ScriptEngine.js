@@ -23,7 +23,8 @@ export default class ScriptEngine {
                 worker.onmessage = (m) => this.onMessage(m, resolve, reject, start, js, renderFactory)
                 worker.postMessage({
                     code: js, 
-                    model: lang.clone(model), 
+                    //model: lang.clone(model),
+                    model: DIProvider.tempModelContext().currentModel(),
                     viewModel: lang.clone(viewModel)
                 })
                 // worker.onmessage(e => {
@@ -60,11 +61,18 @@ export default class ScriptEngine {
     onMessage (message, resolve, reject, start) {
         if (message?.data?.type === "transform") {
             const widget = message.data.widget
-            // const uiwidg = renderFactory.getUIWidget(widget)
-            // console.error(`found UI widg: ${JSON.stringify(uiwidg)}`)
+            DIProvider.uiWidgetsActionQueue().pushAction(widget.id, message.data.type, message.data.action_payload, (action, payload) => {
+                console.log(action ? "" : "") // dummy params, but err if I do not do this (strict-mode compilation)
+                console.log(payload ? "" : "")
 
-            DIProvider.uiWidgetsActionQueue().pushAction(widget.id, message.data.type, message.data.action_payload)
+                const model = DIProvider.tempModelContext().currentModel();
+                const element = model.widgets[widget.id] || model.groups[widget.id]
 
+                DIProvider.tempModelContext().update(widget.id, {
+                    x: element.x + payload.x,
+                    y: element.y + payload.y
+                })
+            })
             return;
         }
         console.error(`worker msg: ${JSON.stringify(message.data)}`)

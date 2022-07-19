@@ -10,7 +10,7 @@ self.addEventListener('message', e => {
     const model = e.data.model
     const viewModel = e.data.viewModel
     
-    const qux = new ScriptAPI(model, self)
+    const qux = new ScriptAPI(model)
     const code = new Function('qux', 'data', 'console', js);
     const console = new ScriptConsole()
     let result = undefined

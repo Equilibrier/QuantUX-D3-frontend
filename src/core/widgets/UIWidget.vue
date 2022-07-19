@@ -1274,14 +1274,6 @@ export default {
       };
     },
 
-    setPosition: function(x, y) {
-      domStyle.set(this.domNode, "left", x + " px")
-      domStyle.set(this.domNode, "top", y + " px")
-    },
-    getPosition: function() {
-      this.getCanvasPosition(this.domNode)
-    },
-
     inherited () {
       console.warn(this.name + '().inherected() > DEPRECTAED')
     }

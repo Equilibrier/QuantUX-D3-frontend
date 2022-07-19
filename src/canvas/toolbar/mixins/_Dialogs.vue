@@ -28,6 +28,8 @@ import AnimationComposer from 'canvas/toolbar/dialogs/AnimationComposer'
 import ExportDialog from 'canvas/toolbar/dialogs/ExportDialog'
 import CustomFonts from 'canvas/toolbar/dialogs/CustomFonts'
 
+import DIProvider from 'core/di/DIProvider'
+
 export default {
     name: '_Dialogs',
     mixins:[Plan, DojoWidget],
@@ -861,6 +863,9 @@ export default {
 
 
 		startSimilator () {
+			
+			DIProvider.tempModelContext().resetModel(this.model)
+
 			this.logger.log(0,"startSimilator", "entry");
 			var pos = domGeom.position(win.body());
 			let maxHeight = pos.h - 100

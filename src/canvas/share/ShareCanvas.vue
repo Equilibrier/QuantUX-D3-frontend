@@ -86,6 +86,8 @@ import Replicate from "canvas/Replicate";
 
 import DomUtil from 'core/FastDomUtil'
 
+import DIProvider from 'core/di/DIProvider'
+
 export default {
     name: 'ShareCanvas',
     mixins:[DojoWidget, _DragNDrop, Util, Render, Lines, DnD, Add, Select, Distribute,
@@ -348,7 +350,9 @@ export default {
 			this.startSimulator(e, this.controller.model)
 		},
 
-		startSimulator (e, model){
+		startSimulator (e, model) {
+			DIProvider.tempModelContext().resetModel(this.model)
+
 			this.logger.log(1,"startSimulator", "enter > " );
 
 			/**

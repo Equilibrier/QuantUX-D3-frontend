@@ -73,39 +73,47 @@ class QModel {
 
     getPosition() {
         
-        // console.error(`qmodel: ${JSON.stringify(this?.qModel)}`)
-        // console.error(`qmodel-attr: ${JSON.stringify(Object.getOwnPropertyNames(this.qModel))}`)
-        // //console.error(`api.app: ${JSON.stringify(this.api.app)}`)
-        // //this.qModel.x = this.qModel.x * 2
-        
-        // const pscr = this.__getParentScreen(this.qModel, this.api.app);
-        // console.error(`pscreen: ${JSON.stringify(pscr)}`);
-        // console.error(`parrent: ${JSON.stringify(this.parent.qModel)}`);
-
-        // console.error(`rel pos: x=${this.qModel.x - pscr.x}; y=${this.qModel.y - pscr.y}`)
-
-        // console.error(`widg: ${JSON.stringify(Object.getOwnPropertyNames(this.api.app.widgets[this.qModel.id]))}`)
-
-        // console.error(`worker: ${this.api.worker}`)
-        //console.error(`uiwidg: ${JSON.stringify(Object.getOwnPropertyNames(this.api.renderFactory.getUIWidget(this.qModel)))}`)
-        postMessage({
-            type: 'transform',
-            action_payload: `translate(${-10}px,${70}px) `,
-            widget: this.qModel
-        })
-
-        // let trans = "translate(" + pos.x + "px," + pos.y + "px) ";
-        // this.qModel.node.style.transform = trans;
-        // node.style.webkitTransform = trans;
-
-        // console.error(`new-w: ${this.qModel.w}`)
-        // const f = this?.qModel?.getPosition
-        // return f && typeof f === "function" ? f() : {}
-        return {}
+        const pscr = this.__getParentScreen(this.qModel, this.api.app);
+        return {
+            x: this.qModel.x - pscr.x,
+            y: this.qModel.y - pscr.y
+        }
     }
 
-    setPosition(x, y) {
-        this?.qModel?.setPosition(x, y)
+    getSize() {
+        return {
+            w: this.qModel.w,
+            h: this.qModel.h
+        }
+    }
+
+    getBoundingBox() {
+        const pscr = this.__getParentScreen(this.qModel, this.api.app);
+        
+        return {
+            x: 0,
+            y: 0,
+            w: pscr.w,
+            h: pscr.h
+        }
+    }
+
+    setPosition(nx, ny) {
+        
+        const {x, y} = this.getPosition();
+        const {tx, ty} = {
+            tx: nx - x,
+            ty: ny - y
+        };
+
+        postMessage( {
+            type: 'transform',
+            action_payload: `translate(${tx}px,${ty}px) `,
+            widget: this.qModel
+        })
+        const pscr = this.__getParentScreen(this.qModel, this.api.app);
+        this.qModel.x = nx + pscr.x;
+        this.qModel.y = ny + pscr.y;
     }
 }
 
@@ -157,13 +165,51 @@ class QGroup extends QModel {
         return hidden.length === this.qModel.children.length
     }
 
-    getPosition() {
-        return {};
+    getPosition() { // we return the top-left corner of the bounding-box that surrounds all children
+        let ltx = 10000000, lty = 10000000;
+        this.forEachChild(cid => {
+            const w = this.api.app.widgets[cid] || this.api.app.groups[cid]
+            const {x, y} = w.getPosition()
+            if (x < ltx) ltx = x;
+            if (y < lty) lty = y;
+        });
+        return {
+            x: ltx,
+            y: lty
+        }
     }
 
-    setPosition(x, y) {
-        console.log(x != x ? y : ""); // dummy write to get rid of the strict syntax checking 'x, y are never used'
-        return;
+    setPosition(nx, ny) {
+        const {x, y} = this.getPosition() // we create a vector from left-top corner of the bounding-box of the group, and translate all children with that vector
+        const {tx, ty} = {
+            tx: nx - x,
+            ty: ny - y
+        }
+        this.forEachChild(cid => {
+            const w = this.api.app.widgets[cid] || this.api.app.groups[cid]
+            const op = w.getPosition();
+            w.setPosition(op.x + tx, op.y + ty)
+        })
+    }
+
+    getSize() {
+        let x1 = 0, y1 = 0;
+        const {x, y} = this.getPosition();
+        this.forEachChild(cid => {
+            const w = this.api.app.widgets[cid] || this.api.app.groups[cid]
+            const cp = w.getPosition()
+            const cs = w.getSize()
+            if (cp.x + cs.w > x1) x1 = cp.x + cs.w
+            if (cp.y + cs.h > y1) y1 = cp.y + cs.h
+        })
+        return {
+            w: x1 - x + 1,
+            h: y1 - y + 1
+        }
+    }
+
+    getBoundingBox() {
+        return this.qModel.children.length > 0 (this.api.app.widgets[this.qModel.children[0]] || this.api.app.groups[this.qModel.children[0]]).getBoundingBox() 
     }
 
     __getMeta(id) {
@@ -268,11 +314,10 @@ class QScreen extends QModel {
 
 export default class ScriptAPI {
 
-    constructor(app, viewModel, worker) {
+    constructor(app, viewModel) {
         Logger.log(2, "ScriptAPI.constructor() ", viewModel)
         this.app = app
         this.appDeltas = []
-        this.worker = worker
     }
 
     getScreen(name) {

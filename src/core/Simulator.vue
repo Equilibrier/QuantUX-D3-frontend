@@ -467,6 +467,9 @@ export default {
 		},
 
 		async startSimilator (model){
+
+			DIProvider.tempModelContext().resetModel(this.model)
+
 			this.logger.log(2,"startSimilator","enter >" + model.id);
 
 			this.initScale();

@@ -9,21 +9,24 @@ export class UIWidgetsActionQueue {
         this.renderFactory = ref;
     }
 
-    pushAction(widgetId, action, payload) {
+    pushAction(widgetId, action, payload, clbk = (action, payload) => {console.log(`${action?"":""}${payload?"":""}`)}) {
         console.warn(`pushAction(${widgetId}, ${action}, ${payload})...`)
 
         if (this.renderFactory) {
             const widg = this.renderFactory.getUIWidget({id: widgetId})
             if (widg) {
                 console.warn(`...consuming the action right now`)
-                this.__consumeAction(widg, action, payload, widgetId)
+                if (this.__consumeAction(widg, action, payload, widgetId)) {
+                    clbk(action, payload);
+                }
                 return true;
             }
         }
         this.queue[widgetId] = this.queue[widgetId] ? this.queue[widgetId] : [];
         this.queue[widgetId].push({
             action,
-            payload
+            payload,
+            clbk
         });
         console.warn(`...postponing the action`)
         return false; // false means scheduled for later execution...
@@ -35,7 +38,9 @@ export class UIWidgetsActionQueue {
         }
         else {
             console.warn(`widget action '${action}' (with payload "${JSON.stringify(payload)}") for widget id ${widgetId} is unknown and it was ignored...`);
+            return false;
         }
+        return true;
     }
 
     consumeActions(widgetId, widget) {
@@ -48,7 +53,10 @@ export class UIWidgetsActionQueue {
             const sched = scheduled.shift(); // pop-first
             const action = sched.action;
             const payload = sched.payload;
-            this.__consumeAction(widget, action, payload, widgetId);
+            const clbk = sched.clbk;
+            if (this.__consumeAction(widget, action, payload, widgetId)) {
+                clbk(action, payload);
+            }
         }
     }
 }

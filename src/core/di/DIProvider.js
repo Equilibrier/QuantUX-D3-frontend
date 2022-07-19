@@ -5,6 +5,7 @@ import { KeyboardInputHandler } from 'core/input/KeyboardInputHandler'
 import { ElementsLookup } from '../../core/project/ElementsLookup'
 
 import { UIWidgetsActionQueue } from 'core/di/UIWidgetsActionQueue'
+import { TempModelContext } from 'core/di/TempModelContext'
 
 class DIProvider {
 
@@ -15,6 +16,7 @@ class DIProvider {
         this._keyhandler = new KeyboardInputHandler();
         this._elLookup = null;
         this.uwActionQueue = new UIWidgetsActionQueue();
+        this.tmpModelCtx = new TempModelContext();
 
         this._listeners = {};
 
@@ -120,6 +122,8 @@ class DIProvider {
     }
 
     uiWidgetsActionQueue() { return this.uwActionQueue; }
+
+    tempModelContext() { return this.tmpModelCtx; }
 }
 
 export default new DIProvider();
