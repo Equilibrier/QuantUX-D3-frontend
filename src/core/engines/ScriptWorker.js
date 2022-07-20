@@ -9,8 +9,9 @@ self.addEventListener('message', e => {
     const js = e.data.code
     const model = e.data.model
     const viewModel = e.data.viewModel
+    const scalingFactor = e.data.scaleFactor
     
-    const qux = new ScriptAPI(model)
+    const qux = new ScriptAPI(model, scalingFactor)
     const code = new Function('qux', 'data', 'console', js);
     const console = new ScriptConsole()
     let result = undefined

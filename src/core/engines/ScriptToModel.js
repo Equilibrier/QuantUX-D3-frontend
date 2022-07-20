@@ -14,13 +14,14 @@ export function applyChange(model, change, renderFactory) {
 
                 console.error(`Am transformat widgetul ${element.id} cu ${payload}, ar fi trebuit ${JSON.stringify(change)}`)
 
-                // const model = DIProvider.tempModelContext().currentModel();
-                // const element = model.widgets[widget.id] || model.groups[widget.id]
+                const model = DIProvider.tempModelContext().currentModel();
+                const el = model.widgets[element.id] || model.groups[element.id]
+                console.error(`el: ${JSON.stringify(el)}; action: ${JSON.stringify(action)} -- payload: ${JSON.stringify({tx, ty})}`)
 
-                // DIProvider.tempModelContext().update(widget.id, {
-                //     x: element.x + payload.x,
-                //     y: element.y + payload.y
-                // })
+                DIProvider.tempModelContext().update(element.id, {
+                    x: el.x + tx,
+                    y: el.y + ty
+                })
             })
         }
         else {

@@ -1,9 +1,14 @@
 import lang from '../../dojo/_base/lang'
 
+// it might be an overwhelming logic bellow, because it seems the current my-quantux software can provide an accurate periodic 
+// setExplicitScreenSize call with actual values, but for the sake of the OOP science and as an eulogy of math, we past 
+// highest priority on the computing scale-factor rather than explicit resolutions (and because you can define 
+// multiple size screens, although, in practice it should be one single size for all)
 export class ScalingComputer {
     
     constructor() {
         this._scale = 1.0; // default assumption
+        this._explicitSizes = {w: 1024, h: 800}
         this._model = null;
         this._screensOrigSizes = {}
     }
@@ -24,6 +29,20 @@ export class ScalingComputer {
     scaleFactor() { 
         console.log(`ScalingComputer: Returning scale factor of ${this._scale}...`)
         return this._scale; 
+    }
+
+    projectedScreenSize(screenId = null, screenName = null) {
+        if (!this._scale || Object.values(this._screensOrigSizes).length <= 0) return this._explicitSizes;
+
+        const referenceScreen = screenId ? this._screensOrigSizes[screenId] : (screenName ? Object.values(this._screensOrigSizes).find(s => s.name.toLowerCase() === screenName.toLowerCase()) : Object.values(this._screensOrigSizes)[0]);
+        const w = referenceScreen.w * this._scale;
+        const h = referenceScreen.h * this._scale;
+        return {w, h}
+    }
+
+    setExplicitScreenSize(w, h) {
+        console.log(`ScalingComputer: Explicit sizes provided: ${w} X ${h}`)
+        this._explicitSizes = {w, h};
     }
 
     setModel(model) { 

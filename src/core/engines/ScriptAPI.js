@@ -1,5 +1,4 @@
 import Logger from '../Logger'
-//import DIProvider from 'core/di/DIProvider'
 
 class QModel {
 
@@ -72,31 +71,28 @@ class QModel {
     }
 
     getPosition() {
-        
         const pscr = this.__getParentScreen(this.qModel, this.api.app);
         return {
-            x: this.qModel.x - pscr.x,
-            y: this.qModel.y - pscr.y
+            x: (this.qModel.x - pscr.x) * this.api.scalingFactor,
+            y: (this.qModel.y - pscr.y) * this.api.scalingFactor
         }
     }
 
     getSize() {
         return {
-            w: this.qModel.w,
-            h: this.qModel.h
+            w: this.qModel.w * this.api.scalingFactor,
+            h: this.qModel.h * this.api.scalingFactor
         }
     }
 
     getBoundingBox() {
         const pscr = this.__getParentScreen(this.qModel, this.api.app);
         
-        console.error(`pscr: ${JSON.stringify(pscr)}`)
-
         return {
             x: 0,
             y: 0,
-            w: pscr.w,
-            h: pscr.h
+            w: pscr.w * this.api.scalingFactor,
+            h: pscr.h * this.api.scalingFactor
         }
     }
 
@@ -110,22 +106,22 @@ class QModel {
         };
         console.error(`new tx,ty: ${tx}-${ty}`)
 
-        postMessage( {
-            type: 'translate',
-            action_payload: `translate(${tx}px,${ty}px) `,
-            widget: this.qModel
-        })
-
-        // this.api.appDeltas.push({
-        //     type: this.type,
-        //     key: 'translate',
-        //     id: this.qModel.id,
-        //     props: {tx, ty}
+        // postMessage( {
+        //     type: 'translate',
+        //     action_payload: `translate(${tx}px,${ty}px) `,
+        //     widget: this.qModel
         // })
 
-        // const pscr = this.__getParentScreen(this.qModel, this.api.app);
-        // this.qModel.x = nx + pscr.x;
-        // this.qModel.y = ny + pscr.y;
+        this.api.appDeltas.push({
+            type: this.type,
+            key: 'translate',
+            id: this.qModel.id,
+            props: {tx, ty}
+        })
+
+        const pscr = this.__getParentScreen(this.qModel, this.api.app);
+        this.qModel.x = nx + pscr.x;
+        this.qModel.y = ny + pscr.y;
 
         // console.error(`new (remained) x,y: ${this.qModel.x}-${this.qModel.y}`)
     }
@@ -328,10 +324,13 @@ class QScreen extends QModel {
 
 export default class ScriptAPI {
 
-    constructor(app, viewModel) {
-        Logger.log(2, "ScriptAPI.constructor() ", viewModel)
+    constructor(app, scalingFactor) {
+        Logger.log(2, "ScriptAPI.constructor() ")
         this.app = app
         this.appDeltas = []
+        console.error(`Scaling factor given: ${scalingFactor}`)
+        this.scalingFactor = scalingFactor ? scalingFactor : 1.0;
+        console.error(`Scaling factor set: ${this.scalingFactor}`)
     }
 
     getScreen(name) {

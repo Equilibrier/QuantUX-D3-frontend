@@ -21,11 +21,13 @@ export default class ScriptEngine {
                 // TDOD: we could compress the model and just remove everything like styles etc...
                 const start = new Date().getTime()
                 worker.onmessage = (m) => this.onMessage(m, resolve, reject, start, js, renderFactory)
+                console.error(`##### getting scaling factor from diprovider: ${DIProvider.scalingComputer().scaleFactor()}`)
                 worker.postMessage({
                     code: js, 
                     //model: lang.clone(model),
                     model: DIProvider.tempModelContext().currentModel(),
-                    viewModel: lang.clone(viewModel)
+                    viewModel: lang.clone(viewModel),
+                    scaleFactor: DIProvider.scalingComputer().scaleFactor()
                 })
                 // worker.onmessage(e => {
                 //     console.error(`mesaj de la worker: ${JSON.stringify(e)}`)

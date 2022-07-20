@@ -141,7 +141,8 @@ export default {
 		},
 
 		setDomSize (screen, overlay){
-			console.error(`-------#### model.screenSize: ${JSON.stringify(this.model.screenSize)}; screensize: ${JSON.stringify(screen.w)}x${JSON.stringify(screen.h)}`)
+			DIProvider.scalingComputer().setExplicitScreenSize(this.model.screenSize.w, this.model.screenSize.h)
+			
 			if (this.domNode) {
 				/**
 				* set screen position. Make -1 to fix scrolling issues...
