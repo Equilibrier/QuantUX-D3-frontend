@@ -438,7 +438,6 @@ export default class RenderFactory extends Core {
 				}
 			}
 
-			console.error(`CREATE_UI_WIDGET...`)
 			DIProvider.uiWidgetsActionQueue().consumeActions(model.id, w);
 		}
 

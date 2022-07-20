@@ -11,6 +11,8 @@ import on from 'dojo/on'
 import domGeom from 'dojo/domGeom'
 import win from 'dojo/win'
 
+import DIProvider from 'core/di/DIProvider'
+
 export default {
 	name: 'RenderMixin',
     methods: {
@@ -139,6 +141,7 @@ export default {
 		},
 
 		setDomSize (screen, overlay){
+			console.error(`-------#### model.screenSize: ${JSON.stringify(this.model.screenSize)}; screensize: ${JSON.stringify(screen.w)}x${JSON.stringify(screen.h)}`)
 			if (this.domNode) {
 				/**
 				* set screen position. Make -1 to fix scrolling issues...
@@ -168,7 +171,9 @@ export default {
 		* line: The line that triggered the rendering. Might be null on start!
 		* **********************************************************/
 		createScreen (screen, isOverlay){
-			console.error(`****CREATE_SCREEN...`)
+			console.error(`****CREATE_SCREEN...: ${screen.w}-${screen.h}`)
+
+			DIProvider.scalingComputer().screenCreated(screen)
 
 
 			this.logger.log(2,"createScreen","enter > " + screen.id + " > overlay : " + isOverlay);

@@ -44,7 +44,7 @@ export class UIWidgetsActionQueue {
     }
 
     consumeActions(widgetId, widget) {
-        console.warn(`consumeActions(${widgetId}, ${widget})`)
+        //console.warn(`consumeActions(${widgetId}, ${widget})`)
 
         const scheduled = this.queue[widgetId];
         if (!scheduled) return;

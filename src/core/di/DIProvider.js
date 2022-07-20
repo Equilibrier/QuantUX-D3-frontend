@@ -6,6 +6,7 @@ import { ElementsLookup } from '../../core/project/ElementsLookup'
 
 import { UIWidgetsActionQueue } from 'core/di/UIWidgetsActionQueue'
 import { TempModelContext } from 'core/di/TempModelContext'
+import { ScalingComputer } from 'core/di/ScalingComputer'
 
 class DIProvider {
 
@@ -15,17 +16,22 @@ class DIProvider {
         this._route = null;
         this._keyhandler = new KeyboardInputHandler();
         this._elLookup = null;
-        this.uwActionQueue = new UIWidgetsActionQueue();
-        this.tmpModelCtx = new TempModelContext();
+        this._uwActionQueue = new UIWidgetsActionQueue();
+        this._tmpModelCtx = new TempModelContext();
+        this._scaleComputer = new ScalingComputer();
 
         this._listeners = {};
 
-        this.__waitUntil(() => '_route', 5000, async () => {
-            if (this._route !== null) {
+        this.__waitUntil('_route', 5000, () => {
+            console.error(`DIProvider: timeout reached waiting for _route to be set`)
+        }).then(async _route => {
+            if (_route !== null) {
                 console.error("Setez model-ul")
                 const modelService = Services.getModelService(this._route);
-                let id = this._route.params.id;
-                this.setModel(await modelService.findApp(id));
+                let id = _route.params.id;
+                const model = await modelService.findApp(id)
+                this.setModel(model);
+                this._scaleComputer.setModel(model);
                 console.error("Am setat modelul: ", this._model)
             }
             else {
@@ -121,9 +127,11 @@ class DIProvider {
         return this._elLookup; 
     }
 
-    uiWidgetsActionQueue() { return this.uwActionQueue; }
+    uiWidgetsActionQueue() { return this._uwActionQueue; }
 
-    tempModelContext() { return this.tmpModelCtx; }
+    tempModelContext() { return this._tmpModelCtx; }
+
+    scalingComputer() { return this._scaleComputer; }
 }
 
 export default new DIProvider();

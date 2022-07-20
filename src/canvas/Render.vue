@@ -662,6 +662,7 @@ export default {
 		createScreen (screen){
 			this.logger.log(4,"createScreen", "enter");
 			var div = this.createBox(screen);
+			console.error(`createScreen->createBox: ${screen.w}X${screen.h}`)
 			css.add(div, "MatcScreen");
 			return div;
 		},
