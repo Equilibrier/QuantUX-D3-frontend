@@ -122,9 +122,9 @@ export default {
     
             if (result.status === 'ok') {     
                 requestAnimationFrame( () => {
-                    this.renderAppChanges(result)
-                    this.renderScriptDataBinding(result)  
-                    this.renderScriptTo(result, widget, orginalLine)
+                    this.applyApiDeltas(result)
+                    this.rerenderWidgetsFromDataBinding(result)  
+                    this.renderScriptedScreenTransition(result, widget, orginalLine)
                     this.logger.log(-1,"runScript","exit");
 
                     let targetScreen = Object.values(this.model.screens).find(s => result.to !== undefined && s.name.toLowerCase() === result.to.toLowerCase())
@@ -145,8 +145,8 @@ export default {
             }
         }) 
     },
-    renderAppChanges (result) {
-        this.logger.log(2,"renderAppChanges","enter >", result.appDeltas);
+    applyApiDeltas (result) {
+        this.logger.log(2,"applyApiDeltas","enter >", result.appDeltas);
         if (result.appDeltas) {
             result.appDeltas.forEach(change => {
                 ScriptToModel.applyChange(this.model, change, this.renderFactory)
@@ -156,13 +156,13 @@ export default {
     
 
 
-    renderScriptDataBinding (result) {
-        this.logger.log(2,"renderScriptDataBinding","enter >", result.viewModel);
+    rerenderWidgetsFromDataBinding (result) {
+        this.logger.log(2,"rerenderWidgetsFromDataBinding","enter >", result.viewModel);
         if (result.viewModel) {
-           this.replaceDataBinding(result.viewModel)
+           this.updateWidgetFromDataBinding(result.viewModel)
         }
     },
-    renderScriptTo (result, widget, orginalLine) {
+    renderScriptedScreenTransition (result, widget, orginalLine) {
         this.logger.log(2,"renderScriptResult","enter >" ,  orginalLine);
         if (result.to) {
             let targetScreen = Object.values(this.model.screens).find(s => result.to !== undefined && s.name.toLowerCase() === result.to.toLowerCase())

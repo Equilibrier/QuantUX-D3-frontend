@@ -215,13 +215,13 @@ export default {
 			}
 		},
 
-		replaceDataBinding (newValues) {
-			this.logger.log(4,"replaceDataBinding","enter  > ", newValues);
+		updateWidgetFromDataBinding (newValues) {
+			this.logger.log(4,"updateWidgetFromDataBinding","enter  > ", newValues);
 
 			this.dataBindingValues = newValues
 
 			if (!this.currentScreen) {
-				this.logger.log(-4,"replaceDataBinding","exit  > No screen");
+				this.logger.log(-4,"updateWidgetFromDataBinding","exit  > No screen");
 				return
 			}
 			// update all visible widgets
@@ -239,7 +239,7 @@ export default {
 
 							if (!uiWidget.isHidden()) {
 								if (value !== undefined && value !== null) {
-									this.logger.log(4,"replaceDataBinding","set  > " +  variable + ': ' , value);
+									this.logger.log(4,"updateWidgetFromDataBinding","set  > " +  variable + ': ' , value);
 									const changed = uiWidget.setDataBinding(variable, value, this);
 									if(changed){
 										const state = uiWidget.getState();
