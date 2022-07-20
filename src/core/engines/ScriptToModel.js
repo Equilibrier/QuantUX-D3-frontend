@@ -18,10 +18,7 @@ export function applyChange(model, change, renderFactory) {
                 const el = model.widgets[element.id] || model.groups[element.id]
                 console.error(`el: ${JSON.stringify(el)}; action: ${JSON.stringify(action)} -- payload: ${JSON.stringify({tx, ty})}`)
 
-                DIProvider.tempModelContext().update(element.id, {
-                    x: el.x + tx,
-                    y: el.y + ty
-                })
+                DIProvider.tempModelContext().update(element.id, {tx,ty})
             })
         }
         else {

@@ -7,6 +7,11 @@ class QModel {
         this.api = api
         this.type = type
         this.parent = parent
+
+        if (this.qModel.tx === undefined || this.qModel.ty === undefined) {
+            this.qModel.tx = 0
+            this.qModel.ty = 0
+        }
     }
 
     getName() {
@@ -73,8 +78,8 @@ class QModel {
     getPosition() {
         const pscr = this.__getParentScreen(this.qModel, this.api.app);
         return {
-            x: this.qModel.x - pscr.x,
-            y: this.qModel.y - pscr.y
+            x: this.qModel.x - pscr.x + this.qModel.tx / this.api.scalingFactor,
+            y: this.qModel.y - pscr.y + this.qModel.ty / this.api.scalingFactor
         }
     }
 
@@ -101,29 +106,21 @@ class QModel {
         const {x, y} = this.getPosition();
         console.error(`old pos: ${x}-${y}`)
         const {tx, ty} = {
-            tx: nx - x,
-            ty: ny - y
+            tx: (nx - x) * this.api.scalingFactor,
+            ty: (ny - y) * this.api.scalingFactor
         };
-        console.error(`new tx,ty: ${tx}-${ty}`)
-
-        // postMessage( {
-        //     type: 'translate',
-        //     action_payload: `translate(${tx}px,${ty}px) `,
-        //     widget: this.qModel
-        // })
-
+        
+        this.qModel.tx += tx; // acumulating translations; this will give the persisted getPosition values and a good rendering correspondence on the screen
+        this.qModel.ty += ty;
+        
+        console.error(`new tx,ty: ${this.qModel.tx}-${this.qModel.ty}`)
+        
         this.api.appDeltas.push({
             type: this.type,
             key: 'translate',
             id: this.qModel.id,
-            props: {tx: tx * this.api.scalingFactor, ty: ty * this.api.scalingFactor}
+            props: {tx: this.qModel.tx, ty: this.qModel.ty}
         })
-
-        const pscr = this.__getParentScreen(this.qModel, this.api.app);
-        this.qModel.x = nx + pscr.x;
-        this.qModel.y = ny + pscr.y;
-
-        // console.error(`new (remained) x,y: ${this.qModel.x}-${this.qModel.y}`)
     }
 }
 

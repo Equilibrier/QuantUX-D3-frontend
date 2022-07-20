@@ -65,8 +65,10 @@ export default {
         }
 
         this.__resetSourceMetadata();
-        this.dataBindingValues.__sourceScreen = DIProvider.elementsLookup().screenOf(orginalLine.from)?.name;
-        this.dataBindingValues.__sourceElement = DIProvider.elementsLookup().getObjectFromId(orginalLine.from)?.name;
+        const elk = DIProvider.elementsLookup();
+        this.dataBindingValues.__sourceScreen = !elk.isScreen(orginalLine.from) ? elk.screenOf(orginalLine.from)?.name : elk.getObjectFromId(orginalLine.from)?.name;
+        this.dataBindingValues.__sourceElement = !elk.isScreen(orginalLine.from) ? elk.getObjectFromId(orginalLine.from)?.name : undefined;
+        //console.error(`Set prevScreen to ${this.dataBindingValues.__sourceScreen} && previousElement to ${this.dataBindingValues.__sourceElement}`)
 
         let widget = this.model.widgets[widgetID]
         if (widget && widget.props.script) {

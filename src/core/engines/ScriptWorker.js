@@ -16,7 +16,7 @@ self.addEventListener('message', e => {
     const console = new ScriptConsole()
     let result = undefined
     try {
-        result = code(qux,viewModel, console)
+        result = code(qux, viewModel, console)
         self.postMessage({
             to: result !== undefined ? (typeof result === 'string' ? result : result.to) : undefined,
             delayedBackMs: result !== undefined ? (typeof myVar === 'string' ? undefined : result.backTimeout) : undefined,

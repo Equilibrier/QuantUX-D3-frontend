@@ -61,22 +61,6 @@ export default class ScriptEngine {
     }
 
     onMessage (message, resolve, reject, start) {
-        if (message?.data?.type === "translate") {
-            const widget = message.data.widget
-            DIProvider.uiWidgetsActionQueue().pushAction(widget.id, message.data.type, message.data.action_payload, (action, payload) => {
-                console.log(action ? "" : "") // dummy params, but err if I do not do this (strict-mode compilation)
-                console.log(payload ? "" : "")
-
-                const model = DIProvider.tempModelContext().currentModel();
-                const element = model.widgets[widget.id] || model.groups[widget.id]
-
-                DIProvider.tempModelContext().update(widget.id, {
-                    x: element.x + payload.x,
-                    y: element.y + payload.y
-                })
-            })
-            return;
-        }
         console.error(`worker msg: ${JSON.stringify(message.data)}`)
 
         const end = new Date().getTime()
