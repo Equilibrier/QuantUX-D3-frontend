@@ -73,15 +73,15 @@ class QModel {
     getPosition() {
         const pscr = this.__getParentScreen(this.qModel, this.api.app);
         return {
-            x: (this.qModel.x - pscr.x) * this.api.scalingFactor,
-            y: (this.qModel.y - pscr.y) * this.api.scalingFactor
+            x: this.qModel.x - pscr.x,
+            y: this.qModel.y - pscr.y
         }
     }
 
     getSize() {
         return {
-            w: this.qModel.w * this.api.scalingFactor,
-            h: this.qModel.h * this.api.scalingFactor
+            w: this.qModel.w,
+            h: this.qModel.h
         }
     }
 
@@ -91,8 +91,8 @@ class QModel {
         return {
             x: 0,
             y: 0,
-            w: pscr.w * this.api.scalingFactor,
-            h: pscr.h * this.api.scalingFactor
+            w: pscr.w,
+            h: pscr.h
         }
     }
 
@@ -116,7 +116,7 @@ class QModel {
             type: this.type,
             key: 'translate',
             id: this.qModel.id,
-            props: {tx, ty}
+            props: {tx: tx * this.api.scalingFactor, ty: ty * this.api.scalingFactor}
         })
 
         const pscr = this.__getParentScreen(this.qModel, this.api.app);
