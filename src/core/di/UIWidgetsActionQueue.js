@@ -1,3 +1,7 @@
+
+import Animation from 'core/Animation'
+import DIProvider from 'core/di/DIProvider'
+
 export class UIWidgetsActionQueue {
 
     constructor(renderFactory = null) {
@@ -9,14 +13,14 @@ export class UIWidgetsActionQueue {
         this.renderFactory = ref;
     }
 
-    pushAction(widgetId, action, payload, clbk = (action, payload) => {console.log(`${action?"":""}${payload?"":""}`)}) {
+    async pushAction(widgetId, action, payload, clbk = (action, payload) => {console.log(`${action?"":""}${payload?"":""}`)}) {
         console.warn(`pushAction(${widgetId}, ${action}, ${payload})...`)
 
         if (this.renderFactory) {
             const widg = this.renderFactory.getUIWidget({id: widgetId})
             if (widg) {
                 console.warn(`...consuming the action right now`)
-                if (this.__consumeAction(widg, action, payload, widgetId)) {
+                if (await this.__consumeAction(widg, action, payload, widgetId)) {
                     clbk(action, payload);
                 }
                 return true;
@@ -32,18 +36,99 @@ export class UIWidgetsActionQueue {
         return false; // false means scheduled for later execution...
     }
 
-    __consumeAction(widget, action, payload, widgetId = -1) {
-        if (action.toLowerCase() === "translate") {
-            widget.postTransform(payload);
+    async __consumeAction(widget, action, payload, widgetId = -1) {
+
+        const createAnimation = (animFactory, event) => {
+            var anim = animFactory.createAnimation();
+            anim.duration = event.duration;
+            anim.delay = event.delay;
+            anim.event = event;
+            if (event.easing) {
+                anim.setEasing(event.easing);
+            }
+
+
+            var fromStyle = event.from.style;
+            var fromPos = event.from.pos;
+            var toStyle = event.to.style;
+            var toPos = event.to.pos;
+
+
+            var me = animFactory;
+            anim.onRender(p => {
+                if (widget) {
+                    try {
+                        if (toStyle) {
+                            var mixedStyle = me.getAnimationMixedStyle(fromStyle, toStyle, p);
+                            widget.setAnimatedStyle(mixedStyle);
+                        }
+
+                        if (toPos && fromPos) {
+                            var mixedPos = me.getAnimationMixedPos(fromPos, toPos, 1 - p);
+                            mixedPos.x += event.posOffset.x
+                            mixedPos.y += event.posOffset.y
+                            widget.setAnimatedPos(mixedPos, mixedStyle);
+
+                            const {tx,ty} = {
+                                tx: mixedPos.x,
+                                ty: mixedPos.y
+                            }
+                            console.error(`updating dom for widget id '${widgetId}'...`)
+                            DIProvider.tempModelContext().update(widgetId, {tx,ty})
+                        }
+
+                    } catch (e) {
+                        console.error("WidgetAnimation.render() >  ", e);
+                        console.error("WidgetAnimation.render() >  ", e.stack);
+                    }
+                }
+            })
+
+            return anim;
         }
-        else {
-            console.warn(`widget action '${action}' (with payload "${JSON.stringify(payload)}") for widget id ${widgetId} is unknown and it was ignored...`);
-            return false;
-        }
-        return true;
+
+        return new Promise((resolve, reject) => {
+
+            console.log(reject ? "" : "")
+
+            if (action.toLowerCase() === "translate") {
+                widget.postTransform(payload);
+                resolve(true)
+            }
+            else if (action.toLowerCase() === "animate") {
+                const animEvent = {
+                    duration: payload.durationMs,
+                    delay: payload.delayMs,
+                    from: {
+                        style: payload.styleFrom,
+                        pos: payload.posFrom
+                    },
+                    to: {
+                        style: payload.styleTo,
+                        pos: payload.posTo
+                    },
+                    posOffset: payload.posOffset
+                }
+    
+                var animFactory = new Animation();
+                //var anim = animFactory.createWidgetAnimation(widget, animEvent);
+                var anim = createAnimation(animFactory, animEvent);
+    
+                anim.run()
+                console.error(`anim.run-----`)
+                //anim.onEnd(lang.hitch(this, "onAnimationEnded", e.id));
+                anim.onEnd(() => {
+                    resolve(true)
+                })
+            }
+            else {
+                console.warn(`widget action '${action}' (with payload "${JSON.stringify(payload)}") for widget id ${widgetId} is unknown and it was ignored...`);
+                resolve(false)
+            }
+        });
     }
 
-    consumeActions(widgetId, widget) {
+    async consumeActions(widgetId, widget) {
         //console.warn(`consumeActions(${widgetId}, ${widget})`)
 
         const scheduled = this.queue[widgetId];
@@ -54,7 +139,7 @@ export class UIWidgetsActionQueue {
             const action = sched.action;
             const payload = sched.payload;
             const clbk = sched.clbk;
-            if (this.__consumeAction(widget, action, payload, widgetId)) {
+            if (await this.__consumeAction(widget, action, payload, widgetId)) {
                 clbk(action, payload);
             }
         }

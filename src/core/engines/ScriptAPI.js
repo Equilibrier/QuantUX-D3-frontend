@@ -122,6 +122,28 @@ class QModel {
             props: {tx: this.qModel.tx, ty: this.qModel.ty}
         })
     }
+
+    animate(durationMs, posTo, styleTo = undefined) {
+        console.log(styleTo ? "" : "")
+
+        const posFrom = this.getPosition();
+        posTo.x *= this.api.scalingFactor
+        posTo.y *= this.api.scalingFactor
+        posFrom.x *= this.api.scalingFactor
+        posFrom.y *= this.api.scalingFactor
+        
+        // posTo.x += this.qModel.tx
+        // posTo.y += this.qModel.ty
+
+        console.error(`posTo: ${JSON.stringify(posTo)}; posFrom: ${JSON.stringify(posFrom)}`)
+
+        this.api.appDeltas.push({
+            type: this.type,
+            key: 'animate',
+            id: this.qModel.id,
+            props: {styleFrom: undefined, styleTo, posFrom: posTo, posTo: posFrom, durationMs, posOffset: {x: this.qModel.tx, y: this.qModel.ty}}
+        })
+    }
 }
 
 class QWidget extends QModel {

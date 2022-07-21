@@ -237,10 +237,15 @@ export default class Animation extends Core{
 		var f = (1 - p);
 		var mixed = {
 			x: (fromPos.x - toPos.x) * f,
-			y: (fromPos.y - toPos.y) * f,
-			w: (fromPos.w - toPos.w) * f,
-			h: (fromPos.h - toPos.h) * f
+			y: (fromPos.y - toPos.y) * f
 		};
+		if ((fromPos.w !== undefined && fromPos.w !== null && toPos.w !== undefined && toPos.w !== null) || (fromPos.h !== undefined && fromPos.h !== null && toPos.h !== undefined && toPos.h !== null)) {
+			mixed = {
+				...mixed,
+				w: (fromPos.w - toPos.w) * f,
+				h: (fromPos.h - toPos.h) * f
+			}
+		}
 		return mixed;
 	}
 
@@ -1418,7 +1423,7 @@ export default class Animation extends Core{
 
 
 				/**
-				 * ok we are done. No clean up and call the end callback. we just cal this once
+				 * ok we are done. No clean up and call the end callback. we just call this once
 				 *
 				 * FIXME: Shouldn't the thing stop only when the time is
 				 *
@@ -1436,13 +1441,19 @@ export default class Animation extends Core{
 						this.finishCallback();
 					}
 					this.finished = true;
+
+					console.log(`anim: finished legally`)
 				}
 			},
 
 
 			run() {
 
+				console.log(`anim: run frame`)
+
 				if (this.duration > 0) {
+					console.log(`anim: frame processing...`)
+
 					if (!this.startTime) {
 						this.startTime = new Date().getTime();
 					}
@@ -1459,6 +1470,8 @@ export default class Animation extends Core{
 					}
 					this.time(now);
 				} else {
+					console.log(`anim: prematurely ended`)
+
 					if (this.renderCallback) {
 						this.renderCallback(1)
 					}

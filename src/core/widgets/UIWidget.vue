@@ -618,6 +618,8 @@ export default {
         return;
       }
 
+      console.log(`pos: ${JSON.stringify(pos)}`)
+
       if (this.domNode) {
         /**
          * X and Y as css3 translate
@@ -638,6 +640,7 @@ export default {
 
         const node = this.getAnimationNode();
         if (node) {
+          console.log(`anim: setting translation to ${JSON.stringify(trans)}`)
           node.style.transform = trans;
           node.style.webkitTransform = trans;
         } else {
