@@ -439,13 +439,18 @@ export default class RenderFactory extends Core {
 			}
 
 			if (DIProvider.simulatorStarted()) {
-			DIProvider.uiWidgetsActionQueue().consumeActions(model.id, w, () => {
-					
+	
+				DIProvider.uiWidgetsActionQueue().consumeActions(model.id, w, () => {
+	
 					let mmodel = DIProvider.tempModelContext().currentModelForReadOnly();
 					mmodel = mmodel.widgets[model.id] ? mmodel.widgets[model.id] : undefined;
-					if (mmodel && mmodel.tx !== undefined && mmodel.ty !== undefined) {
-						console.error(`EVRIKA`)
-						this._uiWidgets[model.id].postTransform(`translate(${mmodel.tx}px,${mmodel.ty}px) `)
+					if (mmodel) {
+						if (mmodel.tx !== undefined && mmodel.ty !== undefined) {
+							this._uiWidgets[model.id].postTransform(`translate(${mmodel.tx}px,${mmodel.ty}px) `)
+						}
+						if (mmodel.postStyle !== undefined) {
+							this._uiWidgets[model.id].setStyle(mmodel.postStyle)
+						}
 					}
 				});
 			}

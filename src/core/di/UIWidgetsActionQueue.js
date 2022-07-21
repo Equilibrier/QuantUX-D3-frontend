@@ -76,6 +76,7 @@ export class UIWidgetsActionQueue {
                             }
                             console.error(`updating dom for widget id '${widgetId}'...`)
                             DIProvider.tempModelContext().update(widgetId, {tx,ty})
+                            DIProvider.tempModelContext().update(widgetId, {postStyle: mixedStyle})
                         }
 
                     } catch (e) {
