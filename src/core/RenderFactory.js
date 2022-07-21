@@ -438,7 +438,17 @@ export default class RenderFactory extends Core {
 				}
 			}
 
-			DIProvider.uiWidgetsActionQueue().consumeActions(model.id, w);
+			if (DIProvider.simulatorStarted()) {
+			DIProvider.uiWidgetsActionQueue().consumeActions(model.id, w, () => {
+					
+					let mmodel = DIProvider.tempModelContext().currentModelForReadOnly();
+					mmodel = mmodel.widgets[model.id] ? mmodel.widgets[model.id] : undefined;
+					if (mmodel && mmodel.tx !== undefined && mmodel.ty !== undefined) {
+						console.error(`EVRIKA`)
+						this._uiWidgets[model.id].postTransform(`translate(${mmodel.tx}px,${mmodel.ty}px) `)
+					}
+				});
+			}
 		}
 
 	}

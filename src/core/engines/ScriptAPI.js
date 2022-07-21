@@ -123,7 +123,7 @@ class QModel {
         })
     }
 
-    animate(durationMs, posTo, styleTo = undefined) {
+    animate(durationMs, posTo, styleFrom = undefined, styleTo = undefined) {
         console.log(styleTo ? "" : "")
 
         const posFrom = this.getPosition();
@@ -141,7 +141,7 @@ class QModel {
             type: this.type,
             key: 'animate',
             id: this.qModel.id,
-            props: {styleFrom: undefined, styleTo, posFrom: posTo, posTo: posFrom, durationMs, posOffset: {x: this.qModel.tx, y: this.qModel.ty}}
+            props: {styleFrom: styleFrom, styleTo, posFrom: posTo, posTo: posFrom, durationMs, posOffset: {x: this.qModel.tx, y: this.qModel.ty}}
         })
     }
 }

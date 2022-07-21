@@ -59,6 +59,7 @@ export class UIWidgetsActionQueue {
                 if (widget) {
                     try {
                         if (toStyle) {
+                            //console.error(`\n*********************fromStyle: ${JSON.stringify(fromStyle)}; toStyle: ${JSON.stringify(toStyle)}\n******************************`)
                             var mixedStyle = me.getAnimationMixedStyle(fromStyle, toStyle, p);
                             widget.setAnimatedStyle(mixedStyle);
                         }
@@ -128,11 +129,10 @@ export class UIWidgetsActionQueue {
         });
     }
 
-    async consumeActions(widgetId, widget) {
-        //console.warn(`consumeActions(${widgetId}, ${widget})`)
-
+    async consumeActions(widgetId, widget, doneClbk = () => {}) {
+        
         const scheduled = this.queue[widgetId];
-        if (!scheduled) return;
+        if (!scheduled) { doneClbk(); return }
 
         while (scheduled.length > 0) {
             const sched = scheduled.shift(); // pop-first
@@ -143,5 +143,7 @@ export class UIWidgetsActionQueue {
                 clbk(action, payload);
             }
         }
+
+        doneClbk();
     }
 }

@@ -352,12 +352,13 @@ export default {
 
 		startSimulator (e, model) {
 			DIProvider.tempModelContext().resetModel(this.model)
+			DIProvider.setSimulatorStartState(true)
 
 			this.logger.log(1,"startSimulator", "enter > " );
 
 			/**
 			 * Since 2.1.7 we have better scalling. Keep in
-			 * sync with _Dialogs.startSimilator()
+			 * sync with _Dialogs.startSimulator()
 			 */
 			var pos = domGeom.position(win.body());
 			let maxHeight = pos.h - 100

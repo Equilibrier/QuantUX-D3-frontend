@@ -191,7 +191,7 @@ export default {
 			/**
 			* set model
 			*/
-			this.own(on(this.simulatorButton, touch.press, lang.hitch(this, "startSimilator")));
+			this.own(on(this.simulatorButton, touch.press, lang.hitch(this, "startSimulator")));
 
 			/**
 			* Tools section

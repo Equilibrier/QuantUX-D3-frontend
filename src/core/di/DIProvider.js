@@ -19,6 +19,7 @@ class DIProvider {
         this._uwActionQueue = new UIWidgetsActionQueue();
         this._tmpModelCtx = new TempModelContext();
         this._scaleComputer = new ScalingComputer();
+        this._simStarted = false;
 
         this._listeners = {};
 
@@ -112,6 +113,12 @@ class DIProvider {
         console.error(`Cosmin: setRoute`);
         this.__set("_route")(route);
     }
+
+    setSimulatorStartState(started) {
+        this._simStarted = started;
+    } 
+
+    simulatorStarted() { return this._simStarted; }
 
     canvas() { return this._canvas; }
     async canvasAsync() { return await this.__waitUntil('_canvas', 3000); }

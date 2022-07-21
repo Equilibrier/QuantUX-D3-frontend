@@ -11,10 +11,13 @@ export class TempModelContext {
         console.error(`reseted model to ${JSON.stringify(this.model)}`)
     }
 
-    currentModel(model) {
-        console.error(`get current model ${model ? "" : ""}`)
+    currentModel() {
         return lang.clone(this.model);
     }
+    currentModelForReadOnly() {
+        return this.model;
+    }
+
     update(elementId, props) {
         console.error(`Updating widget ${JSON.stringify(elementId)} to props ${JSON.stringify(props)}`)
 

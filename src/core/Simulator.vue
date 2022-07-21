@@ -365,7 +365,7 @@ export default {
 					}, t);
 					this.fullSreenListener = on(this.startNode, "click", lang.hitch(this, "onStartClick", model));
 				} else {
-					this.startSimilator(model);
+					this.startSimulator(model);
 				}
 			}
 		},
@@ -459,18 +459,19 @@ export default {
 				 * so we have to wait a little!
 				 */
 				setTimeout(() => {
-					this.startSimilator(model);
+					this.startSimulator(model);
 				}, 200)
 			} else {
-				this.startSimilator(model);
+				this.startSimulator(model);
 			}
 		},
 
-		async startSimilator (model){
+		async startSimulator (model){
 
 			DIProvider.tempModelContext().resetModel(this.model)
+			DIProvider.setSimulatorStartState(true)
 
-			this.logger.log(2,"startSimilator","enter >" + model.id);
+			this.logger.log(2,"startSimulator","enter >" + model.id);
 
 			this.initScale();
 			this.initLiveUpdate();
@@ -1174,6 +1175,9 @@ export default {
 		},
 
 		destroy (){
+
+			DIProvider.setSimulatorStartState(false)
+
 			this.logger.log(-1,"destroy","enter");
 			this.isDestroyed = true;
 			this.sendMouse();

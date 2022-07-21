@@ -862,11 +862,12 @@ export default {
 
 
 
-		startSimilator () {
+		startSimulator () {
 			
 			DIProvider.tempModelContext().resetModel(this.model)
+			DIProvider.setSimulatorStartState(true)
 
-			this.logger.log(0,"startSimilator", "entry");
+			this.logger.log(0,"startSimulator", "entry");
 			var pos = domGeom.position(win.body());
 			let maxHeight = pos.h - 100
 			/**
