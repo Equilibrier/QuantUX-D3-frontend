@@ -19,7 +19,9 @@ self.addEventListener('message', e => {
         result = code(qux, viewModel, console)
         self.postMessage({
             to: result !== undefined ? (typeof result === 'string' ? result : result.to) : undefined,
-            delayedBackMs: result !== undefined ? (typeof myVar === 'string' ? undefined : result.backTimeout) : undefined,
+            delayedBackMs: result !== undefined ? result.backTimeout : undefined,
+            loop: result !== undefined ? result.loop : undefined,
+            immediateTransition: result !== undefined ? result.immediateTransition : false,
             viewModel: viewModel,
             appDeltas: qux.getAppDeltas(),
             console: console.messages,

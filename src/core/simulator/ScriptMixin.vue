@@ -15,6 +15,7 @@ export default {
     __resetSourceMetadata() {
         this.dataBindingValues.__sourceScreen = undefined;
         this.dataBindingValues.__sourceElement = undefined;
+        this.dataBindingValues.__sourceLooping = false;
         this.dataBindingValues.__sourceData = undefined;
         this.dataBindingValues.__sourceOldValue = undefined;
         this.dataBindingValues.__sourceNewValue = undefined;
@@ -110,33 +111,106 @@ export default {
         return outp;
     },
 
+    retrieveTargetScreen(scriptResult) {
+        return Object.values(this.model.screens).find(s => scriptResult.to !== undefined && s.name.toLowerCase() === scriptResult.to.toLowerCase())
+    },
+
     async runScript (script, widget, orginalLine) {
         this.logger.log(-2,"runScript","enter", widget?.name);
 
-        return new Promise(async(resolve) => {
-            const engine = new ScriptEngine()
-            let glbJS = await this._prefetchGlobalJS();
+        return new Promise(async (resolve) => {
+            const runScript = async () => {
+                const engine = new ScriptEngine()
+                let glbJS = await this._prefetchGlobalJS();
+                //console.log("Running script: \n", script);
+                let result = await engine.run(glbJS + script, this.model, this.dataBindingValues, this.renderFactory)
+                return result
+            }
+            const stopLoop = (result, sched) => {
+                console.error(`ANIMATIONS complete: proceeding with OUT-LOOP screen transition to ${result.to}`)
 
-            //console.log("Running script: \n", script);
-            let result = await engine.run(glbJS + script, this.model, this.dataBindingValues, this.renderFactory)
-    
-            if (result.status === 'ok') {     
+                // DIProvider.asyncScheduler().unschedule(sched1)
+                DIProvider.asyncScheduler().unschedule(sched)
+                // running default transition logic...
+                this.tryRenderScriptedScreenTransition(result, null, orginalLine)
+            }
+
+            const result = await runScript()
+
+            if (result.status === 'ok') {
+
                 requestAnimationFrame( () => {
+
                     this.applyApiDeltas(result)
                     this.rerenderWidgetsFromDataBinding(result)  
-                    this.renderScriptedScreenTransition(result, widget, orginalLine)
+                    this.tryRenderScriptedScreenTransition(result, widget, orginalLine)
                     this.logger.log(-1,"runScript","exit");
 
-                    let targetScreen = Object.values(this.model.screens).find(s => result.to !== undefined && s.name.toLowerCase() === result.to.toLowerCase())
+
+                    let targetScreen = this.retrieveTargetScreen(result)
+
+                    //console.error(`targetScreen: ${JSON.stringify(targetScreen)}; \n\tresult: ${JSON.stringify(result)}`)
+
+
                     if (targetScreen && result.delayedBackMs !== undefined) {
                         setTimeout(() => {
                             this.onTransitionBack(targetScreen.id, null, null);
+                            resolve(result)
                         }, result.delayedBackMs);
                     }
+
+                    else if (result.loop !== undefined) {
+
+                        this.dataBindingValues.__sourceElement = null;
+                        this.dataBindingValues.__sourceLooping = true;
+
+                        const endConditionReached = (result, dbind) => { console.log(`result.viewModel[dbind]: ${JSON.stringify(result.viewModel[dbind])}`); return result.viewModel[dbind] }//this.dataBindingValues[dbind]
+                        const endLoopDataBinding = result.loop
+                        if (this.dataBindingValues[endLoopDataBinding] === undefined) {
+                            this.dataBindingValues[endLoopDataBinding] = false
+                        }
+                        // let sched1;
+                        let sched2;
+
+                        const doLoopbackScriptRun = async () => {
+                            const rresult = await runScript()
+
+                            const ttargetScreen = this.retrieveTargetScreen(rresult)
+                            //console.error(`dataBindingValues: ${JSON.stringify(this.dataBindingValues)}`)
+                            //console.error(`viewmodel: ${JSON.stringify(rresult.viewModel)}`)
+
+                            this.applyApiDeltas(rresult)
+                            this.rerenderWidgetsFromDataBinding(rresult)
+
+                            if (ttargetScreen || endConditionReached(rresult, endLoopDataBinding)) {
+
+                                if ((ttargetScreen && rresult.immediateTransition) || endConditionReached(rresult, endLoopDataBinding)) {
+                                    stopLoop(rresult, sched2)
+                                    resolve(rresult)
+                                }
+                                else {
+                                    DIProvider.uiWidgetsActionQueue().registerNoMoreActionsListener('animate', () => {
+                                        stopLoop(rresult, sched2)
+                                        resolve(rresult)
+                                    });
+                                }
+                            }
+                        }
+
+                        // sched1 = DIProvider.asyncScheduler().scheduleForAnimationStarted(async () => {
+                        //     console.error(`^^^^^^^^^^^^^^^^^ animation event (started)`)
+                        //     await doLoopbackScriptRun()
+                        // })
+                        sched2 = DIProvider.asyncScheduler().scheduleForAnimationEnded(async () => {
+                            console.error(`^^^^^^^^^^^^^^^^^ animation event (ended)`)
+                            await doLoopbackScriptRun()
+                        })
+                    }
+
                     else if (targetScreen === undefined && result.to !== undefined) {
                         console.error(`<>script's target screen was not found for screen-name ${result.to}`);
+                        resolve(result)
                     }
-                    //console.error(`TO: ${result.to}`);
 
                     resolve(result)
                 })
@@ -145,15 +219,16 @@ export default {
             }
         }) 
     },
+
+
     applyApiDeltas (result) {
         this.logger.log(2,"applyApiDeltas","enter >", result.appDeltas);
         if (result.appDeltas) {
             result.appDeltas.forEach(change => {
-                ScriptToModel.applyChange(this.model, change, this.renderFactory)
+                ScriptToModel.applyChange(this.model, change, this.renderFactory, this.dataBindingValues)
             });
         }
     },
-    
 
 
     rerenderWidgetsFromDataBinding (result) {
@@ -162,10 +237,10 @@ export default {
            this.updateWidgetFromDataBinding(result.viewModel)
         }
     },
-    renderScriptedScreenTransition (result, widget, orginalLine) {
+    tryRenderScriptedScreenTransition (result, widget, orginalLine) {
         this.logger.log(2,"renderScriptResult","enter >" ,  orginalLine);
         if (result.to) {
-            let targetScreen = Object.values(this.model.screens).find(s => result.to !== undefined && s.name.toLowerCase() === result.to.toLowerCase())
+            let targetScreen = this.retrieveTargetScreen(result)
             if (targetScreen) {
                 const tempLine = this.createTempLine(targetScreen.id, orginalLine)
                 this.logLine(tempLine, this.currentScreen.id);

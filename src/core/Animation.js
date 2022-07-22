@@ -1442,17 +1442,17 @@ export default class Animation extends Core{
 					}
 					this.finished = true;
 
-					console.log(`anim: finished legally`)
+					// console.log(`anim: finished legally`)
 				}
 			},
 
 
 			run() {
 
-				console.log(`anim: run frame`)
+				// console.log(`anim: run frame`)
 
 				if (this.duration > 0) {
-					console.log(`anim: frame processing...`)
+					// console.log(`anim: frame processing...`)
 
 					if (!this.startTime) {
 						this.startTime = new Date().getTime();
@@ -1470,7 +1470,7 @@ export default class Animation extends Core{
 					}
 					this.time(now);
 				} else {
-					console.log(`anim: prematurely ended`)
+					// console.log(`anim: prematurely ended`)
 
 					if (this.renderCallback) {
 						this.renderCallback(1)

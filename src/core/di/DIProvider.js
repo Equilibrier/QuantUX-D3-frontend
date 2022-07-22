@@ -7,6 +7,7 @@ import { ElementsLookup } from '../../core/project/ElementsLookup'
 import { UIWidgetsActionQueue } from 'core/di/UIWidgetsActionQueue'
 import { TempModelContext } from 'core/di/TempModelContext'
 import { ScalingComputer } from 'core/di/ScalingComputer'
+import { AsyncScheduler } from 'core/di/AsyncScheduler'
 
 class DIProvider {
 
@@ -20,6 +21,7 @@ class DIProvider {
         this._tmpModelCtx = new TempModelContext();
         this._scaleComputer = new ScalingComputer();
         this._simStarted = false;
+        this._asyncScheduler = new AsyncScheduler();
 
         this._listeners = {};
 
@@ -126,19 +128,21 @@ class DIProvider {
     model() { return this._model; }
     async modelAsync() { return await this.__waitUntil('_model', 3000); }
 
-    keyInputHandler() { return this._keyhandler; }
+    keyInputHandler() { return this._keyhandler }
     elementsLookup() { // lazy inst because there is a circular dep between DIProvider<->ElementsLookup, and this is how we break it
         if (this._elLookup === null) {
-            this._elLookup = new ElementsLookup();
+            this._elLookup = new ElementsLookup()
         }
-        return this._elLookup; 
+        return this._elLookup
     }
 
-    uiWidgetsActionQueue() { return this._uwActionQueue; }
+    uiWidgetsActionQueue() { return this._uwActionQueue }
 
-    tempModelContext() { return this._tmpModelCtx; }
+    tempModelContext() { return this._tmpModelCtx }
 
-    scalingComputer() { return this._scaleComputer; }
+    scalingComputer() { return this._scaleComputer }
+
+    asyncScheduler() { return this._asyncScheduler }
 }
 
 export default new DIProvider();

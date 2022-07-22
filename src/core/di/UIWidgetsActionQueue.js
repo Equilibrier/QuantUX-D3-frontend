@@ -6,6 +6,8 @@ export class UIWidgetsActionQueue {
 
     constructor(renderFactory = null) {
         this.queue = {}
+        this.noActionsNotifsPending = {}
+        this.currentPendingActions = {}
         this.renderFactory = renderFactory;
     }
 
@@ -34,6 +36,26 @@ export class UIWidgetsActionQueue {
         });
         console.warn(`...postponing the action`)
         return false; // false means scheduled for later execution...
+    }
+
+    actionsPendingCount(action) {
+        let count = 0
+        const allActions = [].concat.apply([], Object.values(this.queue))
+        for (let act of allActions) {
+            if (act.toLowerCase() === action.toLowerCase()) {
+                count ++
+            }
+        }
+        return count;
+    }
+
+    registerNoMoreActionsListener(action, clbk = () => {}) {
+        if (!this.actionsPendingCount(action) && Object.values(this.currentPendingActions).filter(e => Object.values(e).length > 0).length <= 0) {
+            clbk()
+            return
+        }
+        this.noActionsNotifsPending[action] = this.noActionsNotifsPending[action] ? this.noActionsNotifsPending[action] : []
+        this.noActionsNotifsPending[action].push(clbk)
     }
 
     async __consumeAction(widget, action, payload, widgetId = -1) {
@@ -74,7 +96,7 @@ export class UIWidgetsActionQueue {
                                 tx: mixedPos.x,
                                 ty: mixedPos.y
                             }
-                            console.error(`updating dom for widget id '${widgetId}'...`)
+                            // console.error(`updating dom for widget id '${widgetId}'...`)
                             DIProvider.tempModelContext().update(widgetId, {tx,ty})
                             DIProvider.tempModelContext().update(widgetId, {postStyle: mixedStyle})
                         }
@@ -93,8 +115,12 @@ export class UIWidgetsActionQueue {
 
             console.log(reject ? "" : "")
 
+            this.currentPendingActions[action] = this.currentPendingActions[action] ? this.currentPendingActions[action] : {}
+            this.currentPendingActions[action][widgetId] = 'just-a-maker'
+
             if (action.toLowerCase() === "translate") {
                 widget.postTransform(payload);
+                delete this.currentPendingActions[action][widgetId]
                 resolve(true)
             }
             else if (action.toLowerCase() === "animate") {
@@ -120,11 +146,13 @@ export class UIWidgetsActionQueue {
                 console.error(`anim.run-----`)
                 //anim.onEnd(lang.hitch(this, "onAnimationEnded", e.id));
                 anim.onEnd(() => {
+                    delete this.currentPendingActions[action][widgetId]
                     resolve(true)
                 })
             }
             else {
                 console.warn(`widget action '${action}' (with payload "${JSON.stringify(payload)}") for widget id ${widgetId} is unknown and it was ignored...`);
+                delete this.currentPendingActions[action][widgetId]
                 resolve(false)
             }
         });
@@ -143,8 +171,18 @@ export class UIWidgetsActionQueue {
             if (await this.__consumeAction(widget, action, payload, widgetId)) {
                 clbk(action, payload);
             }
+
+            if (this.noActionsNotifsPending[action]) {
+                if (!this.actionsPendingCount(action)) {
+                    for (let noaClbk in this.noActionsNotifsPending[action]) {
+                        noaClbk()
+                    }
+                    this.noActionsNotifsPending[action] = []
+                }
+            }
         }
 
         doneClbk();
+
     }
 }

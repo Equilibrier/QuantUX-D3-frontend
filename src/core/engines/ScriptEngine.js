@@ -21,7 +21,7 @@ export default class ScriptEngine {
                 // TDOD: we could compress the model and just remove everything like styles etc...
                 const start = new Date().getTime()
                 worker.onmessage = (m) => this.onMessage(m, resolve, reject, start, js, renderFactory)
-                console.error(`##### getting scaling factor from diprovider: ${DIProvider.scalingComputer().scaleFactor()}`)
+                // console.error(`##### getting scaling factor from diprovider: ${DIProvider.scalingComputer().scaleFactor()}`)
                 worker.postMessage({
                     code: js, 
                     //model: lang.clone(model),
@@ -61,7 +61,7 @@ export default class ScriptEngine {
     }
 
     onMessage (message, resolve, reject, start) {
-        console.error(`worker msg: ${JSON.stringify(message.data)}`)
+        // console.error(`worker msg: ${JSON.stringify(message.data)}`)
 
         const end = new Date().getTime()
         Logger.log(-1, 'ScriptEngine.onMessage() > took',end - start)

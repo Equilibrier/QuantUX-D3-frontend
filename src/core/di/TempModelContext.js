@@ -8,7 +8,7 @@ export class TempModelContext {
 
     resetModel(model) {
         this.model = lang.clone(model)
-        console.error(`reseted model to ${JSON.stringify(this.model)}`)
+        // console.error(`reseted model to ${JSON.stringify(this.model)}`)
     }
 
     currentModel() {
@@ -19,7 +19,7 @@ export class TempModelContext {
     }
 
     update(elementId, props) {
-        console.error(`Updating widget ${JSON.stringify(elementId)} to props ${JSON.stringify(props)}`)
+        // console.error(`Updating widget ${JSON.stringify(elementId)} to props ${JSON.stringify(props)}`)
 
         const element = this.model.widgets[elementId] || this.model.groups[elementId]
         for (let k of Object.keys(props)) {

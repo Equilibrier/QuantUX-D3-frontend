@@ -172,7 +172,7 @@ export default {
 		* line: The line that triggered the rendering. Might be null on start!
 		* **********************************************************/
 		createScreen (screen, isOverlay){
-			console.error(`****CREATE_SCREEN...: ${screen.w}-${screen.h}`)
+			// console.error(`****CREATE_SCREEN...: ${screen.w}-${screen.h}`)
 
 			DIProvider.scalingComputer().screenCreated(screen)
 

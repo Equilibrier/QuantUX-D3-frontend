@@ -104,7 +104,7 @@ class QModel {
     setPosition(nx, ny) {
         
         const {x, y} = this.getPosition();
-        console.error(`old pos: ${x}-${y}`)
+        // console.error(`old pos: ${x}-${y}`)
         const {tx, ty} = {
             tx: (nx - x) * this.api.scalingFactor,
             ty: (ny - y) * this.api.scalingFactor
@@ -113,7 +113,7 @@ class QModel {
         this.qModel.tx += tx; // acumulating translations; this will give the persisted getPosition values and a good rendering correspondence on the screen
         this.qModel.ty += ty;
         
-        console.error(`new tx,ty: ${this.qModel.tx}-${this.qModel.ty}`)
+        // console.error(`new tx,ty: ${this.qModel.tx}-${this.qModel.ty}`)
         
         this.api.appDeltas.push({
             type: this.type,
@@ -135,7 +135,7 @@ class QModel {
         // posTo.x += this.qModel.tx
         // posTo.y += this.qModel.ty
 
-        console.error(`posTo: ${JSON.stringify(posTo)}; posFrom: ${JSON.stringify(posFrom)}`)
+        // console.error(`posTo: ${JSON.stringify(posTo)}; posFrom: ${JSON.stringify(posFrom)}`)
 
         this.api.appDeltas.push({
             type: this.type,
@@ -347,9 +347,9 @@ export default class ScriptAPI {
         Logger.log(2, "ScriptAPI.constructor() ")
         this.app = app
         this.appDeltas = []
-        console.error(`Scaling factor given: ${scalingFactor}`)
+        // console.error(`Scaling factor given: ${scalingFactor}`)
         this.scalingFactor = scalingFactor ? scalingFactor : 1.0;
-        console.error(`Scaling factor set: ${this.scalingFactor}`)
+        // console.error(`Scaling factor set: ${this.scalingFactor}`)
     }
 
     getScreen(name) {

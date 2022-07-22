@@ -23,11 +23,11 @@ export class ScalingComputer {
                 h: scr.h,
             }
         }
-        console.log(`ScalingComputer: Orig sizes computed: \n\t${JSON.stringify(this._screensOrigSizes)}`)
+        // console.log(`ScalingComputer: Orig sizes computed: \n\t${JSON.stringify(this._screensOrigSizes)}`)
     }
 
     scaleFactor() { 
-        console.log(`ScalingComputer: Returning scale factor of ${this._scale}...`)
+        // console.log(`ScalingComputer: Returning scale factor of ${this._scale}...`)
         return this._scale; 
     }
 
@@ -41,12 +41,12 @@ export class ScalingComputer {
     }
 
     setExplicitScreenSize(w, h) {
-        console.log(`ScalingComputer: Explicit sizes provided: ${w} X ${h}`)
+        // console.log(`ScalingComputer: Explicit sizes provided: ${w} X ${h}`)
         this._explicitSizes = {w, h};
     }
 
     setModel(model) { 
-        console.log(`ScalingComputer: setting model to ${JSON.stringify(model)}\n\n\t, computing orig-sizes hash...`)
+        // console.log(`ScalingComputer: setting model to ${JSON.stringify(model)}\n\n\t, computing orig-sizes hash...`)
         this._model = lang.clone(model); // we want it only for read-only purposes
         this.__computerOrigSize();
     }
@@ -59,7 +59,7 @@ export class ScalingComputer {
             if (Math.abs(sf1 - sf2) > 0.001) {
                 console.warn(`ScalingComputer: Computed scaling factors are not identical, for w/h: ${sf1}/${sf2}. Using the first one as default`)
             }
-            console.log(`ScalingComputer: Setting scaling-factor to ${sf1}...`)
+            // console.log(`ScalingComputer: Setting scaling-factor to ${sf1}...`)
             this._scale = sf1;
         }
         else {

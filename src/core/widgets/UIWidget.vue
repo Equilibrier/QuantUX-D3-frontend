@@ -606,7 +606,7 @@ export default {
     },
 
     postTransform(cssTransform) {
-        console.error(`postTransform: ${JSON.stringify(cssTransform)}`)
+        // console.error(`postTransform: ${JSON.stringify(cssTransform)}`)
         this.domNode.style.transform = cssTransform;
         this.domNode.style.webkitTransform = cssTransform;
     },
@@ -618,7 +618,7 @@ export default {
         return;
       }
 
-      console.log(`pos: ${JSON.stringify(pos)}`)
+      // console.log(`pos: ${JSON.stringify(pos)}`)
 
       if (this.domNode) {
         /**
@@ -640,7 +640,7 @@ export default {
 
         const node = this.getAnimationNode();
         if (node) {
-          console.log(`anim: setting translation to ${JSON.stringify(trans)}`)
+          // console.log(`anim: setting translation to ${JSON.stringify(trans)}`)
           node.style.transform = trans;
           node.style.webkitTransform = trans;
         } else {
