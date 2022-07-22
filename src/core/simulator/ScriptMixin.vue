@@ -142,7 +142,7 @@ export default {
                 requestAnimationFrame( () => {
 
                     this.applyApiDeltas(result)
-                    this.rerenderWidgetsFromDataBinding(result)  
+                    this.rerenderWidgetsFromDataBindingAndUpdateViewModel(result)  
                     this.tryRenderScriptedScreenTransition(result, widget, orginalLine)
                     this.logger.log(-1,"runScript","exit");
 
@@ -179,8 +179,14 @@ export default {
                             //console.error(`dataBindingValues: ${JSON.stringify(this.dataBindingValues)}`)
                             //console.error(`viewmodel: ${JSON.stringify(rresult.viewModel)}`)
 
-                            this.applyApiDeltas(rresult)
-                            this.rerenderWidgetsFromDataBinding(rresult)
+                            if (!((ttargetScreen && rresult.immediateTransition) || endConditionReached(rresult, endLoopDataBinding))) {
+                                console.warn(`no-skip: ${ttargetScreen.name}-${rresult.immediateTransition}-${endConditionReached(rresult, endLoopDataBinding)}`)
+                                this.applyApiDeltas(rresult)
+                            }
+                            else {
+                                console.warn(`skipping api-deltas&databinding-update`)
+                            }
+                            this.rerenderWidgetsFromDataBindingAndUpdateViewModel(rresult)
 
                             if (ttargetScreen || endConditionReached(rresult, endLoopDataBinding)) {
 
@@ -231,7 +237,7 @@ export default {
     },
 
 
-    rerenderWidgetsFromDataBinding (result) {
+    rerenderWidgetsFromDataBindingAndUpdateViewModel (result) {
         this.logger.log(2,"rerenderWidgetsFromDataBinding","enter >", result.viewModel);
         if (result.viewModel) {
            this.updateWidgetFromDataBinding(result.viewModel)

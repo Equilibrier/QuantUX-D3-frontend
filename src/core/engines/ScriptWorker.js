@@ -21,7 +21,7 @@ self.addEventListener('message', e => {
             to: result !== undefined ? (typeof result === 'string' ? result : result.to) : undefined,
             delayedBackMs: result !== undefined ? result.backTimeout : undefined,
             loop: result !== undefined ? result.loop : undefined,
-            immediateTransition: result !== undefined ? result.immediateTransition : false,
+            immediateTransition: result !== undefined && result.immediateTransition !== undefined ? result.immediateTransition : false,
             viewModel: viewModel,
             appDeltas: qux.getAppDeltas(),
             console: console.messages,

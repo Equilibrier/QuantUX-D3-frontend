@@ -25,6 +25,7 @@ export class UIWidgetsActionQueue {
                 if (await this.__consumeAction(widg, action, payload, widgetId)) {
                     clbk(action, payload);
                 }
+                this.__notifyNoAction(action)
                 return true;
             }
         }
@@ -42,7 +43,7 @@ export class UIWidgetsActionQueue {
         let count = 0
         const allActions = [].concat.apply([], Object.values(this.queue))
         for (let act of allActions) {
-            if (act.toLowerCase() === action.toLowerCase()) {
+            if (act.action.toLowerCase() === action.toLowerCase()) {
                 count ++
             }
         }
@@ -158,6 +159,18 @@ export class UIWidgetsActionQueue {
         });
     }
 
+    __notifyNoAction(action) {
+        if (this.noActionsNotifsPending[action]) {
+            if (!this.actionsPendingCount(action)) {
+                console.warn(`NOTIFYING no-action...`)
+                for (let noaClbk of this.noActionsNotifsPending[action]) {
+                    noaClbk()
+                }
+                this.noActionsNotifsPending[action] = []
+            }
+        }
+    }
+
     async consumeActions(widgetId, widget, doneClbk = () => {}) {
         
         const scheduled = this.queue[widgetId];
@@ -171,15 +184,7 @@ export class UIWidgetsActionQueue {
             if (await this.__consumeAction(widget, action, payload, widgetId)) {
                 clbk(action, payload);
             }
-
-            if (this.noActionsNotifsPending[action]) {
-                if (!this.actionsPendingCount(action)) {
-                    for (let noaClbk in this.noActionsNotifsPending[action]) {
-                        noaClbk()
-                    }
-                    this.noActionsNotifsPending[action] = []
-                }
-            }
+            this.__notifyNoAction(action)
         }
 
         doneClbk();
