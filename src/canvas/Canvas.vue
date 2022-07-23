@@ -374,6 +374,7 @@ export default {
 			}
 			//return globalScriptsActivates;
 			this.settings.globalScriptUrlsEnabled = globalScriptsActivates;
+			console.error(`globalScriptUrlsEnabled: ${JSON.stringify(this.settings.globalScriptUrlsEnabled)}`)
 		},
 
 
@@ -408,7 +409,7 @@ export default {
 				globalScriptUrlsEnabled: {}
 			};
 
-			this.initGlobalScripts() // not using await because this will delay initSettings, and some other mechanisms will crush --> the original source code isn't well written, it lacks async mechanism for for not-ready data
+			this.initGlobalScripts() // not using await because this will delay initSettings, and some other mechanisms will crush --> the original source code isn't well written, it lacks async mechanism for not-ready data
 
 			var s = this._getStatus("matcSettings");
 			if (s){

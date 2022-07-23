@@ -439,6 +439,8 @@ export default class RenderFactory extends Core {
 			}
 
 			if (DIProvider.simulatorStarted()) {
+
+				const wobj = this._uiWidgets[model.id]
 	
 				DIProvider.uiWidgetsActionQueue().consumeActions(model.id, w, () => {
 	
@@ -446,10 +448,10 @@ export default class RenderFactory extends Core {
 					mmodel = mmodel.widgets[model.id] ? mmodel.widgets[model.id] : undefined;
 					if (mmodel) {
 						if (mmodel.tx !== undefined && mmodel.ty !== undefined) {
-							this._uiWidgets[model.id].postTransform(`translate(${mmodel.tx}px,${mmodel.ty}px) `)
+							wobj.postTransform(`translate(${mmodel.tx}px,${mmodel.ty}px) `)
 						}
 						if (mmodel.postStyle !== undefined) {
-							this._uiWidgets[model.id].setStyle(mmodel.postStyle)
+							wobj.setStyle(mmodel.postStyle)
 						}
 					}
 				});

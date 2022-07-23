@@ -179,6 +179,9 @@ export default {
                             //console.error(`dataBindingValues: ${JSON.stringify(this.dataBindingValues)}`)
                             //console.error(`viewmodel: ${JSON.stringify(rresult.viewModel)}`)
 
+                            console.log(`DATABINDING  : anca: ${this.dataBindingValues.pagesnapshot.cnt[2].label}; cosmin: ${this.dataBindingValues.pagesnapshot.cnt[3].label}; phase: ${this.dataBindingValues.phase}`)
+                            console.log(`DATABINDING-r: anca: ${rresult.viewModel.pagesnapshot.cnt[2].label}; cosmin: ${rresult.viewModel.pagesnapshot.cnt[3].label}; phase: ${rresult.viewModel.phase}`)
+
                             if (!((ttargetScreen && rresult.immediateTransition) || endConditionReached(rresult, endLoopDataBinding))) {
                                 console.warn(`no-skip: ${ttargetScreen.name}-${rresult.immediateTransition}-${endConditionReached(rresult, endLoopDataBinding)}`)
                                 this.applyApiDeltas(rresult)
