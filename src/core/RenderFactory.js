@@ -450,6 +450,10 @@ export default class RenderFactory extends Core {
 						if (mmodel.tx !== undefined && mmodel.ty !== undefined) {
 							wobj.postTransform(`translate(${mmodel.tx}px,${mmodel.ty}px) `)
 						}
+						if (mmodel.rotAngDegrees !== undefined) {
+							console.log(`posttransform: mmodel: ${mmodel.rotAngDegrees}`)
+							wobj.postTransform(`rotate(${mmodel.rotAngDegrees}deg) `)
+						}
 						if (mmodel.postStyle !== undefined) {
 							wobj.setStyle(mmodel.postStyle)
 						}

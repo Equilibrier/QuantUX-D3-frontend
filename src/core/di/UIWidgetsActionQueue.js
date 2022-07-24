@@ -62,6 +62,11 @@ export class UIWidgetsActionQueue {
     async __consumeAction(widget, action, payload, widgetId = -1) {
 
         const createAnimation = (animFactory, event) => {
+            const getAnimationMixedRot = (fromRot, toRot, p) => {
+                var f = (1 - p);
+                var mixed = fromRot + (toRot - fromRot) * f;
+                return mixed;
+            }
             var anim = animFactory.createAnimation();
             anim.duration = event.duration;
             anim.delay = event.delay;
@@ -75,6 +80,10 @@ export class UIWidgetsActionQueue {
             var fromPos = event.from.pos;
             var toStyle = event.to.style;
             var toPos = event.to.pos;
+            var fromRot = event.from.rot
+            var toRot = event.to.rot
+
+            console.log(`postrot: from: ${fromRot}, to: ${toRot}`)
 
 
             var me = animFactory;
@@ -102,6 +111,13 @@ export class UIWidgetsActionQueue {
                             DIProvider.tempModelContext().update(widgetId, {postStyle: mixedStyle})
                         }
 
+                        if (toRot && fromRot) {
+                            var mixedRot = getAnimationMixedRot(fromRot, toRot, 1 - p)
+                            widget.setAnimatedRot(mixedRot)
+
+                            DIProvider.tempModelContext().update(widgetId, {rotAngDegrees: mixedRot})
+                        }
+
                     } catch (e) {
                         console.error("WidgetAnimation.render() >  ", e);
                         console.error("WidgetAnimation.render() >  ", e.stack);
@@ -124,17 +140,25 @@ export class UIWidgetsActionQueue {
                 delete this.currentPendingActions[action][widgetId]
                 resolve(true)
             }
+            else if (action.toLowerCase() === "rotate") {
+                console.log(`posttransform: payload: ${payload}`)
+                widget.postTransform(payload);
+                delete this.currentPendingActions[action][widgetId]
+                resolve(true)
+            }
             else if (action.toLowerCase() === "animate") {
                 const animEvent = {
                     duration: payload.durationMs,
                     delay: payload.delayMs,
                     from: {
                         style: payload.styleFrom,
-                        pos: payload.posFrom
+                        pos: payload.posFrom,
+                        rot: payload.rotDegFrom
                     },
                     to: {
                         style: payload.styleTo,
-                        pos: payload.posTo
+                        pos: payload.posTo,
+                        rot: payload.rotDegTo
                     },
                     posOffset: payload.posOffset
                 }

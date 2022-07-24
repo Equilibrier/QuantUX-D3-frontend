@@ -605,10 +605,93 @@ export default {
       }
     },
 
+    __parseCssTransf(str) {
+        let tokens = str.split(";")
+        //console.log(tokens[0].trim())
+        let rotCode = tokens.length > 0 && tokens[0].toLowerCase().search('rotate') >= 0 ? tokens[0].toLowerCase().trim() : (tokens.length > 1 && tokens[1].toLowerCase().search('rotate') >= 0 ? tokens[1].toLowerCase().trim() : (tokens.length > 2 && tokens[2].toLowerCase().search('rotate') >= 0 ? tokens[2].toLowerCase().trim() : undefined))
+        let translCode = tokens.length > 0 && tokens[0].toLowerCase().search('translate') >= 0 ? tokens[0].toLowerCase().trim() : (tokens.length > 1 && tokens[1].toLowerCase().search('translate') >= 0 ? tokens[1].toLowerCase().trim() : (tokens.length > 2 && tokens[2].toLowerCase().search('translate') >= 0 ? tokens[2].toLowerCase().trim() : undefined))
+        let scaleCode = tokens.length > 0 && tokens[0].toLowerCase().search('scale') >= 0 ? tokens[0].toLowerCase().trim() : (tokens.length > 1 && tokens[1].toLowerCase().search('scale') >= 0 ? tokens[1].toLowerCase().trim() : (tokens.length > 2 && tokens[2].toLowerCase().search('scale') >= 0 ? tokens[2].toLowerCase().trim() : undefined))
+        //console.log(rotCode)
+        //console.log(translCode)
+        let outp = {}
+        if (rotCode) {
+          let rotNumRaw = /.*\(\s*(.*)\s*deg\s*\)/.exec(rotCode)
+          if (rotNumRaw && rotNumRaw.length >= 2) {
+            outp.rotate = parseFloat(rotNumRaw[1])
+          }
+        }
+        if (translCode) {
+          let translNumRaw = /.*\(\s*(.*)\s*px\s*\,\s*(.*)\s*px\s*\)/.exec(translCode)
+          if (translNumRaw && translNumRaw.length >= 3) {
+            outp.translate = [parseFloat(translNumRaw[1]), parseFloat(translNumRaw[2])]
+          }
+        }
+        if (scaleCode) {
+          let scaleNumRaw = /.*\(\s*(.*)\s*\,\s*(.*)\s*\)/.exec(scaleCode)
+          if (scaleNumRaw && scaleNumRaw.length >= 3) {
+            outp.scale = [parseFloat(scaleNumRaw[1]), parseFloat(scaleNumRaw[2])]
+          }
+          else {
+            scaleNumRaw = /.*\(\s*(.*)\s*\)/.exec(scaleCode) // one dimension scale, as an exception
+            if (scaleNumRaw && scaleNumRaw.length >= 2) {
+              outp.scale = [parseFloat(scaleNumRaw[1]), parseFloat(scaleNumRaw[1])]
+            }
+          }
+        }
+        // console.log(rotNumRaw)
+        // console.log(translNumRaw)
+        return outp
+    },
+
+    __applyTransform(cssTransform) {
+      // console.log(`posttransform: param ${cssTransform}`)
+      // console.log(`posttransform: previous this.domNode.style.webkitTransform ${this.domNode.style.webkitTransform}`)
+      this.domNode.style.transform = cssTransform
+      this.domNode.style.webkitTransform = cssTransform
+      // console.log(`posttransform: after this.domNode.style.webkitTransform ${this.domNode.style.webkitTransform}`)
+    },
+
     postTransform(cssTransform) {
-        // console.error(`postTransform: ${JSON.stringify(cssTransform)}`)
-        this.domNode.style.transform = cssTransform;
-        this.domNode.style.webkitTransform = cssTransform;
+        let oldStyle = this.domNode.style.transform;
+
+        let givenTransf = this.__parseCssTransf(cssTransform)
+        let existentTransf = this.__parseCssTransf(this.domNode.style.transform || this.domNode.style.webkitTransform)
+        // let prefix = '' // it doesn't work this simple, because the order in which you put this scale transform can matter, so you have to take that into account and this complicates things considerably ...
+        // if (existentTransf.scale) {
+        //   prefix = `scale(${existentTransf.scale[0]},${existentTransf.scale[1]}) `;
+        // }
+        if (givenTransf.translate && givenTransf.rotate) {
+          console.log(`posttransform: apply given css`)
+          this.__applyTransform(cssTransform)
+        }
+        else if (givenTransf.translate) {
+          console.log(`posttransform: previous ${existentTransf.rotate ? "has" : "does not have"} rotation, so apply ${existentTransf.rotate ? 'that and' : 'only'} given transform`)
+          this.__applyTransform((existentTransf.rotate ? `rotate(${existentTransf.rotate}deg) ` : "") + cssTransform)
+        }
+        else if (givenTransf.rotate) {
+          console.log(`posttransform: previous ${existentTransf.translate ? "has" : "does not have"} translation, so apply ${existentTransf.translate ? 'that and' : 'only'} given transform`)
+          this.__applyTransform((existentTransf.translate ? `translate(${existentTransf.translate[0]}px,${existentTransf.translate[1]}px) ` : "") + cssTransform)
+        }
+        else {
+          console.error(`posttransform: untreated case`)
+        }
+
+        console.error(`Cosmin: postTransform: ${cssTransform} | ${oldStyle} | ${JSON.stringify(existentTransf)} | ${this.domNode.style.transform}`)
+        console.error(`Cosmin: postTransform: '${this.domNode.style.transform}'`) 
+    },
+
+    setAnimatedRot(degrees) {
+      
+      const node = this.getAnimationNode();
+        if (node) {
+            let ctrans = `rotate(${degrees}deg)`;
+            // console.log(`anim: setting translation to ${JSON.stringify(trans)}`)
+            let existentTransf = this.__parseCssTransf(this.domNode.style.transform || this.domNode.style.webkitTransform)
+            this.__applyTransform((existentTransf.translate ? `translate(${existentTransf.translate[0]}px,${existentTransf.translate[1]}px) ` : "") + ctrans)
+            console.log(`postrot: c-rot: ${ctrans}, after: ${this.domNode.style.transform}`)
+        } else {
+            console.warn("No anim node");
+        }
     },
 
     setAnimatedPos (pos, style) {
@@ -641,8 +724,10 @@ export default {
         const node = this.getAnimationNode();
         if (node) {
           // console.log(`anim: setting translation to ${JSON.stringify(trans)}`)
-          node.style.transform = trans;
-          node.style.webkitTransform = trans;
+          
+          let existentTransf = this.__parseCssTransf(this.domNode.style.transform || this.domNode.style.webkitTransform)
+          this.__applyTransform((existentTransf.rotate ? `rotate(${existentTransf.rotate}deg) ` : "") + trans)
+
         } else {
           console.warn("No anim node");
         }

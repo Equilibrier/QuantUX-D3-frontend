@@ -123,7 +123,23 @@ class QModel {
         })
     }
 
-    animate(durationMs, posTo, styleFrom = undefined, styleTo = undefined) {
+    rotateDegrees(degrees) {
+        this.qModel.rotAngDegrees = this.qModel.rotAngDegrees === undefined || isNaN(this.qModel.rotAngDegrees) ? 0.0 : this.qModel.rotAngDegrees;
+        this.qModel.rotAngDegrees += degrees
+
+        this.api.appDeltas.push({
+            type: this.type,
+            key: 'rotate',
+            id: this.qModel.id,
+            props: {rotAngDegrees: this.qModel.rotAngDegrees}
+        })
+    }
+
+    getRotationDegrees() {
+        return this.qModel.rotAngDegrees
+    }
+
+    animate(durationMs, posTo, styleFrom = undefined, styleTo = undefined, rotDegTo = undefined) {
         console.log(styleTo ? "" : "")
 
         const posFrom = this.getPosition();
@@ -131,6 +147,8 @@ class QModel {
         posTo.y *= this.api.scalingFactor
         posFrom.x *= this.api.scalingFactor
         posFrom.y *= this.api.scalingFactor
+
+        const rotDegFrom = this.getRotationDegrees()
         
         // posTo.x += this.qModel.tx
         // posTo.y += this.qModel.ty
@@ -141,7 +159,7 @@ class QModel {
             type: this.type,
             key: 'animate',
             id: this.qModel.id,
-            props: {styleFrom: styleFrom, styleTo, posFrom: posTo, posTo: posFrom, durationMs, posOffset: {x: this.qModel.tx, y: this.qModel.ty}}
+            props: {styleFrom: styleFrom, styleTo, posFrom: posTo, posTo: posFrom, rotDegFrom, rotDegTo, durationMs, posOffset: {x: this.qModel.tx, y: this.qModel.ty}}
         })
     }
 }
