@@ -182,23 +182,39 @@ class QModel {
         return this.qModel.rotAngDegrees
     }
 
-    animate(durationMs, posTo, styleFrom = undefined, styleTo = undefined, rotDegTo = undefined, scaleTo = undefined) {
-        console.log(styleTo ? "" : "")
+    animate(durationMs, params) {
+        
+        if (params.posTo !== undefined) {
+            params.posFrom = this.getPosition();
+            params.posTo.x *= this.api.scalingFactor
+            params.posTo.y *= this.api.scalingFactor
+            params.posFrom.x *= this.api.scalingFactor
+            params.posFrom.y *= this.api.scalingFactor
+        }
 
-        const posFrom = this.getPosition();
-        posTo.x *= this.api.scalingFactor
-        posTo.y *= this.api.scalingFactor
-        posFrom.x *= this.api.scalingFactor
-        posFrom.y *= this.api.scalingFactor
-
-        const rotDegFrom = this.getRotationDegrees()
-        const scaleFrom = this.getScale()
+        if (params.rotDegTo !== undefined) {
+            params.rotDegFrom = this.getRotationDegrees()
+        }
+        if (params.scaleTo !== undefined) {
+            params.scaleFrom = this.getScale()
+        }
         
         this.api.appDeltas.push({
             type: this.type,
             key: 'animate',
             id: this.qModel.id,
-            props: {styleFrom: styleFrom, styleTo, posFrom: posTo, posTo: posFrom, rotDegFrom, rotDegTo, scaleFrom, scaleTo, durationMs, posOffset: {x: this.qModel.tx, y: this.qModel.ty}}
+            props: {
+                durationMs,
+                styleFrom: params.styleFrom, 
+                styleTo: params.styleTo, 
+                posFrom: params.posTo, 
+                posTo: params.posFrom, 
+                posOffset: {x: this.qModel.tx, y: this.qModel.ty},
+                rotDegFrom: params.rotDegFrom, 
+                rotDegTo: params.rotDegTo, 
+                scaleFrom: params.scaleFrom, 
+                scaleTo: params.scaleTo
+            }
         })
     }
 }
