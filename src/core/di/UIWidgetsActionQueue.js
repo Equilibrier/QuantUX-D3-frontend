@@ -11,6 +11,12 @@ export class UIWidgetsActionQueue {
         this.renderFactory = renderFactory;
     }
 
+    reset() {
+        this.queue = {}
+        this.noActionsNotifsPending = {}
+        this.currentPendingActions = {}
+    }
+
     setRenderFactory(ref) {
         this.renderFactory = ref;
     }
@@ -92,9 +98,6 @@ export class UIWidgetsActionQueue {
             var fromScale = event.from.scale
             var toScale = event.to.scale
 
-            console.log(`postrot: from: ${fromRot}, to: ${toRot}`)
-
-
             var me = animFactory;
             anim.onRender(p => {
                 if (widget) {
@@ -105,7 +108,8 @@ export class UIWidgetsActionQueue {
                             widget.setAnimatedStyle(mixedStyle);
                         }
 
-                        if (toPos && fromPos) {
+                        
+                        if (toPos !== undefined && fromPos !== undefined) {
                             var mixedPos = me.getAnimationMixedPos(fromPos, toPos, 1 - p);
                             mixedPos.x += event.posOffset.x
                             mixedPos.y += event.posOffset.y
@@ -119,17 +123,16 @@ export class UIWidgetsActionQueue {
                             DIProvider.tempModelContext().update(widgetId, {tx,ty})
                             DIProvider.tempModelContext().update(widgetId, {postStyle: mixedStyle})
                         }
-
-                        if (toRot && fromRot) {
+                        
+                        if (toRot !== undefined && fromRot !== undefined) {
                             var mixedRot = getAnimationMixedRot(fromRot, toRot, 1 - p)
                             widget.setAnimatedRot(mixedRot)
 
                             DIProvider.tempModelContext().update(widgetId, {rotAngDegrees: mixedRot})
                         }
-
-                        if (toScale && fromScale) {
+                        
+                        if (toScale !== undefined && fromScale !== undefined) {
                             var mixedScale = getAnimationMixedScale(fromScale, toScale, 1 - p)
-                            console.log(`cosmin: postscale-anim: ${JSON.stringify(mixedScale)}`)
                             widget.setAnimatedScale(mixedScale.sx, mixedScale.sy)
 
                             DIProvider.tempModelContext().update(widgetId, {sx: mixedScale.sx, sy: mixedScale.sy})

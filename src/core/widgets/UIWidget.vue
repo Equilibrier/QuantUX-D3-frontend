@@ -648,13 +648,19 @@ export default {
         if (parsedStruct.rotate) {
             outp += `rotate(${parsedStruct.rotate}deg) `
         }
-        if (parsedStruct.Scale) {
+        if (parsedStruct.scale) {
             outp += `scale(${parsedStruct.scale[0]},${parsedStruct.scale[1]}) `
         }
         return outp
     },
 
+    __orderCssTransfs(rawStr) {
+        return this.__buildCssTransf(this.__parseCssTransf(rawStr))
+    },
+
     __applyTransform(cssTransform) {
+      console.log(`cosmin: postscale-anim: ${cssTransform}`)
+
       // console.log(`posttransform: param ${cssTransform}`)
       // console.log(`posttransform: previous this.domNode.style.webkitTransform ${this.domNode.style.webkitTransform}`)
       this.domNode.style.transform = cssTransform
@@ -675,7 +681,7 @@ export default {
         // }
         if (givenTransf.translate && givenTransf.rotate && givenTransf.scale) {
           console.log(`posttransform: apply given css`)
-          this.__applyTransform(cssTransform)
+          this.__applyTransform(this.__orderCssTransfs(cssTransform))
         }
         else {
           let transfRemainder = ""
@@ -688,7 +694,7 @@ export default {
           if (existentTransf.rotate && !givenTransf.rotate) {
             transfRemainder += `rotate(${existentTransf.rotate}deg) `
           }
-          this.__applyTransform(transfRemainder + cssTransform)
+          this.__applyTransform(this.__orderCssTransfs(transfRemainder + cssTransform))
         }
 
         console.error(`Cosmin: postTransform: ${cssTransform} | ${oldStyle} | ${JSON.stringify(existentTransf)} | ${this.domNode.style.transform}`)
@@ -716,9 +722,9 @@ export default {
               transfRemainder += `scale(${existentTransf.scale[0]},${existentTransf.scale[1]}) `
             }
 
-            this.__applyTransform(transfRemainder + ctrans)
-            console.log(`cosmin: postscale-anim: ${transfRemainder + ctrans}`)
-            console.log(`postrot: c-rot: ${ctrans}, after: ${this.domNode.style.transform}`)
+            this.__applyTransform(this.__orderCssTransfs(transfRemainder + ctrans))
+            //console.log(`cosmin: postscale-anim: ${transfRemainder + ctrans}`)
+            //console.log(`postrot: c-rot: ${ctrans}, after: ${this.domNode.style.transform}`)
         } else {
             console.warn("No anim node");
         }
@@ -763,8 +769,8 @@ export default {
           if (existentTransf.scale) {
             transfRemainder += `scale(${existentTransf.scale[0]},${existentTransf.scale[1]}) `
           }
-          this.__applyTransform(transfRemainder + trans)
-          console.log(`cosmin: postscale-anim: ${transfRemainder + trans}`)
+          this.__applyTransform(this.__orderCssTransfs(transfRemainder + trans))
+          //console.log(`cosmin: postscale-anim: ${transfRemainder + trans}`)
 
         } else {
           console.warn("No anim node");

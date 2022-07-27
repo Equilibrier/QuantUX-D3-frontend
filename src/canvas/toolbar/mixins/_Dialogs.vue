@@ -864,6 +864,7 @@ export default {
 
 		startSimulator () {
 			
+			DIProvider.uiWidgetsActionQueue().reset()
 			DIProvider.tempModelContext().resetModel(this.model)
 			DIProvider.setSimulatorStartState(true)
 

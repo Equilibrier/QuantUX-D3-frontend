@@ -76,6 +76,8 @@ class QModel {
     }
 
     getPosition() {
+        this.__initTransformFactors()
+
         const pscr = this.__getParentScreen(this.qModel, this.api.app);
         return {
             x: this.qModel.x - pscr.x + this.qModel.tx / this.api.scalingFactor,
@@ -91,6 +93,8 @@ class QModel {
     }
 
     getScale() {
+        this.__initTransformFactors()
+
         return {
             sx: this.qModel.sx,
             sy: this.qModel.sy
@@ -108,7 +112,22 @@ class QModel {
         }
     }
 
+    __initTransformFactors() {
+        if (this.qModel.tx === undefined || this.qModel.ty === undefined) {
+            this.qModel.tx = 0
+            this.qModel.ty = 0
+        }
+        if (this.qModel.sx === undefined || this.qModel.sy === undefined) {
+            this.qModel.sx = 1
+            this.qModel.sy = 1
+        }
+        if (this.qModel.rotAngDegrees === undefined) {
+            this.qModel.rotAngDegrees = 0
+        }
+    }
+
     setPosition(nx, ny) {
+        this.__initTransformFactors()
         
         const {x, y} = this.getPosition();
         // console.error(`old pos: ${x}-${y}`)
@@ -131,6 +150,8 @@ class QModel {
     }
 
     rotateDegrees(degrees) {
+        this.__initTransformFactors()
+
         this.qModel.rotAngDegrees = this.qModel.rotAngDegrees === undefined || isNaN(this.qModel.rotAngDegrees) ? 0.0 : this.qModel.rotAngDegrees;
         this.qModel.rotAngDegrees += degrees
 
@@ -143,6 +164,8 @@ class QModel {
     }
 
     scale(sx, sy = undefined) {
+        this.__initTransformFactors()
+
         this.qModel.sx = sx;
         this.qModel.sy = sy !== undefined ? sy : sx;
         
@@ -155,6 +178,7 @@ class QModel {
     }
 
     getRotationDegrees() {
+        this.__initTransformFactors()
         return this.qModel.rotAngDegrees
     }
 
