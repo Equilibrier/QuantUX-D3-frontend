@@ -102,7 +102,7 @@ export class UIWidgetsActionQueue {
             anim.onRender(p => {
                 if (widget) {
                     try {
-                        if (toStyle) {
+                        if (fromStyle && toStyle) {
                             //console.error(`\n*********************fromStyle: ${JSON.stringify(fromStyle)}; toStyle: ${JSON.stringify(toStyle)}\n******************************`)
                             var mixedStyle = me.getAnimationMixedStyle(fromStyle, toStyle, p);
                             widget.setAnimatedStyle(mixedStyle);
