@@ -30,8 +30,20 @@ export function applyChange(model, change, renderFactory, databindings) {
                 DIProvider.tempModelContext().update(element.id, {rotAngDegrees})
             })
         }
+        else if (change.key.toLowerCase() === "scale") {
+            const {sx, sy} = change.props;
+            DIProvider.uiWidgetsActionQueue().pushAction(element.id, "scale", `scale(${sx},${sy}) `, (action, payload) => {
+                console.log(action ? "" : "") // dummy params, but err if I do not do this (strict-mode compilation)
+                console.log(payload ? "" : "")
+
+                // const model = DIProvider.tempModelContext().currentModel();
+                //const el = model.widgets[element.id] || model.groups[element.id]
+
+                DIProvider.tempModelContext().update(element.id, {sx, sy})
+            })
+        }
         else if (change.key.toLowerCase() === "animate") {
-            const {styleFrom, styleTo, posFrom, posTo, rotDegFrom, rotDegTo, durationMs} = change.props;
+            const {styleFrom, styleTo, posFrom, posTo, rotDegFrom, rotDegTo, scaleFrom, scaleTo, durationMs} = change.props;
             const posOffset = change.props.posOffset ? change.props.posOffset : {x: 0, y: 0}
             const delayMs = 0;
             
@@ -40,7 +52,7 @@ export function applyChange(model, change, renderFactory, databindings) {
 
             DIProvider.asyncScheduler().triggerAnimationStarted(element.id)
 
-            DIProvider.uiWidgetsActionQueue().pushAction(element.id, "animate", {styleFrom, styleTo, posFrom, posTo, rotDegFrom, rotDegTo, durationMs, delayMs, posOffset}, (action, payload) => {
+            DIProvider.uiWidgetsActionQueue().pushAction(element.id, "animate", {styleFrom, styleTo, posFrom, posTo, rotDegFrom, rotDegTo, scaleFrom, scaleTo, durationMs, delayMs, posOffset}, (action, payload) => {
                 console.log(action ? "" : "") // dummy params, but err if I do not do this (strict-mode compilation)
                 console.log(payload ? "" : "")
 

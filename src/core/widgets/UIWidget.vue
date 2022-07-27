@@ -606,40 +606,51 @@ export default {
     },
 
     __parseCssTransf(str) {
-        let tokens = str.split(";")
-        //console.log(tokens[0].trim())
-        let rotCode = tokens.length > 0 && tokens[0].toLowerCase().search('rotate') >= 0 ? tokens[0].toLowerCase().trim() : (tokens.length > 1 && tokens[1].toLowerCase().search('rotate') >= 0 ? tokens[1].toLowerCase().trim() : (tokens.length > 2 && tokens[2].toLowerCase().search('rotate') >= 0 ? tokens[2].toLowerCase().trim() : undefined))
-        let translCode = tokens.length > 0 && tokens[0].toLowerCase().search('translate') >= 0 ? tokens[0].toLowerCase().trim() : (tokens.length > 1 && tokens[1].toLowerCase().search('translate') >= 0 ? tokens[1].toLowerCase().trim() : (tokens.length > 2 && tokens[2].toLowerCase().search('translate') >= 0 ? tokens[2].toLowerCase().trim() : undefined))
-        let scaleCode = tokens.length > 0 && tokens[0].toLowerCase().search('scale') >= 0 ? tokens[0].toLowerCase().trim() : (tokens.length > 1 && tokens[1].toLowerCase().search('scale') >= 0 ? tokens[1].toLowerCase().trim() : (tokens.length > 2 && tokens[2].toLowerCase().search('scale') >= 0 ? tokens[2].toLowerCase().trim() : undefined))
-        //console.log(rotCode)
-        //console.log(translCode)
+        str = str.replaceAll(' ', '')
+        const scaleReg = /.*scale.*?\((.*?)\).*/.exec(str)
+        const translateReg = /.*translate.*?\((.*?)\).*/.exec(str)
+        const rotateReg = /.*rotate.*?\((.*?)\).*/.exec(str)
+
+        let rotCode = rotateReg && rotateReg.length > 0 ? rotateReg[1] : null
+        let translCode = translateReg && translateReg.length > 0 ? translateReg[1] : null
+        let scaleCode = scaleReg && scaleReg.length > 0 ? scaleReg[1] : null
+        
         let outp = {}
         if (rotCode) {
-          let rotNumRaw = /.*\(\s*(.*)\s*deg\s*\)/.exec(rotCode)
+          let rotNumRaw = /(.*)deg/.exec(rotCode)
           if (rotNumRaw && rotNumRaw.length >= 2) {
             outp.rotate = parseFloat(rotNumRaw[1])
           }
         }
         if (translCode) {
-          let translNumRaw = /.*\(\s*(.*)\s*px\s*\,\s*(.*)\s*px\s*\)/.exec(translCode)
+          let translNumRaw = /(.*)px\,(.*)px/.exec(translCode)
           if (translNumRaw && translNumRaw.length >= 3) {
             outp.translate = [parseFloat(translNumRaw[1]), parseFloat(translNumRaw[2])]
           }
         }
         if (scaleCode) {
-          let scaleNumRaw = /.*\(\s*(.*)\s*\,\s*(.*)\s*\)/.exec(scaleCode)
+          let scaleNumRaw = /(.*)\,(.*)/.exec(scaleCode)
           if (scaleNumRaw && scaleNumRaw.length >= 3) {
             outp.scale = [parseFloat(scaleNumRaw[1]), parseFloat(scaleNumRaw[2])]
           }
           else {
-            scaleNumRaw = /.*\(\s*(.*)\s*\)/.exec(scaleCode) // one dimension scale, as an exception
-            if (scaleNumRaw && scaleNumRaw.length >= 2) {
-              outp.scale = [parseFloat(scaleNumRaw[1]), parseFloat(scaleNumRaw[1])]
-            }
+            outp.scale = [parseFloat(scaleCode), parseFloat(scaleCode)] // one dimension scale, as an exception
           }
         }
-        // console.log(rotNumRaw)
-        // console.log(translNumRaw)
+        return outp
+    },
+
+    __buildCssTransf(parsedStruct) {
+        let outp = ""
+        if (parsedStruct.translate) {
+            outp += `translate(${parsedStruct.translate[0]}px,${parsedStruct.translate[1]}px) `
+        }
+        if (parsedStruct.rotate) {
+            outp += `rotate(${parsedStruct.rotate}deg) `
+        }
+        if (parsedStruct.Scale) {
+            outp += `scale(${parsedStruct.scale[0]},${parsedStruct.scale[1]}) `
+        }
         return outp
     },
 
@@ -652,6 +663,8 @@ export default {
     },
 
     postTransform(cssTransform) {
+        console.log(`cosmin: postscale: postTransform(${cssTransform})`)
+
         let oldStyle = this.domNode.style.transform;
 
         let givenTransf = this.__parseCssTransf(cssTransform)
@@ -660,24 +673,31 @@ export default {
         // if (existentTransf.scale) {
         //   prefix = `scale(${existentTransf.scale[0]},${existentTransf.scale[1]}) `;
         // }
-        if (givenTransf.translate && givenTransf.rotate) {
+        if (givenTransf.translate && givenTransf.rotate && givenTransf.scale) {
           console.log(`posttransform: apply given css`)
           this.__applyTransform(cssTransform)
         }
-        else if (givenTransf.translate) {
-          console.log(`posttransform: previous ${existentTransf.rotate ? "has" : "does not have"} rotation, so apply ${existentTransf.rotate ? 'that and' : 'only'} given transform`)
-          this.__applyTransform((existentTransf.rotate ? `rotate(${existentTransf.rotate}deg) ` : "") + cssTransform)
-        }
-        else if (givenTransf.rotate) {
-          console.log(`posttransform: previous ${existentTransf.translate ? "has" : "does not have"} translation, so apply ${existentTransf.translate ? 'that and' : 'only'} given transform`)
-          this.__applyTransform((existentTransf.translate ? `translate(${existentTransf.translate[0]}px,${existentTransf.translate[1]}px) ` : "") + cssTransform)
-        }
         else {
-          console.error(`posttransform: untreated case`)
+          let transfRemainder = ""
+          if (existentTransf.translate && !givenTransf.translate) {
+            transfRemainder += `translate(${existentTransf.translate[0]}px,${existentTransf.translate[1]}px) `
+          }
+          if (existentTransf.scale && !givenTransf.scale) {
+            transfRemainder += `scale(${existentTransf.scale[0]},${existentTransf.scale[1]}) `
+          }
+          if (existentTransf.rotate && !givenTransf.rotate) {
+            transfRemainder += `rotate(${existentTransf.rotate}deg) `
+          }
+          this.__applyTransform(transfRemainder + cssTransform)
         }
 
         console.error(`Cosmin: postTransform: ${cssTransform} | ${oldStyle} | ${JSON.stringify(existentTransf)} | ${this.domNode.style.transform}`)
         console.error(`Cosmin: postTransform: '${this.domNode.style.transform}'`) 
+    },
+
+    setAnimatedScale(sx, sy) {
+      console.log(`cosmin: postscale: setAnimatedScale(${sx}, ${sy})`)
+      this.postTransform(`scale(${sx}, ${sy})`)
     },
 
     setAnimatedRot(degrees) {
@@ -687,7 +707,17 @@ export default {
             let ctrans = `rotate(${degrees}deg)`;
             // console.log(`anim: setting translation to ${JSON.stringify(trans)}`)
             let existentTransf = this.__parseCssTransf(this.domNode.style.transform || this.domNode.style.webkitTransform)
-            this.__applyTransform((existentTransf.translate ? `translate(${existentTransf.translate[0]}px,${existentTransf.translate[1]}px) ` : "") + ctrans)
+
+            let transfRemainder = ""
+            if (existentTransf.translate) {
+              transfRemainder += `translate(${existentTransf.translate[0]}px,${existentTransf.translate[1]}px) `
+            }
+            if (existentTransf.scale) {
+              transfRemainder += `scale(${existentTransf.scale[0]},${existentTransf.scale[1]}) `
+            }
+
+            this.__applyTransform(transfRemainder + ctrans)
+            console.log(`cosmin: postscale-anim: ${transfRemainder + ctrans}`)
             console.log(`postrot: c-rot: ${ctrans}, after: ${this.domNode.style.transform}`)
         } else {
             console.warn("No anim node");
@@ -726,7 +756,15 @@ export default {
           // console.log(`anim: setting translation to ${JSON.stringify(trans)}`)
           
           let existentTransf = this.__parseCssTransf(this.domNode.style.transform || this.domNode.style.webkitTransform)
-          this.__applyTransform((existentTransf.rotate ? `rotate(${existentTransf.rotate}deg) ` : "") + trans)
+          let transfRemainder = ""
+          if (existentTransf.rotate) {
+            transfRemainder += `rotate(${existentTransf.rotate}deg) `
+          }
+          if (existentTransf.scale) {
+            transfRemainder += `scale(${existentTransf.scale[0]},${existentTransf.scale[1]}) `
+          }
+          this.__applyTransform(transfRemainder + trans)
+          console.log(`cosmin: postscale-anim: ${transfRemainder + trans}`)
 
         } else {
           console.warn("No anim node");

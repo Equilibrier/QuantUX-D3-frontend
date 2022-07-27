@@ -90,6 +90,13 @@ class QModel {
         }
     }
 
+    getScale() {
+        return {
+            sx: this.qModel.sx,
+            sy: this.qModel.sy
+        }
+    }
+
     getBoundingBox() {
         const pscr = this.__getParentScreen(this.qModel, this.api.app);
         
@@ -135,11 +142,23 @@ class QModel {
         })
     }
 
+    scale(sx, sy = undefined) {
+        this.qModel.sx = sx;
+        this.qModel.sy = sy !== undefined ? sy : sx;
+        
+        this.api.appDeltas.push({
+            type: this.type,
+            key: 'scale',
+            id: this.qModel.id,
+            props: {sx: this.qModel.sx, sy: this.qModel.sy}
+        })
+    }
+
     getRotationDegrees() {
         return this.qModel.rotAngDegrees
     }
 
-    animate(durationMs, posTo, styleFrom = undefined, styleTo = undefined, rotDegTo = undefined) {
+    animate(durationMs, posTo, styleFrom = undefined, styleTo = undefined, rotDegTo = undefined, scaleTo = undefined) {
         console.log(styleTo ? "" : "")
 
         const posFrom = this.getPosition();
@@ -149,17 +168,13 @@ class QModel {
         posFrom.y *= this.api.scalingFactor
 
         const rotDegFrom = this.getRotationDegrees()
+        const scaleFrom = this.getScale()
         
-        // posTo.x += this.qModel.tx
-        // posTo.y += this.qModel.ty
-
-        // console.error(`posTo: ${JSON.stringify(posTo)}; posFrom: ${JSON.stringify(posFrom)}`)
-
         this.api.appDeltas.push({
             type: this.type,
             key: 'animate',
             id: this.qModel.id,
-            props: {styleFrom: styleFrom, styleTo, posFrom: posTo, posTo: posFrom, rotDegFrom, rotDegTo, durationMs, posOffset: {x: this.qModel.tx, y: this.qModel.ty}}
+            props: {styleFrom: styleFrom, styleTo, posFrom: posTo, posTo: posFrom, rotDegFrom, rotDegTo, scaleFrom, scaleTo, durationMs, posOffset: {x: this.qModel.tx, y: this.qModel.ty}}
         })
     }
 }

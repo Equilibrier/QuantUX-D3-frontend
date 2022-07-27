@@ -442,7 +442,7 @@ export default class RenderFactory extends Core {
 
 				const wobj = this._uiWidgets[model.id]
 	
-				DIProvider.uiWidgetsActionQueue().consumeActions(model.id, w, () => {
+				DIProvider.uiWidgetsActionQueue().consumeActions(model.id, w, () => {}, () => {
 	
 					let mmodel = DIProvider.tempModelContext().currentModelForReadOnly();
 					mmodel = mmodel.widgets[model.id] ? mmodel.widgets[model.id] : undefined;
@@ -453,6 +453,10 @@ export default class RenderFactory extends Core {
 						if (mmodel.rotAngDegrees !== undefined) {
 							console.log(`posttransform: mmodel: ${mmodel.rotAngDegrees}`)
 							wobj.postTransform(`rotate(${mmodel.rotAngDegrees}deg) `)
+						}
+						if (mmodel.sx !== undefined && mmodel.sy !== undefined) {
+							console.log(`postscale: mmodel: ${mmodel.sx}, ${mmodel.sy}`)
+							wobj.postTransform(`scale(${mmodel.sx}, ${mmodel.sy}) `)
 						}
 						if (mmodel.postStyle !== undefined) {
 							wobj.setStyle(mmodel.postStyle)

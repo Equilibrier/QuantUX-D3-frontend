@@ -67,6 +67,13 @@ export class UIWidgetsActionQueue {
                 var mixed = fromRot + (toRot - fromRot) * f;
                 return mixed;
             }
+            const getAnimationMixedScale = (fromScale, toScale, p) => {
+                var f = (1 - p);
+                var sx = fromScale.sx + (toScale.sx - fromScale.sx) * f;
+                var sy = fromScale.sy + (toScale.sy - fromScale.sy) * f;
+                return {sx,sy};
+            }
+
             var anim = animFactory.createAnimation();
             anim.duration = event.duration;
             anim.delay = event.delay;
@@ -82,6 +89,8 @@ export class UIWidgetsActionQueue {
             var toPos = event.to.pos;
             var fromRot = event.from.rot
             var toRot = event.to.rot
+            var fromScale = event.from.scale
+            var toScale = event.to.scale
 
             console.log(`postrot: from: ${fromRot}, to: ${toRot}`)
 
@@ -118,6 +127,14 @@ export class UIWidgetsActionQueue {
                             DIProvider.tempModelContext().update(widgetId, {rotAngDegrees: mixedRot})
                         }
 
+                        if (toScale && fromScale) {
+                            var mixedScale = getAnimationMixedScale(fromScale, toScale, 1 - p)
+                            console.log(`cosmin: postscale-anim: ${JSON.stringify(mixedScale)}`)
+                            widget.setAnimatedScale(mixedScale.sx, mixedScale.sy)
+
+                            DIProvider.tempModelContext().update(widgetId, {sx: mixedScale.sx, sy: mixedScale.sy})
+                        }
+
                     } catch (e) {
                         console.error("WidgetAnimation.render() >  ", e);
                         console.error("WidgetAnimation.render() >  ", e.stack);
@@ -135,13 +152,7 @@ export class UIWidgetsActionQueue {
             this.currentPendingActions[action] = this.currentPendingActions[action] ? this.currentPendingActions[action] : {}
             this.currentPendingActions[action][widgetId] = 'just-a-maker'
 
-            if (action.toLowerCase() === "translate") {
-                widget.postTransform(payload);
-                delete this.currentPendingActions[action][widgetId]
-                resolve(true)
-            }
-            else if (action.toLowerCase() === "rotate") {
-                console.log(`posttransform: payload: ${payload}`)
+            if (action.toLowerCase() === "translate" || action.toLowerCase() === "rotate" || action.toLowerCase() === "scale") {
                 widget.postTransform(payload);
                 delete this.currentPendingActions[action][widgetId]
                 resolve(true)
@@ -153,12 +164,14 @@ export class UIWidgetsActionQueue {
                     from: {
                         style: payload.styleFrom,
                         pos: payload.posFrom,
-                        rot: payload.rotDegFrom
+                        rot: payload.rotDegFrom,
+                        scale: payload.scaleFrom
                     },
                     to: {
                         style: payload.styleTo,
                         pos: payload.posTo,
-                        rot: payload.rotDegTo
+                        rot: payload.rotDegTo,
+                        scale: payload.scaleTo
                     },
                     posOffset: payload.posOffset
                 }
@@ -195,8 +208,10 @@ export class UIWidgetsActionQueue {
         }
     }
 
-    async consumeActions(widgetId, widget, doneClbk = () => {}) {
+    async consumeActions(widgetId, widget, doneClbk = () => {}, beforeClbk = () => {}) {
         
+        beforeClbk()
+
         const scheduled = this.queue[widgetId];
         if (!scheduled) { doneClbk(); return }
 
