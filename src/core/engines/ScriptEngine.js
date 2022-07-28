@@ -61,7 +61,7 @@ export default class ScriptEngine {
     }
 
     onMessage (message, resolve, reject, start) {
-        console.error(`worker msg: ${JSON.stringify(message.data)}`)
+        //console.error(`worker msg: ${JSON.stringify(message.data)}`)
         if (message.data.key && message.data.key === "stop-animation") {
             const {animId} = message.data.props;
             DIProvider.uiWidgetsActionQueue().stopAnimation(animId)

@@ -15,8 +15,10 @@ export class AsyncScheduler {
         return id
     }
     async _call(key, payload) {
+        console.warn(`^^^^^^^^^^^ cosmin:suntem: _clbks: ${JSON.stringify(this._clbks)}`)
         for (let clbk of Object.values(this._clbks[key])) {
-            await clbk(payload)
+            //await clbk(payload)
+            clbk(payload)
         }
         // do something else ?!... like trigger a callback-called notification somewhere
     }

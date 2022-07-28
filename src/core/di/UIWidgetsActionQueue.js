@@ -45,6 +45,7 @@ export class UIWidgetsActionQueue {
                 console.warn(`...consuming the action right now`)
                 //if (await this.__consumeAction(widg, action, payload, widgetId)) {
                 this.__consumeAction(widg, action, payload, widgetId).then(succeeded => {
+                    console.error(`cosmin:suntem:stopanim: action COMPLETE for widget ${widgetId}, payload: ${JSON.stringify(payload)}`)
                     if (succeeded) {
                         clbk(action, payload);
                     }
@@ -75,11 +76,19 @@ export class UIWidgetsActionQueue {
         return count;
     }
 
+    __noMoreActions(action) {
+        console.error(`cosmin:suntem:stopanim:${JSON.stringify(this.currentPendingActions)}`)
+        console.error(`cosmin:suntem:stopanim: no-actions?: ${!this.actionsPendingCount(action) && (!this.currentPendingActions[action] || (this.currentPendingActions[action] && Object.values(this.currentPendingActions[action]).filter(e => e > 0).length <= 0))}`)
+        return !this.actionsPendingCount(action) && (!this.currentPendingActions[action] || (this.currentPendingActions[action] && Object.values(this.currentPendingActions[action]).filter(e => e > 0).length <= 0));
+    }
+
     registerNoMoreActionsListener(action, clbk = () => {}) {
-        if (!this.actionsPendingCount(action) && Object.values(this.currentPendingActions).filter(e => Object.values(e).length > 0).length <= 0) {
+        // if already no more actions, we call the clbk right now...
+        if (!this.__noMoreActions(action)) {
             clbk()
             return
         }
+        // otherwise we register the listener for later use...
         this.noActionsNotifsPending[action] = this.noActionsNotifsPending[action] ? this.noActionsNotifsPending[action] : []
         this.noActionsNotifsPending[action].push(clbk)
     }
@@ -87,6 +96,7 @@ export class UIWidgetsActionQueue {
     async __consumeAction(widget, action, payload, widgetId = -1) {
 
         const createAnimation = (animFactory, event) => {
+
             const getAnimationMixedRot = (fromRot, toRot, p) => {
                 var f = (1 - p);
                 var mixed = fromRot + (toRot - fromRot) * f;
@@ -171,11 +181,11 @@ export class UIWidgetsActionQueue {
             console.log(reject ? "" : "")
 
             this.currentPendingActions[action] = this.currentPendingActions[action] ? this.currentPendingActions[action] : {}
-            this.currentPendingActions[action][widgetId] = 'just-a-maker'
+            this.currentPendingActions[action][widgetId] = this.currentPendingActions[action][widgetId] !== undefined ? this.currentPendingActions[action][widgetId] + 1 : 1;
 
             if (action.toLowerCase() === "translate" || action.toLowerCase() === "rotate" || action.toLowerCase() === "scale") {
                 widget.postTransform(payload);
-                delete this.currentPendingActions[action][widgetId]
+                this.currentPendingActions[action][widgetId] --;
                 resolve(true)
             }
             else if (action.toLowerCase() === "animate") {
@@ -187,6 +197,13 @@ export class UIWidgetsActionQueue {
                     this.animStoppers[payload.animId] = {
                         stopIt: false
                     }
+                }
+                if (payload.cyclic) {
+                    console.warn(`cosmin:suntem:stopanim: decrementing cyclic anim (no no-action hang) for widget id ${widgetId}, payload: ${JSON.stringify(payload)}`)
+                    this.currentPendingActions[action][widgetId] --; // eliminating the counter because this animation will never end by itself, it will be ended explicit, and if so, you can do your logic at that time in JS-script
+                }
+                else {
+                    console.warn(`cosmin:suntem:stopanim: non-cyclic anim for widget id ${widgetId}: ${JSON.stringify(payload)}`)
                 }
 
                 let iparams = true;
@@ -224,19 +241,26 @@ export class UIWidgetsActionQueue {
                     //anim.onEnd(lang.hitch(this, "onAnimationEnded", e.id));
                     anim.onEnd(() => {
                         if (!payload.cyclic) {
-                            delete this.currentPendingActions[action][widgetId]
+                            console.error(`cosmin:suntem:stopanim: action COMPLETE(2) for widget ${widgetId}`)
+                        }
+
+                        if (!payload.cyclic) {
+                            this.currentPendingActions[action][widgetId] --;
                             resolve(true)
                         }
                         else {
-                            if (!(payload.animId !== undefined && this.animStoppers[payload.animId] !== undefined && this.animStoppers[payload.animId].stopIt)) {
+                            if (!(payload.animId !== undefined && this.animStoppers[payload.animId] && this.animStoppers[payload.animId].stopIt)) {
                                 doAnimate(iparams)
                                 iparams = !iparams;
                             }
                             else {
+                                console.log(`cosmin:stopanim: stopped animation for ${payload.animId}`)
                                 if (payload.animId !== undefined && this.animStoppers[payload.animId]) {
                                     this.animStoppers[payload.animId].clbk(payload.animId)
                                     delete this.animStoppers[payload.animId];
+                                    console.log(`cosmin:stopanim: deleted stopper for ${payload.animId}`)
                                 }
+                                this.currentPendingActions[action][widgetId] --;
                                 resolve(true)
                             }
                         }
@@ -246,7 +270,7 @@ export class UIWidgetsActionQueue {
             }
             else {
                 console.warn(`widget action '${action}' (with payload "${JSON.stringify(payload)}") for widget id ${widgetId} is unknown and it was ignored...`);
-                delete this.currentPendingActions[action][widgetId]
+                this.currentPendingActions[action][widgetId] --
                 resolve(false)
             }
         });
@@ -254,13 +278,17 @@ export class UIWidgetsActionQueue {
 
     __notifyNoAction(action) {
         if (this.noActionsNotifsPending[action]) {
-            if (!this.actionsPendingCount(action)) {
+            //if (!this.actionsPendingCount(action)) {
+            if (this.__noMoreActions(action)) {
                 console.warn(`NOTIFYING no-action...`)
                 for (let noaClbk of this.noActionsNotifsPending[action]) {
                     noaClbk()
                 }
                 this.noActionsNotifsPending[action] = []
             }
+        }
+        else {
+            console.warn(`cosmin: suntem: no no-more-action listeners registered for action ${action}; whoel struct here: ${JSON.stringify(this.noActionsNotifsPending)}`)
         }
     }
 
@@ -284,8 +312,11 @@ export class UIWidgetsActionQueue {
             const p = this.__consumeAction(widget, action, payload, widgetId)
             iPs.push(p)
             p.then((succeeded) => {
+                console.error(`cosmin:suntem:stopanim: action COMPLETE for widget ${widgetId}, payload: ${JSON.stringify(payload)}`)
                 !succeeded ? console.error(`error trying to execute previous action`) : {}
-                clbk(action, payload);
+                if (succeeded) {
+                    clbk(action, payload);
+                }
                 this.__notifyNoAction(action)
             })
         }

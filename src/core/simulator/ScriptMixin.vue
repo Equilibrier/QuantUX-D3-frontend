@@ -132,10 +132,8 @@ export default {
                 // DIProvider.asyncScheduler().unschedule(sched1)
                 DIProvider.asyncScheduler().unschedule(sched)
                 // running default transition logic...
-                if (!(result.to !== undefined && this.dataBindingValues.loopScreen !== undefined && result.to.toLowerCase() === this.dataBindingValues.loopScreen.toLowerCase())) {
-                    console.warn(`cosmin:tryRenderScriptedScreenTransition: to ${result.to}, previousScreen: ${this.dataBindingValues.__sourceScreen}`)
-                    this.tryRenderScriptedScreenTransition(result, null, orginalLine)
-                }
+                console.warn(`cosmin:tryRenderScriptedScreenTransition: to ${result.to}, previousScreen: ${this.dataBindingValues.__sourceScreen}`)
+                this.tryRenderScriptedScreenTransition(result, null, orginalLine)
             }
 
             const result = await runScript()
@@ -198,16 +196,23 @@ export default {
 
                             if (ttargetScreen || endConditionReached(rresult, endLoopDataBinding)) {
 
-                                if ((ttargetScreen && rresult.immediateTransition) || endConditionReached(rresult, endLoopDataBinding)) {
-                                    stopLoop(rresult, sched2)
-                                    resolve(rresult)
-                                }
-                                else {
-                                    DIProvider.uiWidgetsActionQueue().registerNoMoreActionsListener('animate', () => {
+                                // if there is no transition (loop) to the same screen and end-loop condition was not reached
+                                if (!(result.to !== undefined && this.dataBindingValues.loopScreen !== undefined && result.to.toLowerCase() === this.dataBindingValues.loopScreen.toLowerCase() && !endConditionReached(rresult, endLoopDataBinding))) {
+                                    
+                                    if ((ttargetScreen && rresult.immediateTransition) || endConditionReached(rresult, endLoopDataBinding)) {
+                                        console.warn(`cosmin:suntem:next-screen-loop -> immediatetransition`)
                                         stopLoop(rresult, sched2)
                                         resolve(rresult)
-                                    });
+                                    }
+                                    else {
+                                        DIProvider.uiWidgetsActionQueue().registerNoMoreActionsListener('animate', () => {
+                                            console.warn(`cosmin:suntem:next-screen-loop -> nomoreactions`)
+                                            stopLoop(rresult, sched2)
+                                            resolve(rresult)
+                                        });
+                                    }
                                 }
+
                             }
                         }
 
@@ -217,7 +222,8 @@ export default {
                         // })
                         sched2 = DIProvider.asyncScheduler().scheduleForAnimationEnded(async () => {
                             console.error(`^^^^^^^^^^^^^^^^^ animation event (ended)`)
-                            await doLoopbackScriptRun()
+                            //await doLoopbackScriptRun()
+                            doLoopbackScriptRun()
                         })
                     }
 

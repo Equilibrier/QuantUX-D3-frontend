@@ -659,7 +659,7 @@ export default {
     },
 
     __applyTransform(cssTransform) {
-      console.log(`cosmin: postscale-anim: ${cssTransform}`)
+      //console.log(`cosmin: postscale-anim: ${cssTransform}`)
 
       // console.log(`posttransform: param ${cssTransform}`)
       // console.log(`posttransform: previous this.domNode.style.webkitTransform ${this.domNode.style.webkitTransform}`)
