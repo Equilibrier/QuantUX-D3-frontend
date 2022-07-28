@@ -182,7 +182,7 @@ class QModel {
         return this.qModel.rotAngDegrees
     }
 
-    animate(durationMs, params) {
+    animate(durationMs, params, id=undefined) {
         
         if (params.posTo !== undefined) {
             params.posFrom = this.getPosition();
@@ -200,11 +200,13 @@ class QModel {
         }
         
         this.api.appDeltas.push({
+            animId: id,
             type: this.type,
             key: 'animate',
             id: this.qModel.id,
             props: {
                 durationMs,
+                cyclic: params.cyclic !== undefined ? params.cyclic : false,
                 styleFrom: params.styleFrom, 
                 styleTo: params.styleTo, 
                 posFrom: params.posTo, 

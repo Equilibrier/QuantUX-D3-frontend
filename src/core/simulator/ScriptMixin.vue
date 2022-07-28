@@ -132,7 +132,10 @@ export default {
                 // DIProvider.asyncScheduler().unschedule(sched1)
                 DIProvider.asyncScheduler().unschedule(sched)
                 // running default transition logic...
-                this.tryRenderScriptedScreenTransition(result, null, orginalLine)
+                if (!(result.to !== undefined && this.dataBindingValues.loopScreen !== undefined && result.to.toLowerCase() === this.dataBindingValues.loopScreen.toLowerCase())) {
+                    console.warn(`cosmin:tryRenderScriptedScreenTransition: to ${result.to}, previousScreen: ${this.dataBindingValues.__sourceScreen}`)
+                    this.tryRenderScriptedScreenTransition(result, null, orginalLine)
+                }
             }
 
             const result = await runScript()
@@ -171,6 +174,8 @@ export default {
                         }
                         // let sched1;
                         let sched2;
+
+                        this.dataBindingValues.loopScreen = result.to !== undefined ? result.to : this.dataBindingValues.__sourceScreen;
 
                         const doLoopbackScriptRun = async () => {
                             const rresult = await runScript()

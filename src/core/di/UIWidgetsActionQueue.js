@@ -9,6 +9,7 @@ export class UIWidgetsActionQueue {
         this.noActionsNotifsPending = {}
         this.currentPendingActions = {}
         this.renderFactory = renderFactory;
+        this.animStoppers = {};
     }
 
     reset() {
@@ -21,6 +22,17 @@ export class UIWidgetsActionQueue {
         this.renderFactory = ref;
     }
 
+    stopAnimation(animId, terminateClbk = () => {}) {
+        if (this.animStoppers[animId] === undefined) {
+            console.warn(`UIWidgetsActionQueue: stopAnimation: Animation with id ${animId} does not exist !`)
+            return;
+        }
+        this.animStoppers[animId] = { // for now it will only stop cyclic-animation on next cycle, not a started one-cycle animation during animation-progress (TODO this can be done if I modify the Animation.js and put a terminating fanion along side the p===1 check)
+            stopIt: true, // true means: "please, stop it as soon as possible"
+            clbk: terminateClbk
+        };
+    }
+
     async pushAction(widgetId, action, payload, clbk = (action, payload) => {console.log(`${action?"":""}${payload?"":""}`)}) {
         console.warn(`pushAction(${widgetId}, ${action}, ${payload})...`)
 
@@ -28,10 +40,14 @@ export class UIWidgetsActionQueue {
             const widg = this.renderFactory.getUIWidget({id: widgetId})
             if (widg) {
                 console.warn(`...consuming the action right now`)
-                if (await this.__consumeAction(widg, action, payload, widgetId)) {
-                    clbk(action, payload);
-                }
-                this.__notifyNoAction(action)
+                //if (await this.__consumeAction(widg, action, payload, widgetId)) {
+                this.__consumeAction(widg, action, payload, widgetId).then(succeeded => {
+                    if (succeeded) {
+                        clbk(action, payload);
+                    }
+                    this.__notifyNoAction(action)
+                });
+                //}
                 return true;
             }
         }
@@ -87,7 +103,6 @@ export class UIWidgetsActionQueue {
             if (event.easing) {
                 anim.setEasing(event.easing);
             }
-
 
             var fromStyle = event.from.style;
             var fromPos = event.from.pos;
@@ -161,35 +176,65 @@ export class UIWidgetsActionQueue {
                 resolve(true)
             }
             else if (action.toLowerCase() === "animate") {
-                const animEvent = {
-                    duration: payload.durationMs,
-                    delay: payload.delayMs,
-                    from: {
-                        style: payload.styleFrom,
-                        pos: payload.posFrom,
-                        rot: payload.rotDegFrom,
-                        scale: payload.scaleFrom
-                    },
-                    to: {
-                        style: payload.styleTo,
-                        pos: payload.posTo,
-                        rot: payload.rotDegTo,
-                        scale: payload.scaleTo
-                    },
-                    posOffset: payload.posOffset
+
+                if (payload.animId !== undefined && this.animStoppers[payload.animId] !== undefined) {
+                    console.warn(`You assigned the same animation id ${payload.animId} to this current animation ${JSON.stringify(payload)}; All animations with this same id will be stopped on the same call, maybe you did this intentionally...!`)
                 }
-    
-                var animFactory = new Animation();
-                //var anim = animFactory.createWidgetAnimation(widget, animEvent);
-                var anim = createAnimation(animFactory, animEvent);
-    
-                anim.run()
-                console.error(`anim.run-----`)
-                //anim.onEnd(lang.hitch(this, "onAnimationEnded", e.id));
-                anim.onEnd(() => {
-                    delete this.currentPendingActions[action][widgetId]
-                    resolve(true)
-                })
+
+                let iparams = true;
+
+                const doAnimate = (invertParams = false) => {
+                    const animEvent = {
+                        duration: payload.durationMs,
+                        delay: payload.delayMs,
+                        from: {
+                            style: payload.styleFrom,
+                            pos: payload.posFrom,
+                            rot: payload.rotDegFrom,
+                            scale: payload.scaleFrom
+                        },
+                        to: {
+                            style: payload.styleTo,
+                            pos: payload.posTo,
+                            rot: payload.rotDegTo,
+                            scale: payload.scaleTo
+                        },
+                        posOffset: payload.posOffset
+                    }
+                    if (invertParams) {
+                        const to = animEvent.to;
+                        animEvent.to = animEvent.from;
+                        animEvent.from = to;
+                    }
+        
+                    var animFactory = new Animation();
+                    //var anim = animFactory.createWidgetAnimation(widget, animEvent);
+                    var anim = createAnimation(animFactory, animEvent);
+        
+                    anim.run()
+                    console.error(`anim.run-----`)
+                    //anim.onEnd(lang.hitch(this, "onAnimationEnded", e.id));
+                    anim.onEnd(() => {
+                        if (!payload.cyclic) {
+                            delete this.currentPendingActions[action][widgetId]
+                            resolve(true)
+                        }
+                        else {
+                            if (!(payload.animId !== undefined && this.animStoppers[payload.animId] !== undefined && this.animStoppers[payload.animId].stopIt)) {
+                                doAnimate(iparams)
+                                iparams = !iparams;
+                            }
+                            else {
+                                if (payload.animId !== undefined && this.animStoppers[payload.animId]) {
+                                    this.animStoppers[payload.animId].clbk(payload.animId)
+                                    delete this.animStoppers[payload.animId];
+                                }
+                                resolve(true)
+                            }
+                        }
+                    })
+                }
+                doAnimate()
             }
             else {
                 console.warn(`widget action '${action}' (with payload "${JSON.stringify(payload)}") for widget id ${widgetId} is unknown and it was ignored...`);
@@ -218,18 +263,28 @@ export class UIWidgetsActionQueue {
         const scheduled = this.queue[widgetId];
         if (!scheduled) { doneClbk(); return }
 
+        let iPs = []
         while (scheduled.length > 0) {
             const sched = scheduled.shift(); // pop-first
             const action = sched.action;
             const payload = sched.payload;
             const clbk = sched.clbk;
-            if (await this.__consumeAction(widget, action, payload, widgetId)) {
+            // if (await this.__consumeAction(widget, action, payload, widgetId)) {
+            //     clbk(action, payload);
+            // }
+            // this.__notifyNoAction(action)
+            const p = this.__consumeAction(widget, action, payload, widgetId)
+            iPs.push(p)
+            p.then((succeeded) => {
+                !succeeded ? console.error(`error trying to execute previous action`) : {}
                 clbk(action, payload);
-            }
-            this.__notifyNoAction(action)
+                this.__notifyNoAction(action)
+            })
         }
 
-        doneClbk();
-
+        Promise.all(iPs).then(dummy => {
+            console.log(dummy ? "" : "")
+            doneClbk(); // it may never run if cyclic animations are activated in this actions-pack; these animations should be stopable with a certain id and a stop method in this class; when stopped, this function will be called automatically
+        })
     }
 }

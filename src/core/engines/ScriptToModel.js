@@ -43,7 +43,7 @@ export function applyChange(model, change, renderFactory, databindings) {
             })
         }
         else if (change.key.toLowerCase() === "animate") {
-            const {styleFrom, styleTo, posFrom, posTo, rotDegFrom, rotDegTo, scaleFrom, scaleTo, durationMs} = change.props;
+            const {styleFrom, styleTo, posFrom, posTo, rotDegFrom, rotDegTo, scaleFrom, scaleTo, durationMs, cyclic, animId} = change.props;
             const posOffset = change.props.posOffset ? change.props.posOffset : {x: 0, y: 0}
             const delayMs = 0;
             
@@ -52,7 +52,7 @@ export function applyChange(model, change, renderFactory, databindings) {
 
             DIProvider.asyncScheduler().triggerAnimationStarted(element.id)
 
-            DIProvider.uiWidgetsActionQueue().pushAction(element.id, "animate", {styleFrom, styleTo, posFrom, posTo, rotDegFrom, rotDegTo, scaleFrom, scaleTo, durationMs, delayMs, posOffset}, (action, payload) => {
+            DIProvider.uiWidgetsActionQueue().pushAction(element.id, "animate", {styleFrom, styleTo, posFrom, posTo, rotDegFrom, rotDegTo, scaleFrom, scaleTo, durationMs, delayMs, posOffset, cyclic, animId}, (action, payload) => {
                 console.log(action ? "" : "") // dummy params, but err if I do not do this (strict-mode compilation)
                 console.log(payload ? "" : "")
 
