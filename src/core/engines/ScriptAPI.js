@@ -200,11 +200,11 @@ class QModel {
         }
         
         this.api.appDeltas.push({
-            animId: id,
             type: this.type,
             key: 'animate',
             id: this.qModel.id,
             props: {
+                animId: id,
                 durationMs,
                 cyclic: params.cyclic !== undefined ? params.cyclic : false,
                 styleFrom: params.styleFrom, 
@@ -439,4 +439,15 @@ export default class ScriptAPI {
         return this.appDeltas
     }
 
+    stopAnimation(animId) {
+        console.log(`cosmin:stopanim: ${animId}`)
+
+        self.postMessage({
+            type: this.type,
+            key: 'stop-animation',
+            props: {
+                animId
+            }
+        })
+    }
 }

@@ -23,14 +23,17 @@ export class UIWidgetsActionQueue {
     }
 
     stopAnimation(animId, terminateClbk = () => {}) {
+        console.log(`cosmin:stopanim: evrik1: ${animId}; ${JSON.stringify(this.animStoppers)}`)
         if (this.animStoppers[animId] === undefined) {
             console.warn(`UIWidgetsActionQueue: stopAnimation: Animation with id ${animId} does not exist !`)
             return;
         }
+        console.log(`cosmin:stopanim: evrik2`)
         this.animStoppers[animId] = { // for now it will only stop cyclic-animation on next cycle, not a started one-cycle animation during animation-progress (TODO this can be done if I modify the Animation.js and put a terminating fanion along side the p===1 check)
             stopIt: true, // true means: "please, stop it as soon as possible"
             clbk: terminateClbk
         };
+        console.log(`cosmin:stopanim: evrik3`)
     }
 
     async pushAction(widgetId, action, payload, clbk = (action, payload) => {console.log(`${action?"":""}${payload?"":""}`)}) {
@@ -179,6 +182,11 @@ export class UIWidgetsActionQueue {
 
                 if (payload.animId !== undefined && this.animStoppers[payload.animId] !== undefined) {
                     console.warn(`You assigned the same animation id ${payload.animId} to this current animation ${JSON.stringify(payload)}; All animations with this same id will be stopped on the same call, maybe you did this intentionally...!`)
+                }
+                else if (payload.animId !== undefined) {
+                    this.animStoppers[payload.animId] = {
+                        stopIt: false
+                    }
                 }
 
                 let iparams = true;
