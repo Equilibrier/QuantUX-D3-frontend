@@ -14,14 +14,17 @@ export class AsyncScheduler {
             this._clbkKeys[id] = key
             return id
         }
+        // regular register, pushing another listener to the listeners stack
         if (!override) {
             return setClbk(key, clbk, Math.random())
         }
-        let clbks = Object.keys(this._clbkKeys).filter(k => this._clbkKeys[k].toLowerCase() == key.toLowerCase())
+        // if there is an overwrite, but we have nothing to overwrite, it's the same, we just push the listener to the listeners stack
+        let clbks = Object.keys(this._clbkKeys).filter(id => this._clbkKeys[id].toLowerCase() == key.toLowerCase())
         if (clbks.length <= 0) {
             return setClbk(key, clbk, Math.random())
         }
-        return setClbk(clbks[0])
+        // in here, we overwrite the first callback we have in the stack, for the requested event
+        return setClbk(key, clbk, clbks[0])
     }
     async _call(key, payload) {
         // console.warn(`^^^^^^^^^^^ cosmin:suntem: _clbks: ${JSON.stringify(this._clbks)}`)
@@ -45,21 +48,15 @@ export class AsyncScheduler {
     }
 
     scheduleForAnimationEnded(clbk, override=false) { // override means it doesn't create an additional callback, for use an existing one (maybe the single one)
-        console.error(`SCHEDULED anim ended... with clbk`)
-
         return this._schedule('anim_ended', clbk, override)
     }
     scheduleForAnimationStarted(clbk, override=false) {
-        console.error(`SCHEDULED anim started... with clbk`)
-
         return this._schedule('anim_started', clbk, override)
     }
     triggerAnimationStarted(elementId) { // instead of elementId it could be anything, but it should be specified in here, for a consistent use among the callers of this methods...
-        console.error(`animation-started triggered`)
         this._call('anim_started', elementId)
     }
     triggerAnimationEnded(elementId) {
-        console.error(`animation-ENDED triggered`)
         this._call('anim_ended', elementId)
     }
 
