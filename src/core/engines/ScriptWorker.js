@@ -5,6 +5,22 @@ import Logger from '../Logger'
 self.addEventListener('message', e => {
     Logger.log(3, 'ScriptWorker.message() > enter ', e)
 
+    self.addEventListener('error', (errorEvent) => {
+        const { lineno, colno, message } = errorEvent;
+        console.log(`Error thrown at: ${lineno}:${colno}: ${message}, full stack bellow: \n\t${errorEvent.error.stack}`);
+        // Don't pollute the console with additional info:
+        errorEvent.preventDefault();
+
+        Logger.error(1, 'ScriptWorker.message() > Error', errorEvent)
+        console.error(errorEvent)
+        //const evEvent = JSON.parse(JSON.stringify(errorEvent))
+        self.postMessage({
+            status: 'error',
+            //console: console.messages,
+            error: errorEvent.message,
+            stack: errorEvent.error.stack
+        })
+    });
 
     const js = e.data.code
     const model = e.data.model
@@ -16,17 +32,20 @@ self.addEventListener('message', e => {
     const console = new ScriptConsole()
     let result = undefined
     try {
-        result = code(qux, viewModel, console)
-        self.postMessage({
-            to: result !== undefined ? (typeof result === 'string' ? result : result.to) : undefined,
-            delayedBackMs: result !== undefined ? result.backTimeout : undefined,
-            loop: result !== undefined ? result.loop : undefined,
-            immediateTransition: result !== undefined && result.immediateTransition !== undefined ? result.immediateTransition : false,
-            viewModel: viewModel,
-            appDeltas: qux.getAppDeltas(),
-            console: console.messages,
-            status : 'ok'
-        })
+        setTimeout(() => {
+            result = code(qux, viewModel, console)
+
+            self.postMessage({
+                to: result !== undefined ? (typeof result === 'string' ? result : result.to) : undefined,
+                delayedBackMs: result !== undefined ? result.backTimeout : undefined,
+                loop: result !== undefined ? result.loop : undefined,
+                immediateTransition: result !== undefined && result.immediateTransition !== undefined ? result.immediateTransition : false,
+                viewModel: viewModel,
+                appDeltas: qux.getAppDeltas(),
+                console: console.messages,
+                status : 'ok'
+            })
+        });
     } catch (error) {
         Logger.error(1, 'ScriptWorker.message() > Error', error)
         console.error(error)

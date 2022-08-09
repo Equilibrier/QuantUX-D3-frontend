@@ -399,12 +399,17 @@ class QScreen extends QModel {
         return null;
     }
 
-    getWidget(name) {
+    getWidget(name, throwable=true) {
         const res = this.__widgetFromName(name);
-        if (!res) { 
+        if (!res && throwable) { 
             throw new Error(`Widget "${name}" in screen "${this.qModel.name}" not found.`)
         }
         return res;
+    }
+
+    getChild(name) {
+        const w = this.getWidget(name, false)
+        return w ? w : this.getGroup(name)
     }
 
     widgetExists(name) {
@@ -440,7 +445,7 @@ export default class ScriptAPI {
     }
 
     stopAnimation(animId) {
-        console.log(`cosmin:stopanim: ${animId}`)
+        // console.log(`cosmin:stopanim: ${animId}`)
 
         self.postMessage({
             type: this.type,

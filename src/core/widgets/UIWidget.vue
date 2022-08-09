@@ -669,9 +669,9 @@ export default {
     },
 
     postTransform(cssTransform) {
-        console.log(`cosmin: postscale: postTransform(${cssTransform})`)
+        // console.log(`cosmin: postscale: postTransform(${cssTransform})`)
 
-        let oldStyle = this.domNode.style.transform;
+        //let oldStyle = this.domNode.style.transform;
 
         let givenTransf = this.__parseCssTransf(cssTransform)
         let existentTransf = this.__parseCssTransf(this.domNode.style.transform || this.domNode.style.webkitTransform)
@@ -697,12 +697,12 @@ export default {
           this.__applyTransform(this.__orderCssTransfs(transfRemainder + cssTransform))
         }
 
-        console.error(`Cosmin: postTransform: ${cssTransform} | ${oldStyle} | ${JSON.stringify(existentTransf)} | ${this.domNode.style.transform}`)
-        console.error(`Cosmin: postTransform: '${this.domNode.style.transform}'`) 
+        // console.error(`Cosmin: postTransform: ${cssTransform} | ${oldStyle} | ${JSON.stringify(existentTransf)} | ${this.domNode.style.transform}`)
+        // console.error(`Cosmin: postTransform: '${this.domNode.style.transform}'`) 
     },
 
     setAnimatedScale(sx, sy) {
-      console.log(`cosmin: postscale: setAnimatedScale(${sx}, ${sy})`)
+      // console.log(`cosmin: postscale: setAnimatedScale(${sx}, ${sy})`)
       this.postTransform(`scale(${sx}, ${sy})`)
     },
 

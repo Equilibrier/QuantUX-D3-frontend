@@ -132,7 +132,7 @@ export default {
                 // DIProvider.asyncScheduler().unschedule(sched1)
                 DIProvider.asyncScheduler().unschedule(sched)
                 // running default transition logic...
-                console.warn(`cosmin:tryRenderScriptedScreenTransition: to ${result.to}, previousScreen: ${this.dataBindingValues.__sourceScreen}`)
+                // console.warn(`cosmin:tryRenderScriptedScreenTransition: to ${result.to}, previousScreen: ${this.dataBindingValues.__sourceScreen}`)
                 this.tryRenderScriptedScreenTransition(result, null, orginalLine)
             }
 
@@ -144,10 +144,12 @@ export default {
 
                     this.applyApiDeltas(result)
                     this.rerenderWidgetsFromDataBindingAndUpdateViewModel(result)  
-                    this.tryRenderScriptedScreenTransition(result, widget, orginalLine)
-                    this.logger.log(-1,"runScript","exit");
 
-
+                    if (!result.loop) {
+                        this.tryRenderScriptedScreenTransition(result, widget, orginalLine)
+                        this.logger.log(-1,"runScript","exit");
+                    }
+                    
                     let targetScreen = this.retrieveTargetScreen(result)
 
                     //console.error(`targetScreen: ${JSON.stringify(targetScreen)}; \n\tresult: ${JSON.stringify(result)}`)
@@ -165,7 +167,7 @@ export default {
                         this.dataBindingValues.__sourceElement = null;
                         this.dataBindingValues.__sourceLooping = true;
 
-                        const endConditionReached = (result, dbind) => { console.log(`result.viewModel[dbind]: ${JSON.stringify(result.viewModel[dbind])}`); return result.viewModel[dbind] }//this.dataBindingValues[dbind]
+                        const endConditionReached = (result, dbind) => { return result.viewModel[dbind] }//this.dataBindingValues[dbind]
                         const endLoopDataBinding = result.loop
                         if (this.dataBindingValues[endLoopDataBinding] === undefined) {
                             this.dataBindingValues[endLoopDataBinding] = false
@@ -182,11 +184,11 @@ export default {
                             //console.error(`dataBindingValues: ${JSON.stringify(this.dataBindingValues)}`)
                             //console.error(`viewmodel: ${JSON.stringify(rresult.viewModel)}`)
 
-                            console.log(`DATABINDING  : anca: ${this.dataBindingValues.pagesnapshot.cnt[2].label}; cosmin: ${this.dataBindingValues.pagesnapshot.cnt[3].label}; phase: ${this.dataBindingValues.phase}`)
-                            console.log(`DATABINDING-r: anca: ${rresult.viewModel.pagesnapshot.cnt[2].label}; cosmin: ${rresult.viewModel.pagesnapshot.cnt[3].label}; phase: ${rresult.viewModel.phase}`)
+                            // console.log(`DATABINDING  : anca: ${this.dataBindingValues.pagesnapshot.cnt[2].label}; cosmin: ${this.dataBindingValues.pagesnapshot.cnt[3].label}; phase: ${this.dataBindingValues.phase}`)
+                            // console.log(`DATABINDING-r: anca: ${rresult.viewModel.pagesnapshot.cnt[2].label}; cosmin: ${rresult.viewModel.pagesnapshot.cnt[3].label}; phase: ${rresult.viewModel.phase}`)
 
                             if (!((ttargetScreen && rresult.immediateTransition) || endConditionReached(rresult, endLoopDataBinding))) {
-                                console.warn(`no-skip: ${ttargetScreen.name}-${rresult.immediateTransition}-${endConditionReached(rresult, endLoopDataBinding)}`)
+                                //console.warn(`cosmin: no-skip: ${ttargetScreen.name}-${rresult.immediateTransition}-${endConditionReached(rresult, endLoopDataBinding)}`)
                                 this.applyApiDeltas(rresult)
                             }
                             else {
@@ -200,13 +202,13 @@ export default {
                                 if (!(result.to !== undefined && this.dataBindingValues.loopScreen !== undefined && result.to.toLowerCase() === this.dataBindingValues.loopScreen.toLowerCase() && !endConditionReached(rresult, endLoopDataBinding))) {
                                     
                                     if ((ttargetScreen && rresult.immediateTransition) || endConditionReached(rresult, endLoopDataBinding)) {
-                                        console.warn(`cosmin:suntem:next-screen-loop -> immediatetransition`)
+                                        // console.warn(`cosmin:suntem:next-screen-loop -> immediatetransition`)
                                         stopLoop(rresult, sched2)
                                         resolve(rresult)
                                     }
                                     else {
                                         DIProvider.uiWidgetsActionQueue().registerNoMoreActionsListener('animate', () => {
-                                            console.warn(`cosmin:suntem:next-screen-loop -> nomoreactions`)
+                                            // console.warn(`cosmin:suntem:next-screen-loop -> nomoreactions`)
                                             stopLoop(rresult, sched2)
                                             resolve(rresult)
                                         });
@@ -219,12 +221,12 @@ export default {
                         // sched1 = DIProvider.asyncScheduler().scheduleForAnimationStarted(async () => {
                         //     console.error(`^^^^^^^^^^^^^^^^^ animation event (started)`)
                         //     await doLoopbackScriptRun()
-                        // })
+                        // }, true)
                         sched2 = DIProvider.asyncScheduler().scheduleForAnimationEnded(async () => {
                             console.error(`^^^^^^^^^^^^^^^^^ animation event (ended)`)
                             //await doLoopbackScriptRun()
                             doLoopbackScriptRun()
-                        })
+                        }, true)
                     }
 
                     else if (targetScreen === undefined && result.to !== undefined) {

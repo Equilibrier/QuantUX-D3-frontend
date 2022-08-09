@@ -8,14 +8,23 @@ export class AsyncScheduler {
         this._clbkKeys = {}
     }
 
-    _schedule(key, clbk) {
-        const id = Math.random()
-        this._clbks[key][id] = clbk
-        this._clbkKeys[id] = key
-        return id
+    _schedule(key, clbk, override) {
+        let setClbk = (key, clbk, id) => {
+            this._clbks[key][id] = clbk
+            this._clbkKeys[id] = key
+            return id
+        }
+        if (!override) {
+            return setClbk(key, clbk, Math.random())
+        }
+        let clbks = Object.keys(this._clbkKeys).filter(k => this._clbkKeys[k].toLowerCase() == key.toLowerCase())
+        if (clbks.length <= 0) {
+            return setClbk(key, clbk, Math.random())
+        }
+        return setClbk(clbks[0])
     }
     async _call(key, payload) {
-        console.warn(`^^^^^^^^^^^ cosmin:suntem: _clbks: ${JSON.stringify(this._clbks)}`)
+        // console.warn(`^^^^^^^^^^^ cosmin:suntem: _clbks: ${JSON.stringify(this._clbks)}`)
         for (let clbk of Object.values(this._clbks[key])) {
             //await clbk(payload)
             clbk(payload)
@@ -35,15 +44,15 @@ export class AsyncScheduler {
 
     }
 
-    scheduleForAnimationEnded(clbk) {
+    scheduleForAnimationEnded(clbk, override=false) { // override means it doesn't create an additional callback, for use an existing one (maybe the single one)
         console.error(`SCHEDULED anim ended... with clbk`)
 
-        return this._schedule('anim_ended', clbk)
+        return this._schedule('anim_ended', clbk, override)
     }
-    scheduleForAnimationStarted(clbk) {
+    scheduleForAnimationStarted(clbk, override=false) {
         console.error(`SCHEDULED anim started... with clbk`)
 
-        return this._schedule('anim_started', clbk)
+        return this._schedule('anim_started', clbk, override)
     }
     triggerAnimationStarted(elementId) { // instead of elementId it could be anything, but it should be specified in here, for a consistent use among the callers of this methods...
         console.error(`animation-started triggered`)

@@ -176,7 +176,7 @@ export default {
 
 			DIProvider.scalingComputer().screenCreated(screen)
 
-			console.log(`DATABINDING-A: anca: ${this.dataBindingValues?.pagesnapshot?.cnt?.length > 0 ? this.dataBindingValues.pagesnapshot.cnt[2].label : ''}; cosmin: ${this.dataBindingValues?.pagesnapshot?.cnt?.length > 0 ? this.dataBindingValues.pagesnapshot.cnt[3].label : ''}; phase: ${this.dataBindingValues?.phase}`)
+			// console.log(`DATABINDING-A: anca: ${this.dataBindingValues?.pagesnapshot?.cnt?.length > 0 ? this.dataBindingValues.pagesnapshot.cnt[2].label : ''}; cosmin: ${this.dataBindingValues?.pagesnapshot?.cnt?.length > 0 ? this.dataBindingValues.pagesnapshot.cnt[3].label : ''}; phase: ${this.dataBindingValues?.phase}`)
 
 
 			this.logger.log(2,"createScreen","enter > " + screen.id + " > overlay : " + isOverlay);
