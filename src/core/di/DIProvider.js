@@ -8,6 +8,7 @@ import { UIWidgetsActionQueue } from 'core/di/UIWidgetsActionQueue'
 import { TempModelContext } from 'core/di/TempModelContext'
 import { ScalingComputer } from 'core/di/ScalingComputer'
 import { AsyncScheduler } from 'core/di/AsyncScheduler'
+import { GlobalCache } from 'core/di/GlobalCache'
 
 class DIProvider {
 
@@ -22,6 +23,7 @@ class DIProvider {
         this._scaleComputer = new ScalingComputer();
         this._simStarted = false;
         this._asyncScheduler = new AsyncScheduler();
+        this._globalCache = new GlobalCache();
 
         this._listeners = {};
 
@@ -143,6 +145,8 @@ class DIProvider {
     scalingComputer() { return this._scaleComputer }
 
     asyncScheduler() { return this._asyncScheduler }
+
+    globalCache() { return this._globalCache }
 }
 
 export default new DIProvider();

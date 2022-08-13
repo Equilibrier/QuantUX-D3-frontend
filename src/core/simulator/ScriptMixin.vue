@@ -84,31 +84,39 @@ export default {
     },
 
     async _prefetchGlobalJS() {
-        const noCacheOptions = () => {
-            var myHeaders = new Headers();
-            myHeaders.append('pragma', 'no-cache');
-            myHeaders.append('cache-control', 'no-cache');
-            var myInit = {
-                method: 'GET',
-                headers: myHeaders,
-            };
-            return myInit;
-        }
 
-        let canvas = DIProvider.canvas();
-        if (canvas === null) {
-            console.error("ScriptMixing: _prefetchGlobalJS: Canvas was not set yet in the DI-provider, but it is needed here.");
-            return "";
-        }
-        let outp = "";
-        for (let url of Object.keys(canvas.settings.globalScriptUrlsEnabled)) {
-            const enabled = canvas.settings.globalScriptUrlsEnabled[url];
-            if (enabled) {
-                let jsgCode = await (await fetch(url, noCacheOptions())).text();
-                outp += jsgCode + "\n";
+        console.log(`_prefetchGlobalJS,...`)
+
+        if (!DIProvider.globalCache().globalJSPrefetched()) {
+            console.log(`not retrieved, retrieving now...`)
+            let outp = "";
+            const noCacheOptions = () => {
+                var myHeaders = new Headers();
+                myHeaders.append('pragma', 'no-cache');
+                myHeaders.append('cache-control', 'no-cache');
+                var myInit = {
+                    method: 'GET',
+                    headers: myHeaders,
+                };
+                return myInit;
             }
+
+            let canvas = DIProvider.canvas();
+            if (canvas === null) {
+                console.error("ScriptMixing: _prefetchGlobalJS: Canvas was not set yet in the DI-provider, but it is needed here.");
+                return "";
+            }
+            for (let url of Object.keys(canvas.settings.globalScriptUrlsEnabled)) {
+                const enabled = canvas.settings.globalScriptUrlsEnabled[url];
+                if (enabled) {
+                    let jsgCode = await (await fetch(url, noCacheOptions())).text();
+                    outp += jsgCode + "\n";
+                }
+            }
+            console.log(`prefetched, setting in DI: ${outp}`)
+            DIProvider.globalCache().setGlobalJSScript(outp)
         }
-        return outp;
+        return DIProvider.globalCache().globalJSScript();
     },
 
     retrieveTargetScreen(scriptResult) {
