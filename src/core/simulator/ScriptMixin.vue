@@ -94,6 +94,7 @@ export default {
                 var myHeaders = new Headers();
                 myHeaders.append('pragma', 'no-cache');
                 myHeaders.append('cache-control', 'no-cache');
+                myHeaders.append('Content-Type', 'text/javascript');
                 var myInit = {
                     method: 'GET',
                     headers: myHeaders,
