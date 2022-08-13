@@ -7,12 +7,12 @@ self.addEventListener('message', e => {
 
     self.addEventListener('error', (errorEvent) => {
         const { lineno, colno, message } = errorEvent;
-        console.log(`Error thrown at: ${lineno}:${colno}: ${message}, full stack bellow: \n\t${errorEvent.error.stack}`);
+        console && console.log(`Error thrown at: ${lineno}:${colno}: ${message}, full stack bellow: \n\t${errorEvent.error.stack}`); // sometimes it gives me an error that 'console' is not yet initialized
         // Don't pollute the console with additional info:
         errorEvent.preventDefault();
 
         Logger.error(1, 'ScriptWorker.message() > Error', errorEvent)
-        console.error(errorEvent)
+        console && console.error(errorEvent)
         //const evEvent = JSON.parse(JSON.stringify(errorEvent))
         self.postMessage({
             status: 'error',

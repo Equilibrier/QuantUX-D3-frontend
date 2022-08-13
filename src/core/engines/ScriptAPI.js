@@ -27,12 +27,12 @@ class QModel {
         })
     }
 
-    setProp(newStyleDelta) {
+    setProp(propsDelta) {
         this.api.appDeltas.push({
             type: this.type,
             id: this.qModel.id,
             key: 'props',
-            props: newStyleDelta
+            props: propsDelta
         })
     }
 
@@ -241,23 +241,33 @@ class QGroup extends QModel {
 
     setStyle(newStyleDelta) {
         this.forEachChild(id => {
-            this.api.appDeltas.push({
-                type: 'Widget',
-                key: 'style',
-                id: id,
-                style: newStyleDelta
-            })
+            if (!this.__isGroup(id)) {
+                this.api.appDeltas.push({
+                    type: 'Widget',
+                    key: 'style',
+                    id: id,
+                    style: newStyleDelta
+                })
+            }
+            else {
+                (new QGroup(this.__getMeta(id), this.api, this)).setStyle(newStyleDelta)
+            }
         })
     }
 
-    setProp(newStyleDelta) {
+    setProp(propsDelta) {
         this.forEachChild(id => {
-            this.api.appDeltas.push({
-                type: 'Widget',
-                key: 'props',
-                id: id,
-                props: newStyleDelta
-            })
+            if (!this.__isGroup(id)) {
+                this.api.appDeltas.push({
+                    type: 'Widget',
+                    key: 'props',
+                    id: id,
+                    props: propsDelta
+                })
+            }
+            else {
+                (new QGroup(this.__getMeta(id), this.api, this)).setProp(propsDelta)
+            }
         })
     }
 

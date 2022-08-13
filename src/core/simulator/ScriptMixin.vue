@@ -112,7 +112,7 @@ export default {
     },
 
     retrieveTargetScreen(scriptResult) {
-        return Object.values(this.model.screens).find(s => scriptResult.to !== undefined && s.name.toLowerCase() === scriptResult.to.toLowerCase())
+        return Object.values(this.model.screens).find(s => scriptResult?.to !== undefined && s.name.toLowerCase() === scriptResult?.to?.toLowerCase())
     },
 
     async runScript (script, widget, orginalLine) {
@@ -126,7 +126,7 @@ export default {
                 let result = await engine.run(glbJS + script, this.model, this.dataBindingValues, this.renderFactory)
                 return result
             }
-            const stopLoop = (result, sched) => {
+            const stopLoop = async (result, sched) => {
                 console.error(`ANIMATIONS complete: proceeding with OUT-LOOP screen transition to ${result.to}`)
 
                 // DIProvider.asyncScheduler().unschedule(sched1)
@@ -134,19 +134,40 @@ export default {
                 // running default transition logic...
                 // console.warn(`cosmin:tryRenderScriptedScreenTransition: to ${result.to}, previousScreen: ${this.dataBindingValues.__sourceScreen}`)
                 this.tryRenderScriptedScreenTransition(result, null, orginalLine)
+
+                // running it just for screen-build (if necessary, if the JS needs it, it doesn't hurt to have another chance to update some bindings, programatically)
+                const ts = this.retrieveTargetScreen(result)
+                if (ts) { // only if a transition is present
+                    this.dataBindingValues.__sourceElement = null;
+                    this.dataBindingValues.__sourceScreen = ts.name;
+                    const rresult = await runScript()
+                    this.applyApiDeltas(rresult)
+                    this.rerenderWidgetsFromDataBindingAndUpdateViewModel(rresult)
+                }
             }
 
             const result = await runScript()
 
             if (result.status === 'ok') {
 
-                requestAnimationFrame( () => {
+                requestAnimationFrame( async () => {
 
                     this.applyApiDeltas(result)
-                    this.rerenderWidgetsFromDataBindingAndUpdateViewModel(result)  
+                    this.rerenderWidgetsFromDataBindingAndUpdateViewModel(result)
 
                     if (!result.loop) {
                         this.tryRenderScriptedScreenTransition(result, widget, orginalLine)
+                        
+                        /*// running it just for screen-build (if necessary, if the JS needs it, it doesn't hurt to have another chance to update some bindings, programatically)
+                        const ts = this.retrieveTargetScreen(result)
+                        if (ts) { // only if a transition is present
+                            this.dataBindingValues.__sourceElement = null;
+                            this.dataBindingValues.__sourceScreen = ts.name;
+                            const rresult = await runScript() // it will run async, but I don't care, it's ok, this function doesn't need to be waited for end-call
+                            this.applyApiDeltas(rresult)
+                            this.rerenderWidgetsFromDataBindingAndUpdateViewModel(rresult)
+                        }*/
+                        
                         this.logger.log(-1,"runScript","exit");
                     }
                     
@@ -203,13 +224,13 @@ export default {
                                     
                                     if ((ttargetScreen && rresult.immediateTransition) || endConditionReached(rresult, endLoopDataBinding)) {
                                         // console.warn(`cosmin:suntem:next-screen-loop -> immediatetransition`)
-                                        stopLoop(rresult, sched2)
+                                        await stopLoop(rresult, sched2)
                                         resolve(rresult)
                                     }
                                     else {
-                                        DIProvider.uiWidgetsActionQueue().registerNoMoreActionsListener('animate', () => {
+                                        DIProvider.uiWidgetsActionQueue().registerNoMoreActionsListener('animate', async () => {
                                             // console.warn(`cosmin:suntem:next-screen-loop -> nomoreactions`)
-                                            stopLoop(rresult, sched2)
+                                            await stopLoop(rresult, sched2)
                                             resolve(rresult)
                                         });
                                     }
