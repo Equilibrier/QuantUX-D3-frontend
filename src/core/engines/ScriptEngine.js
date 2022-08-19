@@ -41,6 +41,7 @@ export default class ScriptEngine {
                             status: 'error',
                             error: 'Running too long'
                         })
+                        console.trace();
                         Logger.error('ScriptEngine.run() > need to terminate script')
                         Logger.error('ScriptEngine.run() > js: \n' + js)
                         worker.terminate()

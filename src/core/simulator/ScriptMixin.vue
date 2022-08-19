@@ -52,6 +52,7 @@ export default {
         for (let i=0; i< widgets.length; i++) {
             const widget = widgets[i]
             if (widget.props.script) {
+                console.log(`databind run script for ${databind}=${newVal}`)
                 await this.runScript(widget.props.script, widget)
             }
         }
@@ -110,7 +111,10 @@ export default {
             for (let url of Object.keys(canvas.settings.globalScriptUrlsEnabled)) {
                 const enabled = canvas.settings.globalScriptUrlsEnabled[url];
                 if (enabled) {
-                    let jsgCode = await (await fetch(url, noCacheOptions())).text();
+                    //let jsgCode = await (await fetch(url, noCacheOptions())).text();
+                    const resp = await fetch(url, noCacheOptions());
+                    const jsgCode = await resp.text()
+                    console.log(`response: ${JSON.stringify(resp)}`)
                     outp += jsgCode + "\n";
                 }
             }
@@ -152,13 +156,13 @@ export default {
                     const rresult = await runScript()
                     this.applyApiDeltas(rresult)
                     this.rerenderWidgetsFromDataBindingAndUpdateViewModel(rresult)
+                    console.log(`ran-script vmodel--: ${JSON.stringify(result.viewModel.pagesnapshot?.cnt[1])}`)
                 }
             }
 
             const result = await runScript()
 
-            if (result.status === 'ok') {
-
+            if (result.status === 'ok' && result.ignore === undefined) {
                 requestAnimationFrame( async () => {
 
                     this.applyApiDeltas(result)
@@ -267,6 +271,9 @@ export default {
                     resolve(result)
                 })
             } else {
+                if (result.ignore) {
+                    console.log(`run-script result (transition.to/loop) IGNORED`)
+                }
                 resolve(result)
             }
         }) 
