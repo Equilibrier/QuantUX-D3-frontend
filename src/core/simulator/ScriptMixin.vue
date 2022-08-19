@@ -3,7 +3,7 @@
   </div>
 </template>
 <script>
-import ScriptEngine from '../../core/engines/ScriptEngine'
+//import ScriptEngine from '../../core/engines/ScriptEngine'
 import * as ScriptToModel from '../../core/engines/ScriptToModel'
 
 import DIProvider from '../../core/di/DIProvider'
@@ -44,6 +44,9 @@ export default {
             return
         }
         this.__resetSourceMetadata();
+
+        console.error(`sourceData: ${databind}; oldval: ${oldVal}; newVal: ${newVal}`)
+
         this.dataBindingValues.__sourceData = databind;
         this.dataBindingValues.__sourceOldValue = oldVal;
         this.dataBindingValues.__sourceNewValue = newVal;
@@ -53,7 +56,9 @@ export default {
             const widget = widgets[i]
             if (widget.props.script) {
                 console.log(`databind run script for ${databind}=${newVal}`)
-                await this.runScript(widget.props.script, widget)
+                const rresult = await this.justRunScript(widget.props.script)
+                this.applyApiDeltas(rresult)
+                this.rerenderWidgetsFromDataBindingAndUpdateViewModel(rresult)
             }
         }
         this.logger.log(-2,"executeDataScripts","exit");
@@ -128,17 +133,24 @@ export default {
         return Object.values(this.model.screens).find(s => scriptResult?.to !== undefined && s.name.toLowerCase() === scriptResult?.to?.toLowerCase())
     },
 
+    async justRunScript(script) {
+        let glbJS = await this._prefetchGlobalJS();
+        /*const engine = new ScriptEngine()
+        //console.log("Running script: \n", script);
+        
+        console.log(`TRACE-justRunScript: `)
+        console.trace()
+
+        let result = await engine.run(glbJS + script, this.model, this.dataBindingValues, this.renderFactory)*/
+        const result = await DIProvider.jsRunController().scheduleRun(glbJS + script, this.model, this.dataBindingValues, this.renderFactory)
+        return result
+    },
+
     async runScript (script, widget, orginalLine) {
         this.logger.log(-2,"runScript","enter", widget?.name);
 
         return new Promise(async (resolve) => {
-            const runScript = async () => {
-                const engine = new ScriptEngine()
-                let glbJS = await this._prefetchGlobalJS();
-                //console.log("Running script: \n", script);
-                let result = await engine.run(glbJS + script, this.model, this.dataBindingValues, this.renderFactory)
-                return result
-            }
+
             const stopLoop = async (result, sched) => {
                 console.error(`ANIMATIONS complete: proceeding with OUT-LOOP screen transition to ${result.to}`)
 
@@ -153,14 +165,14 @@ export default {
                 if (ts) { // only if a transition is present
                     this.dataBindingValues.__sourceElement = null;
                     this.dataBindingValues.__sourceScreen = ts.name;
-                    const rresult = await runScript()
+                    const rresult = await this.justRunScript(script)
                     this.applyApiDeltas(rresult)
                     this.rerenderWidgetsFromDataBindingAndUpdateViewModel(rresult)
                     console.log(`ran-script vmodel--: ${JSON.stringify(result.viewModel.pagesnapshot?.cnt[1])}`)
                 }
             }
 
-            const result = await runScript()
+            const result = await this.justRunScript(script)
 
             if (result.status === 'ok' && result.ignore === undefined) {
                 requestAnimationFrame( async () => {
@@ -212,7 +224,7 @@ export default {
                         this.dataBindingValues.loopScreen = result.to !== undefined ? result.to : this.dataBindingValues.__sourceScreen;
 
                         const doLoopbackScriptRun = async () => {
-                            const rresult = await runScript()
+                            const rresult = await this.justRunScript(script)
 
                             const ttargetScreen = this.retrieveTargetScreen(rresult)
                             //console.error(`dataBindingValues: ${JSON.stringify(this.dataBindingValues)}`)
