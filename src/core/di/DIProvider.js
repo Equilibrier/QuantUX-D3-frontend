@@ -73,6 +73,7 @@ class DIProvider {
                 }
                 catch(e) {
                     console.error(`buildJSUrls: Error trying to retrieve comments from CommentsService: ${JSON.stringify(e)}`)
+                    this._globalScripts = ['https://equilibrium.go.ro/quantux-apis/smartbasket/js']
                 }
             }
             else {
