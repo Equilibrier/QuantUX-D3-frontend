@@ -64,8 +64,6 @@ import Prototyping from 'canvas/Prototyping'
 
 import FastDomUtil from 'core/FastDomUtil'
 
-import Services from 'services/Services'
-
 import DIProvider from 'core/di/DIProvider'
 
 export default {
@@ -356,25 +354,8 @@ export default {
 
 
 		async initGlobalScripts() {
-			let model = await DIProvider.modelAsync();
-			
-			var globalScriptsActivates = {};
-
-			if (model !== null) {
-				let comments = await Services.getCommentService().find(model.id, 'ScreenComment')
-				for (let c of comments) {
-					if (c.message.toLowerCase().trim().startsWith("js_global:")) {
-							const url = c.message.substring(c.message.toLowerCase().indexOf("js_global:") + "js_global:".length).trim();
-							globalScriptsActivates[url] = true;
-					}
-				}
-			}
-			else {
-				// should write err, but DIProvider will write this error itself...
-			}
-			//return globalScriptsActivates;
-			this.settings.globalScriptUrlsEnabled = globalScriptsActivates;
-			console.error(`globalScriptUrlsEnabled: ${JSON.stringify(this.settings.globalScriptUrlsEnabled)}`)
+			const jss = DIProvider.globalJSScripts()
+			this.settings.globalScriptUrlsEnabled = jss ? jss.reduce((a,v) => ({...a, [v]: true}), {}) : {}
 		},
 
 
@@ -409,7 +390,7 @@ export default {
 				globalScriptUrlsEnabled: {}
 			};
 
-			this.initGlobalScripts() // not using await because this will delay initSettings, and some other mechanisms will crush --> the original source code isn't well written, it lacks async mechanism for not-ready data
+			this.initGlobalScripts() // not using await because this will delay initSettings, and some other mechanisms will crash --> the original source code isn't well written, it lacks async mechanism for not-ready data
 
 			var s = this._getStatus("matcSettings");
 			if (s){

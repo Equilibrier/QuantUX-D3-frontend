@@ -110,19 +110,33 @@ export default {
                 return myInit;
             }
 
-            let canvas = DIProvider.canvas();
-            if (canvas === null) {
-                console.error("ScriptMixing: _prefetchGlobalJS: Canvas was not set yet in the DI-provider, but it is needed here.");
-                return "";
+            let canvas = DIProvider.globalJSScripts();
+            if (canvas && canvas?.settings?.globalScriptUrlsEnabled) {
+                for (let url of Object.keys(canvas.settings.globalScriptUrlsEnabled)) {
+                    const enabled = canvas.settings.globalScriptUrlsEnabled[url];
+                    if (enabled) {
+                        //let jsgCode = await (await fetch(url, noCacheOptions())).text();
+                        const resp = await fetch(url, noCacheOptions());
+                        const jsgCode = await resp.text()
+                        console.log(`response: ${JSON.stringify(resp)}`)
+                        outp += jsgCode + "\n";
+                    }
+                }
             }
-            for (let url of Object.keys(canvas.settings.globalScriptUrlsEnabled)) {
-                const enabled = canvas.settings.globalScriptUrlsEnabled[url];
-                if (enabled) {
-                    //let jsgCode = await (await fetch(url, noCacheOptions())).text();
-                    const resp = await fetch(url, noCacheOptions());
-                    const jsgCode = await resp.text()
-                    console.log(`response: ${JSON.stringify(resp)}`)
-                    outp += jsgCode + "\n";
+            else {
+                // we are in test mode, no canvas in here; we are retrieving the jss code directly from DIProvider, and we ignore the enabled-checks
+                const jss = DIProvider.globalJSScripts();
+                if (jss) {
+                    for (let url of jss) {
+                        //let jsgCode = await (await fetch(url, noCacheOptions())).text();
+                        const resp = await fetch(url, noCacheOptions());
+                        const jsgCode = await resp.text()
+                        console.log(`response: ${JSON.stringify(resp)}`)
+                        outp += jsgCode + "\n";
+                    }
+                }
+                else {
+                    console.error(`DIProvider could not retrieve global JS code, for some reason`)
                 }
             }
             console.log(`prefetched, setting in DI: ${outp}`)

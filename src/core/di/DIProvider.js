@@ -14,6 +14,7 @@ import { JSRunController } from 'core/di/JSRunController'
 class DIProvider {
 
     constructor() {
+        this._globalScripts = null;
         this._canvas = null;
         this._model = null;
         this._route = null;
@@ -45,6 +46,28 @@ class DIProvider {
                 console.error("DIProvider: _route was not properly fed in 5 secs");
             }
         });
+
+        this.__waitUntil('_globalScripts', 5000, () => {
+            console.error(`DIProvider: timeout reached waiting for _globalScripts to be set. We will have NO global JS scripts`)
+        }).then(async _globalScripts => {
+            console.log(`Set global JS scripts: ${JSON.stringify(_globalScripts)}`)
+        });
+
+        const buildJSUrls = async () => {
+            let model = await this.modelAsync();
+            if (model !== null) {
+                const globalScripts = [];
+                let comments = await Services.getCommentService().find(model.id, 'ScreenComment')
+                for (let c of comments) {
+                    if (c.message.toLowerCase().trim().startsWith("js_global:")) {
+                            const url = c.message.substring(c.message.toLowerCase().indexOf("js_global:") + "js_global:".length).trim();
+                            globalScripts.push(url)
+                    }
+                }
+                this._globalScripts = globalScripts
+            }
+        }
+        buildJSUrls()
     }
 
     __set(fieldName) {
@@ -88,6 +111,8 @@ class DIProvider {
             }, periodMs);
         })
     }
+
+    __clone(obj) { return JSON.parse(JSON.stringify(obj)) }
 
     listenFor(data, callback) {
         data = data.toLowerCase();
@@ -151,6 +176,8 @@ class DIProvider {
     globalCache() { return this._globalCache }
 
     jsRunController() { return this._jsRunCtrl }
+
+    globalJSScripts() { return this.__clone(this._globalScripts) }
 }
 
 export default new DIProvider();
