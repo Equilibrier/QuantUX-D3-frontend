@@ -56,9 +56,11 @@ export default {
             const widget = widgets[i]
             if (widget.props.script) {
                 console.log(`databind run script for ${databind}=${newVal}`)
-                const rresult = await this.justRunScript(widget.props.script)
+                
+                /*const rresult = await this.justRunScript(widget.props.script)
                 this.applyApiDeltas(rresult)
-                this.rerenderWidgetsFromDataBindingAndUpdateViewModel(rresult)
+                this.rerenderWidgetsFromDataBindingAndUpdateViewModel(rresult)*/
+                await this.runScript(widget.props.script, null, null)
             }
         }
         this.logger.log(-2,"executeDataScripts","exit");
