@@ -59,16 +59,21 @@ class DIProvider {
             if (model !== null) {
                 console.log(`evr2`)
                 const globalScripts = [];
-                let comments = await Services.getCommentService().find(model.id, 'ScreenComment')
-                for (let c of comments) {
-                    console.log(`evr3`)
-                    if (c.message.toLowerCase().trim().startsWith("js_global:")) {
-                            const url = c.message.substring(c.message.toLowerCase().indexOf("js_global:") + "js_global:".length).trim();
-                            globalScripts.push(url)
+                try {
+                    let comments = await Services.getCommentService().find(model.id, 'ScreenComment')
+                    for (let c of comments) {
+                        console.log(`evr3`)
+                        if (c.message.toLowerCase().trim().startsWith("js_global:")) {
+                                const url = c.message.substring(c.message.toLowerCase().indexOf("js_global:") + "js_global:".length).trim();
+                                globalScripts.push(url)
+                        }
                     }
+                    console.log(`evr4: ${JSON.stringify(globalScripts)}`)
+                    this._globalScripts = globalScripts
                 }
-                console.log(`evr4: ${JSON.stringify(globalScripts)}`)
-                this._globalScripts = globalScripts
+                catch(e) {
+                    console.error(`buildJSUrls: Error trying to retrieve comments from CommentsService: ${JSON.stringify(e)}`)
+                }
             }
             else {
                 console.log(`evr22:`)
