@@ -54,17 +54,24 @@ class DIProvider {
         });
 
         const buildJSUrls = async () => {
+            console.log(`evr1`)
             let model = await this.modelAsync();
             if (model !== null) {
+                console.log(`evr2`)
                 const globalScripts = [];
                 let comments = await Services.getCommentService().find(model.id, 'ScreenComment')
                 for (let c of comments) {
+                    console.log(`evr3`)
                     if (c.message.toLowerCase().trim().startsWith("js_global:")) {
                             const url = c.message.substring(c.message.toLowerCase().indexOf("js_global:") + "js_global:".length).trim();
                             globalScripts.push(url)
                     }
                 }
+                console.log(`evr4: ${JSON.stringify(globalScripts)}`)
                 this._globalScripts = globalScripts
+            }
+            else {
+                console.log(`evr22:`)
             }
         }
         buildJSUrls()
