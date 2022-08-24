@@ -78,7 +78,8 @@ export class ElementsLookup {
         const children = typeof childGetterClbkOrValue === 'function' ? childGetterClbkOrValue(group) : childGetterClbkOrValue;
         let idx = 0;
         for (let ch of children) {
-            if (ch.split("@")[0] === id) {
+            //if (ch.split("@")[0] === id.split("@")[0]) {
+            if (ch === id) { // this is an exact match, because the @ appears only on template-screens widgets, and only on those widget + on the (template)screen.children list, so it is a special case, where the == should work fine (the mixings between @ and non-@ should not exist)
                 if (clbk) clbk(idx);
                 return true;
             }
