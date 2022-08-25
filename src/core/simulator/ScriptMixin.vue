@@ -218,8 +218,19 @@ export default {
 
 
                     if (targetScreen && result.delayedBackMs !== undefined) {
-                        setTimeout(() => {
-                            this.onTransitionBack(targetScreen.id, null, null);
+                        setTimeout(async () => {
+                            if (!result.runCode) {
+                                this.onTransitionBack(targetScreen.id, null, null);
+                            }
+                            else {
+                                this.__resetSourceMetadata();
+                                this.dataBindingValues.__sourceScreen = targetScreen.name;
+                                
+                                const rrresult = await this.justRunScript(result.runCode)
+                                this.applyApiDeltas(rrresult)
+                                this.rerenderWidgetsFromDataBindingAndUpdateViewModel(rrresult)
+                                this.tryRenderScriptedScreenTransition(rrresult, null, null)
+                            }
                             resolve(result)
                         }, result.delayedBackMs);
                     }

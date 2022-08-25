@@ -38,6 +38,7 @@ self.addEventListener('message', e => {
             self.postMessage({
                 to: result !== undefined ? (typeof result === 'string' ? result : result.to) : undefined,
                 delayedBackMs: result !== undefined ? result.backTimeout : undefined,
+                runCode: result?.runCode ? result.runCode : undefined,
                 loop: result !== undefined ? result.loop : undefined,
                 immediateTransition: result !== undefined && result.immediateTransition !== undefined ? result.immediateTransition : false,
                 viewModel: viewModel,
