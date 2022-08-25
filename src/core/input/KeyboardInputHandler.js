@@ -21,6 +21,7 @@ export class KeyboardInputHandler {
         this.__listenFor(keys, clbk, "press", preset);
     }
     listenForKeyUp(keys, clbk, preset="all") { // the keys in ascii, separated by comma, e.g. "shift,x"; clbk takes one single arg, the js keyboard event
+
         this.__listenFor(keys, clbk, "up", preset);
     }
 
@@ -51,24 +52,25 @@ export class KeyboardInputHandler {
             for (let lc of Object.values(this[lfield])) {
                 for (let l in lc) {
                     const tokens = l.toLowerCase().replaceAll(' ', '').split(',');
-                    if (e.ctrlKey && tokens.find(e => e === 'ctrl') === undefined) {
-                        continue;
+
+                    if (tokens.find(e => e === "ctrl") && !e.ctrlKey) {
+                        continue
                     }
-                    if (e.altKey && tokens.find(e => e === 'alt') === undefined) {
-                        continue;
+                    if (tokens.find(e => e === "alt") && !e.altKey) {
+                        continue
                     }
-                    if (e.metaKey && tokens.find(e => e === 'meta') === undefined) {
-                        continue;
+                    if (tokens.find(e => e === "meta") && !e.metaKey) {
+                        continue
                     }
-                    if (e.shiftKey && tokens.find(e => e === 'shift') === undefined) {
-                        continue;
+                    if (tokens.find(e => e === "shift") && !e.shiftKey) {
+                        continue
                     }
-                    if (e.ctrlKey && tokens.find(e => e === 'ctrl') === undefined) {
-                        continue;
+                    
+                    const pkey = tokens.find(e => e !== "ctrl" && e !== "alt" && e !== "meta" && e !== "shift")
+                    if (pkey && String.fromCharCode(k).toLowerCase() !== pkey) {
+                        continue
                     }
-                    if (tokens.find(e => e === String.fromCharCode(k).toLowerCase()) === undefined) {
-                        continue;
-                    }
+                    
                     for (let clbk of lc[l]) {
                         clbk(e);
                     }
