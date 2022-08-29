@@ -85,6 +85,8 @@
             "tab-images": "Images",
             "tab-github": "Github",
             "tab-zip": "Zip File",
+            "tab-react-nologic": "ReactJS-plain-no-logic",
+            "tab-react-mvvmlogic": "ReactJS-full-MVVM-logic",
             "github-token": "Github Access Token",
             "github-user": "User",
             "github-repo": "Repository",

@@ -3,9 +3,11 @@
      <div class="MatchImportDialog MatchExportDialog MatcDialog">
 
         <div class="MatcToolbarTabs MatcToolbarTabsBig">
-            <a @click="showImageExport()" :class="{'MatcToolbarTabActive': tab === 'images'}">{{ getNLS('dialog.export.tab-images')}}</a>
-            <a @click="tab='github'" v-if="hasGit" :class="{'MatcToolbarTabActive': tab === 'github'}">{{ getNLS('dialog.export.tab-github')}}</a>
-            <a @click="tab='zip'" :class="{'MatcToolbarTabActive': tab === 'zip'}">{{ getNLS('dialog.export.tab-zip')}}</a>
+            <a @click="showImageExport()"             :class="{'MatcToolbarTabActive': tab === 'images'}">{{ getNLS('dialog.export.tab-images')}}</a>
+            <a @click="tab='github'" v-if="hasGit"    :class="{'MatcToolbarTabActive': tab === 'github'}">{{ getNLS('dialog.export.tab-github')}}</a>
+            <a @click="tab='zip'"                     :class="{'MatcToolbarTabActive': tab === 'zip'}">{{ getNLS('dialog.export.tab-zip')}}</a>
+            <a @click="showDomsExport()"   :class="{'MatcToolbarTabActive': tab === 'reactjs-cmdd-no-logic'}">{{ getNLS('dialog.export.tab-react-nologic')}}</a>
+            <a @click="tab='reactjs-cmdd-MVVM-logic'" :class="{'MatcToolbarTabActive': tab === 'reactjs-cmdd-MVVM-logic'}">{{ getNLS('dialog.export.tab-react-mvvmlogic')}}</a>
         </div>
         <div v-if="isPublic">
              <div class="MatchImportDialogCntr">
@@ -15,6 +17,9 @@
 
         <div v-else class="MatcExportDialogCntr">
             <div v-show="tab=== 'images'" ref="imageCntr">
+            </div>
+
+            <div v-show="tab=== 'reactjs-cmdd-no-logic'" ref="rnlCntr">
             </div>
 
              <div v-show="tab=== 'github'">
@@ -50,6 +55,9 @@ import Util from 'core/Util'
 import ExportImages from './ExportImages'
 //import ExportGit from './ExportGit'
 import ExportZip from './ExportZip'
+import ExportDoms from './ExportDoms'
+
+import DIProvider from '../../../core/di/DIProvider'
 
 export default {
     name: 'GitExport',
@@ -57,7 +65,7 @@ export default {
     data: function () {
         return {
             hasGit: false,
-            tab: "images",
+            tab: "zip",
             zoom: 1,
             errorMSG: '',
             progressMSG: '',
@@ -82,6 +90,32 @@ export default {
           }
         },
 
+        showDomsExport() {
+          this.tab = 'reactjs-cmdd-no-logic'
+          if (this.renderer) {
+            console.log(`evr1: start generating doms`)
+            this.renderer.onFocus()
+
+            let s = null
+            for (let id in this.model.screens) {
+              const screen = this.model.screens[id];
+              if (screen.name === "MMenu") {
+                s = screen
+                break
+              }
+            }
+            if (s) {
+              const sdiv = DIProvider.simulatorRef().renderScreen(s, 0)
+              console.error(`scr div: ${sdiv}, ${JSON.stringify(sdiv)}`)
+              this.renderer.cntr.appendChild(sdiv)
+				      this.renderer.renderCntr.appendChild(sdiv)
+              const el = document.createElement('div')
+              el.innerHTML = "BLAH"
+              this.renderer.renderCntr.appendChild(el)
+            }
+          }
+        },
+
         setModel (m){
           this.model = m;
 
@@ -92,6 +126,18 @@ export default {
           if (this.tab === 'images') {
             setTimeout(() => {
               this.downloader.onFocus()
+            }, 30)
+          }
+
+          console.log(`evr1: creating doms renderer`)
+          this.renderer = this.$new(ExportDoms);
+          this.renderer.setJwtToken(this.jwtToken);
+          this.renderer.placeAt(this.$refs.rnlCntr);
+          this.renderer.setModel(m);
+          if (this.tab === 'reactjs-cmdd-no-logic') {
+            console.log(`evr1: start generating doms`)
+            setTimeout(() => {
+              this.renderer.onFocus()
             }, 30)
           }
         },

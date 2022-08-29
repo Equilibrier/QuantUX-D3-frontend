@@ -351,7 +351,7 @@ export default {
 
 			try {
 				/**
-				 * The sourceModel is used to draw tge elements on the zoomable
+				 * The sourceModel is used to draw the elements on the zoomable
 				 * background, whereas the model is used to handle DND
 				 */
 				this.sourceModel = ModelUtil.updateTemplateModifies(sourceModel);

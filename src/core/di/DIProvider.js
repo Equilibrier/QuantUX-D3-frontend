@@ -14,6 +14,7 @@ import { JSRunController } from 'core/di/JSRunController'
 class DIProvider {
 
     constructor() {
+        this._simulator = null
         this._globalScripts = null;
         this._canvas = null;
         this._model = null;
@@ -162,6 +163,11 @@ class DIProvider {
         this._simStarted = started;
     } 
 
+    setSimulatorRef(sim) {
+        console.error(`evr1: simulator ref set`)
+        this.__set("_simulator")(sim)
+    }
+
     simulatorStarted() { return this._simStarted; }
 
     canvas() { return this._canvas; }
@@ -191,6 +197,8 @@ class DIProvider {
     jsRunController() { return this._jsRunCtrl }
 
     globalJSScripts() { return this.__clone(this._globalScripts) }
+
+    simulatorRef() { return this._simulator }
 }
 
 export default new DIProvider();

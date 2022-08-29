@@ -1193,10 +1193,11 @@ export default {
 		}
     },
     mounted () {
-			if (this.app) {
-				this.setModel(this.app)
-				DIProvider.setModel(this.app);
-			}
+		if (this.app) {
+			this.setModel(this.app)
+			DIProvider.setModel(this.app);
+		}
+		DIProvider.setSimulatorRef(this)
     }
 }
 </script>
