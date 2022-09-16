@@ -7,6 +7,7 @@
 import * as ScriptToModel from '../../core/engines/ScriptToModel'
 
 import DIProvider from '../../core/di/DIProvider'
+import {code as MvvmCodebase} from 'core/mvvm/mvvm_core'
 
 export default {
   name: 'ScriptMixin',
@@ -126,14 +127,32 @@ export default {
             else {
                 // we are in test mode, no canvas in here; we are retrieving the jss code directly from DIProvider, and we ignore the enabled-checks
                 const jss = DIProvider.globalJSScripts();
-                if (jss) {
-                    for (let url of jss) {
-                        //let jsgCode = await (await fetch(url, noCacheOptions())).text();
-                        const resp = await fetch(url, noCacheOptions());
-                        const jsgCode = await resp.text()
-                        console.log(`response: ${JSON.stringify(resp)}`)
-                        outp += jsgCode + "\n";
+                if (jss && jss.length > 0) {
+                    const baseUrl = jss[0]
+                    const scripts = [
+                        //mvvm_lib.js
+                        "ext_modules.js",
+                        "models.js",
+                        "viewmodels.js",
+                        "views.js",
+                        "configurator.js",
+                        //qux-script
+                    ]
+                    outp = MvvmCodebase.toString() + "\n\n"
+                    // for (let url of jss) {
+                    //     //let jsgCode = await (await fetch(url, noCacheOptions())).text();
+                    //     const resp = await fetch(url, noCacheOptions());
+                    //     const jsgCode = await resp.text()
+                    //     console.log(`response: ${JSON.stringify(resp)}`)
+                    //     outp += jsgCode + "\n";
+                    // }
+                    for (let s of scripts) {
+                        const resp = await fetch(`${baseUrl}?filename=${s}`, noCacheOptions());
+                        const js = await resp.text()
+                        //console.log(`response: ${JSON.stringify(resp)}`)
+                        outp += js + "\n";
                     }
+                    console.log(`js code prefetched:\n${outp}`)
                 }
                 else {
                     console.error(`DIProvider could not retrieve global JS code, for some reason`)
