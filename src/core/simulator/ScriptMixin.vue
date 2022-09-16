@@ -131,6 +131,7 @@ export default {
                     const baseUrl = jss[0]
                     const scripts = [
                         //mvvm_lib.js
+                        "io_modules.js",
                         "ext_modules.js",
                         "models.js",
                         "viewmodels.js",
