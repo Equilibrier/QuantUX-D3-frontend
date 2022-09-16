@@ -147,8 +147,14 @@ export default {
                     //     outp += jsgCode + "\n";
                     // }
                     for (let s of scripts) {
-                        const resp = await fetch(`${baseUrl}?filename=${s}`, noCacheOptions());
-                        const js = await resp.text()
+                        let js = ""
+                        try {
+                            const resp = await fetch(`${baseUrl}?filename=${s}`, noCacheOptions());
+                            js = await resp.text()
+                        }
+                        catch(e) {
+                            // file not found on server, just ignoring
+                        }
                         //console.log(`response: ${JSON.stringify(resp)}`)
                         outp += js + "\n";
                     }
