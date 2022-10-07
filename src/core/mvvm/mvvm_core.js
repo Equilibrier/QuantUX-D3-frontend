@@ -89,10 +89,174 @@ class Model {
 	}
 }
 
+class QueuedCommand {
+	constructor(id, payload) {
+		this.id_ = id
+		this.payload_ = payload
+	}
+
+	id() { return this.id_ }
+	payload() { return this.payload_ }
+}
+
+class QueuedUICommand {
+	constructor(id, payload) {
+		this.id_ = id
+		this.payload_ = payload
+	}
+
+	id() { return this.id_ }
+	payload() { return this.payload_ }
+}
+
+class QueueC extends Model {
+	constructor() {
+		super()
+		this.elements_ = []
+	}
+
+	_load() {
+		this.elements_ = data.queue_c ? data.queue_c : []
+		return true
+	}
+	_save() {
+		return true
+	}
+
+	_operate(op, payload, prop) {
+		switch (op.toLowerCase()) {
+			case "add":
+			case "append":
+			case "push":
+				// 'prop' must be the id of a QueueCommand and 'payload' must be the payload of the command, which can be wahtever object will be interpretted by the command processer (custom project class)
+				this.elements_.push(new QueuedCommand(prop, payload))
+				break
+			case "pop":
+				this.elements_.pop()
+				break
+			case "delete":
+			case "remove":
+				// prop is the idx of the element to remove
+				if (prop < 0 || prop >= this.elements_.length) {
+					console.warn(`Could not remove element ${prop} from QueueC, element does not exist`)
+				}
+				else {
+					this.elements_.splice(prop, 1)
+				}
+				break
+			default:
+				console.error(`Unrecognized op ${op} on QueueC`)
+				return false
+		}
+		return true
+	}
+}
+
+class QueueU extends Model {
+	constructor() {
+		super()
+		this.elements_ = []
+	}
+
+	_load() {
+		this.elements_ = data.queue_u ? data.queue_u : []
+		return true
+	}
+	_save() {
+		return true
+	}
+
+	_operate(op, payload, prop) {
+		switch (op.toLowerCase()) {
+			case "add":
+			case "append":
+			case "push":
+				// 'prop' must be the id of a QueuedUICommand and 'payload' must be the payload of the command, which can be wahtever object will be interpretted by the UI command processer (custom project class)
+				this.elements_.push(new QueuedUICommand(prop, payload))
+				break
+			case "pop":
+				this.elements_.pop()
+				break
+			case "delete":
+			case "remove":
+				// prop is the idx of the element to remove
+				if (prop < 0 || prop >= this.elements_.length) {
+					console.warn(`Could not remove element ${prop} from QueueC, element does not exist`)
+				}
+				else {
+					this.elements_.splice(prop, 1)
+				}
+				break
+			default:
+				console.error(`Unrecognized op ${op} on QueueC`)
+				return false
+		}
+		return true
+	}
+}
+
 class ModelFactory {
+
+	_singletonAccess(fname, instantiateClbk) {
+		const field_ = fname.toLowerCase()
+		if (this[field_] === undefined) {
+			this[field_] = instantiateClbk()
+		}
+		return this[field_]
+	}
+	_getQueueCModel() { return this._singletonAccess("queue_c", () => new QueueC()) }
+	_getQueueUModel() { return this._singletonAccess("queue_u", () => new QueueU()) }
+
 	getModel(key) {
+		switch(key.toLowerCase()) {
+			case "queue_c":
+			case "queuec":
+				return this._getQueueCModel()
+			case "queue_u":
+			case "queueu":
+				return this._getQueueUModel()
+			default:
+				return this._getModel(key)
+		}
+	}
+
+	// to be overwritten methods
+	_getModel(key) {
 		key ? null : null // get rid of strict-mode error
 		return null; // returns a Model instance of the 'key' model (key is the name of the model you want)
+	}
+}
+
+//////////////////////////////////////////////////////////////////////
+// classes that should be overwritten on the configurator.js file
+
+// these objects can interogate the C/U queues and can surpress (ignore) or concatenate commands and modify the queue by will; it's a filter and optimizer
+class CmdQueueOptimizer {
+	optimizeQueue(queueC) {
+		queueC ? {} : {}
+		return false // didn't do anything, queue is not touched
+	}
+}
+class UIQueueOptimizer {
+	optimizeQueue(queueU) {
+		queueU ? {} : {}
+		return false // didn't do anything, queue is not touched
+	}
+}
+
+// this should consume project-specific commands and the effect should be model-changes + producing UI commands in the U-queue
+class CmdQueueConsumer {
+	consumeCommand(cmd) { // cmd is of type QueuedCommand
+		cmd ? {} : {}
+		return false // not able to consume it, the caller will know to trigger an exception, handle this error properly
+	}
+}
+/////////////////////////////////////////////////////////////////////
+// this should consume rather more generic UI commands (like starting a certain screen with or without timeout, removing a certain screen or something like that) so the whole impl should be in here
+class UIQueueConsumer {
+	consumeUICommand(uiCmd) { // uiCmd is of type QueuedUICommand
+		uiCmd ? {} : {}
+		return false // not able to consume it, the caller will know to trigger an exception, handle this error properly
 	}
 }
 
@@ -778,6 +942,14 @@ const dummy13 = new ScreenFactory();
 const dummy14 = new MVVMConfigurator();
 const dummy15 = new MVVMContext();
 const dummy16 = new MVVMStarter();
+const dummy17 = new QueuedCommand();
+const dummy18 = new QueuedUICommand();
+const dummy19 = new QueueC();
+const dummy20 = new QueueU();
+const dummy21 = new CmdQueueOptimizer();
+const dummy22 = new UIQueueOptimizer();
+const dummy23 = new CmdQueueConsumer();
+const dummy24 = new UIQueueConsumer();
 dummy0 ? null : null
 dummy1 ? null : null
 dummy2 ? null : null
@@ -795,6 +967,14 @@ dummy13 ? null : null
 dummy14 ? null : null
 dummy15 ? null : null
 dummy16 ? null : null
+dummy17 ? null : null
+dummy18 ? null : null
+dummy19 ? null : null
+dummy20 ? null : null
+dummy21 ? null : null
+dummy22 ? null : null
+dummy23 ? null : null
+dummy24 ? null : null
 }
 
 export const code = codeFunction.toString().match(/function[^{]+\{([\s\S]*)\}$/)[1]
