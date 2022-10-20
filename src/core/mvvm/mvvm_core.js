@@ -105,7 +105,7 @@ class QueuedCommand {
 
 
 	static __insertContext(payload) {
-		// caller closure must contain the 'context' variable (so the ancestor-caller should be MVVM_STARTER, which has rights on the context)
+		// caller closure must contain the 'context' variable (so the ancestor-caller should be MVVM_CONTROLLER, which has rights on the context)
 
 		return {
 			...payload,
@@ -712,10 +712,10 @@ class MVVM_UIUtils {
 	
 	setVisibility(visible, widgName, scr) {
 		if (visible) {
-			return MVVM_STARTER.UIUtils().__showIfExists(widgName, scr)
+			return MVVM_CONTROLLER.UIUtils().__showIfExists(widgName, scr)
 		}
 		else {
-			return MVVM_STARTER.UIUtils().__hideIfExists(widgName, scr)
+			return MVVM_CONTROLLER.UIUtils().__hideIfExists(widgName, scr)
 		}
 	}
 
@@ -764,7 +764,7 @@ class MVVMConfigurator {
 }
 
 
-let MVVM_STARTER = null; // will be later instantiated
+let MVVM_CONTROLLER = null; // will be later instantiated
 
 class MVVMContext {
 	
@@ -780,13 +780,13 @@ class MVVMContext {
 		
 		this.screensStack_ = data.screensStack ? data.screensStack : []
 		
-		const lastScreenIsNotRegistered = (ps) => ps && this.lastScreen()?.screen && MVVM_STARTER.Configurator().ScreenFactory().createScreen(this.lastScreen()?.screen, {})?.screenId()?.toLowerCase() !== ps.toLowerCase()
+		const lastScreenIsNotRegistered = (ps) => ps && this.lastScreen()?.screen && MVVM_CONTROLLER.Configurator().ScreenFactory().createScreen(this.lastScreen()?.screen, {})?.screenId()?.toLowerCase() !== ps.toLowerCase()
 		// this will contain class names
 		
 		// the first screen before this script is starting to run as a MVVM router, will not be registered here, unless we make this as a special case, like so:
 		const ps = data.__sourceScreen ? data.__sourceScreen.toLowerCase() : undefined
 		if (ps && (this.screensStack_.length <= 0 || lastScreenIsNotRegistered(ps))) {
-			const scr_ = MVVM_STARTER.Configurator().ScreenFactory().screenClsFromId(ps)
+			const scr_ = MVVM_CONTROLLER.Configurator().ScreenFactory().screenClsFromId(ps)
 			if (scr_) {
 				console.log(`pushing screen to stack MANUALLY: ${scr_}`)
 				this.screensStack_.push({
@@ -927,7 +927,7 @@ class MVVMStarter {
 	
 	_instantiateScreen(screen, params) {
 		console.log(`log3: creating screen: ${screen} with params ${JSON.stringify(params)}`)
-		const sref = MVVM_STARTER.Configurator().ScreenFactory().createScreen(screen, params)
+		const sref = MVVM_CONTROLLER.Configurator().ScreenFactory().createScreen(screen, params)
 		sref.init()
 		console.log(`create screen ${screen} with params ${JSON.stringify(params)}`)
 		return sref
@@ -984,7 +984,7 @@ class MVVMStarter {
 				this.__context().popLastScreen()
 			}
 			const builtScreen = this.__private_helpers().buildCurrentScreen(isPush)
-			return {targetTo: MVVM_STARTER.Configurator().ScreenFactory().screenIdFromClsName(builtScreen)}
+			return {targetTo: MVVM_CONTROLLER.Configurator().ScreenFactory().screenIdFromClsName(builtScreen)}
 		}
 		else {
 			// vom returna cum ca trebuie sa ramana ecranul curent, deci QUX sa nu face nimic
@@ -1019,14 +1019,14 @@ class MVVMStarter {
 			if (nvm) nvm.onTransitionTo()
 			if (nvm) nvm.initView()
 			console.log(`log1: 111 initView done`)
-			let target = {to: MVVM_STARTER.Configurator().ScreenFactory().screenIdFromClsName(screen)}
+			let target = {to: MVVM_CONTROLLER.Configurator().ScreenFactory().screenIdFromClsName(screen)}
 			return {...target, ...ctx.screenMeta(screen)}
 		}
 		else if (popLastScreen) {
 			ctx.popLastScreen()
 			const {screen, params} = ctx.lastScreen()
 			console.log(`log4: poplastscreen`)
-			let target = {to: MVVM_STARTER.Configurator().ScreenFactory().screenIdFromClsName(screen)}
+			let target = {to: MVVM_CONTROLLER.Configurator().ScreenFactory().screenIdFromClsName(screen)}
 			target = {...target, ...ctx.screenMeta(screen)}
 			if (target.to) {
 				ctx.pushScreen(screen, params)
@@ -1079,7 +1079,7 @@ class MVVMStarter {
 			console.log(`screen: ${s?.constructor.name}`)
 			console.log(`nextScreenCls1: ${nextScreenCls}`)
 			
-			let target = !nextScreenCls || nextScreenCls.trim().toLowerCase() === "same" ? {loop: "fast_exit"} : {to: MVVM_STARTER.Configurator().ScreenFactory().screenIdFromClsName(nextScreenCls)}
+			let target = !nextScreenCls || nextScreenCls.trim().toLowerCase() === "same" ? {loop: "fast_exit"} : {to: MVVM_CONTROLLER.Configurator().ScreenFactory().screenIdFromClsName(nextScreenCls)}
 			target = {...target, ...ctx.screenMeta(nextScreenCls)}
 			// no need to push the new screen to the stack, it will be auto-added next time we instantiate the context, from the qux ScriptMixin ("qux controller")
 			
