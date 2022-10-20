@@ -1,3 +1,5 @@
+import { _ } from "core-js"
+
 const codeFunction = function(){
 let data = null // this must stay on line 1, as it is hardcode-removed from the sources, when building the Qux script
 
@@ -90,108 +92,204 @@ class Model {
 }
 
 class QueuedCommand {
-	constructor(id, payload) {
-		this.id_ = id
+
+	static createClickCommand(sourceElement) {
+		return new QueuedCommand(QueuedCommand.TYPE__CLICK, QueuedCommand.__insertContext({source_element: sourceElement }))
+	}
+	static createAsyncCommand(cmdId) {
+		return new QueuedCommand(QueuedCommand.TYPE__ASYNC, QueuedCommand.__insertContext({cmd_id: cmdId}))
+	}
+	static createDatabindCommand(bindingName, value) {
+		return new QueuedCommand(QueuedCommand.TYPE__DATABIND, QueuedCommand.__insertContext({ databinding: bindingName, value }))
+	}
+
+
+	static __insertContext(payload) {
+		// caller closure must contain the 'context' variable (so the ancestor-caller should be MVVM_STARTER, which has rights on the context)
+
+		return {
+			...payload,
+			source_screen: context.lastScreen(), 
+			previous_screen: context.previousScreen()
+		}
+	}
+
+	static TYPE__CLICK = "click"
+	static TYPE__ASYNC = "async"
+	static TYPE__DATABIND = "databind"
+
+	constructor(type, payload) {
+		this.type_ = type
 		this.payload_ = payload
 	}
 
-	id() { return this.id_ }
+	isClickCommand() { this.type_ === QueuedCommand.TYPE__CLICK }
+	isAsyncCommand() { this.type_ === QueuedCommand.TYPE__ASYNC }
+	isDatabindCommand() { return this.type_ === QueuedCommand.TYPE__DATABIND }
+
+	clickSourceElement() { return this.isClickCommand() ? this.payload_?.source_element : undefined }
+	asyncCmdId() { return this.isAsyncCommand() ? this.payload_?.cmd_id: undefined }
+	databindBinding() { return this.isDatabindCommand() ? this.payload_?.databinding : undefined }
+	databindNewValue() { return this.isDatabindCommand() ? this.payload_?.value : undefined }
+
+	sourceScreen() { return this.payload_?.source_screen }
+	previousScreen() { return this.payload_?.previous_screen }
+
+	toUIEvent() {
+		if (this.isClickCommand()) {
+			return new UIEvent(this.clickSourceElement(), "click")
+		}
+		else if (this.isAsyncCommand()) {
+			return new UIEvent(this.asyncCmdId(), 'async_screen')
+		}
+		else if (this.isDatabindCommand()) {
+			return new UIEvent(this.databindBinding(), 'type', this.databindNewValue())
+		}
+		console.error(`Could not convert QueuedEvent to UIEvent for type: ${this.type()} and payload ${this.payload()}`)
+		return null
+	}
+
+	type() { return this.type_ }
 	payload() { return this.payload_ }
 }
 
-class QueuedUICommand {
-	constructor(id, payload) {
-		this.id_ = id
+class QueuedUIInstruction {
+	static TYPE__DELAY = "delay"
+	static TYPE__PUSHSCREEN = "push-screen"
+	static TYPE__POPSCREEN = "pop-screen"
+	static TYPE__UPDATESCREEN = "update-screen"
+
+	static createDelayInstruction(timeMs) {
+		return new QueuedUIInstruction(QueuedUIInstruction.TYPE__DELAY, timeMs)
+	}
+	static createPushScreenInstruction(screenUrl) {
+		const _parseParams = (raw) => {
+			let pa = {}
+			const exprs = raw.split("&")
+			for (let e of exprs) {
+				const tokens = e.split("=")
+				pa[tokens[0]] = tokens[1]
+			}
+			return pa
+		}
+		const _parseScreenUrl = (url) => {
+			const paramsRaw_ = url && url.includes("?") ? url.substring(url.indexOf("?") + 1) : ""
+			const params = _parseParams(paramsRaw_)
+			const screen = url && url.includes("?") ? url.substring(0, url.indexOf("?")) : url
+			return {screen, params}
+		}
+		const {screen, params} = _parseScreenUrl(screenUrl)
+
+		return new QueuedUIInstruction(QueuedUIInstruction.TYPE__PUSHSCREEN, {screen_name: screen, params})
+	}
+	static createPopScreenInstruction() {
+		return new QueuedUIInstruction(QueuedUIInstruction.TYPE__POPSCREEN, undefined)
+	}
+	static createUpdateScreenInstruction(screenId, updatedParamsSection) {
+		return new QueuedUIInstruction(QueuedUIInstruction.TYPE__UPDATESCREEN, { screen_id: screenId, params: updatedParamsSection })
+	}
+
+	constructor(type, payload) {
+		this.type_ = type
 		this.payload_ = payload
 	}
 
-	id() { return this.id_ }
+	isDelayInstruction() { this.type_ === QueuedUIInstruction.TYPE__DELAY }
+	isPushScreenInstruction() { this.type_ === QueuedUIInstruction.TYPE__PUSHSCREEN }
+	isPopScreenInstruction() { return this.type_ === QueuedUIInstruction.TYPE__POPSCREEN }
+	isUpdateScreenInstruction() { return this.type_ === QueuedUIInstruction.TYPE__UPDATESCREEN }
+
+	delayTimeMs() { return this.isDelayInstruction() ? parseFloat(this.payload_) : undefined }
+	pushScreenScreenName() { return this.isPushScreenInstruction() ? this.payload_?.screen_name : undefined }
+	pushScreenScreenParams() { return this.isPushScreenInstruction() ? this.payload_?.params : undefined }
+	updateScreenScreenId() { return this.isUpdateScreenInstruction() ? this.payload_?.screen_id : undefined }
+	updateScreenParams() { return this.isUpdateScreenInstruction() ? this.payload_?.params : undefined }
+
+	type() { return this.type_ }
 	payload() { return this.payload_ }
 }
 
-class QueueC extends Model {
+class GenericQueue {
 	constructor() {
-		super()
 		this.elements_ = []
+		this.c_head_ = -1 // consume head
 	}
 
-	_load() {
-		this.elements_ = data.queue_c ? data.queue_c : []
+	_queueName() {
+		return "some_queue"
+	}
+
+	__formattedQueueName() {
+		let qn = this._queueName()
+		qn = qn.replaceAll(" ", "_")
+		return qn
+	}
+
+	load() {
+		const _qn = this.__formattedQueueName()
+
+		this.elements_ = data[_qn] && data[_qn]?.data ? data[_qn].data : []
+		this.c_head_ = data[_qn] && data[_qn]?.head_c ? data[_qn].head_c : 0
 		return true
 	}
+
 	_save() {
+		const _qn = this.__formattedQueueName()
+		data[_qn].head_c = this.c_head_
 		return true
 	}
 
-	_operate(op, payload, prop) {
-		switch (op.toLowerCase()) {
-			case "add":
-			case "append":
-			case "push":
-				// 'prop' must be the id of a QueueCommand and 'payload' must be the payload of the command, which can be wahtever object will be interpretted by the command processer (custom project class)
-				this.elements_.push(new QueuedCommand(prop, payload))
-				break
-			case "pop":
-				this.elements_.pop()
-				break
-			case "delete":
-			case "remove":
-				// prop is the idx of the element to remove
-				if (prop < 0 || prop >= this.elements_.length) {
-					console.warn(`Could not remove element ${prop} from QueueC, element does not exist`)
-				}
-				else {
-					this.elements_.splice(prop, 1)
-				}
-				break
-			default:
-				console.error(`Unrecognized op ${op} on QueueC`)
-				return false
+	_push(element) {
+		this.elements_.push(element)
+		this._save()
+	}
+	_pop() {
+		this.elements_.pop()
+		this._save()
+	}
+	_remove(idx) {
+		if (idx < 0 || idx >= this.elements_.length) {
+			console.warn(`Could not remove element ${idx} from ${this._queueName()}, element does not exist`)
 		}
-		return true
+		else {
+			this.elements_.splice(idx, 1)
+		}
+	}
+
+	size() { return this._elements.length }
+	consume() {
+		if (this.c_head_ >= this.size()) return undefined
+		this.c_head_ ++;
+		this._save()
+		return this._elements[this.c_head_ - 1]
 	}
 }
 
-class QueueU extends Model {
+class QueueC extends GenericQueue {
 	constructor() {
 		super()
-		this.elements_ = []
 	}
 
-	_load() {
-		this.elements_ = data.queue_u ? data.queue_u : []
-		return true
-	}
-	_save() {
-		return true
+	_queueName() {
+		return "queue_c"
 	}
 
-	_operate(op, payload, prop) {
-		switch (op.toLowerCase()) {
-			case "add":
-			case "append":
-			case "push":
-				// 'prop' must be the id of a QueuedUICommand and 'payload' must be the payload of the command, which can be wahtever object will be interpretted by the UI command processer (custom project class)
-				this.elements_.push(new QueuedUICommand(prop, payload))
-				break
-			case "pop":
-				this.elements_.pop()
-				break
-			case "delete":
-			case "remove":
-				// prop is the idx of the element to remove
-				if (prop < 0 || prop >= this.elements_.length) {
-					console.warn(`Could not remove element ${prop} from QueueC, element does not exist`)
-				}
-				else {
-					this.elements_.splice(prop, 1)
-				}
-				break
-			default:
-				console.error(`Unrecognized op ${op} on QueueC`)
-				return false
-		}
-		return true
+	pushCommand(cmd) {
+		return this._push(cmd)
+	}
+}
+
+class QueueU extends GenericQueue {
+	constructor() {
+		super()
+	}
+
+	_queueName() {
+		return "queue_u"
+	}
+
+	pushInstruction(uiInstruction/*:QueuedUIInstruction*/) {
+		this._push(uiInstruction)
 	}
 }
 
@@ -204,17 +302,8 @@ class ModelFactory {
 		}
 		return this[field_]
 	}
-	_getQueueCModel() { return this._singletonAccess("queue_c", () => new QueueC()) }
-	_getQueueUModel() { return this._singletonAccess("queue_u", () => new QueueU()) }
-
 	getModel(key) {
 		switch(key.toLowerCase()) {
-			case "queue_c":
-			case "queuec":
-				return this._getQueueCModel()
-			case "queue_u":
-			case "queueu":
-				return this._getQueueUModel()
 			default:
 				return this._getModel(key)
 		}
@@ -230,13 +319,7 @@ class ModelFactory {
 //////////////////////////////////////////////////////////////////////
 // classes that should be overwritten on the configurator.js file
 
-// these objects can interogate the C/U queues and can surpress (ignore) or concatenate commands and modify the queue by will; it's a filter and optimizer
-class CmdQueueOptimizer {
-	optimizeQueue(queueC) {
-		queueC ? {} : {}
-		return false // didn't do anything, queue is not touched
-	}
-}
+// this object can interogate the C/U queues and can surpress (ignore) or concatenate commands and modify the queue by will; it's a filter and optimizer
 class UIQueueOptimizer {
 	optimizeQueue(queueU) {
 		queueU ? {} : {}
@@ -246,19 +329,108 @@ class UIQueueOptimizer {
 
 // this should consume project-specific commands and the effect should be model-changes + producing UI commands in the U-queue
 class CmdQueueConsumer {
-	consumeCommand(cmd) { // cmd is of type QueuedCommand
-		cmd ? {} : {}
-		return false // not able to consume it, the caller will know to trigger an exception, handle this error properly
+	// asta NU se suprascrie
+	consume(queueC/*:QueueC*/, queueU/*QueueU*/) {
+		let cmd;
+		do {
+			cmd = queueC.consume()
+			let consumer;
+			if (cmd.isClickCommand()) {
+				consumer = this.consumeClickCmd
+			}
+			else if (cmd.isAsyncCommand()) {
+				consumer = this.consumeAsyncCmd
+			}
+			else if (cmd.isDatabindCommand()) {
+				consumer = this.consumeDatabindCmd
+			}
+			else {
+				consumer = this.consumeGenericCmd
+			}
+			if (!consumer(cmd, queueU)) {
+				console.error(`Consumer ${consumer.name} was not able to consume command ${cmd.type()}, payload: ${JSON.stringify(cmd.payload())}`)
+			}
+		}
+		while (cmd !== undefined) // consum toata coada (continutul disponibil in prezent)
+	}
+
+	_getHelpers(cmd, queueU) {
+		return {
+			buildScreenQuery: (screen, params) => {
+				let p = ""
+				if (Object.keys(params).length > 0) {
+					for (let pp of Object.keys(params)) {
+						p += `${pp}=${params[pp]}&`
+					}
+					p = p.substring(0, p.length - 1)
+				}
+				return `${screen}${p.length > 0 ? '?' + p : ''}`
+			},
+
+			schedulePushScreen: (screenUrl) => queueU.pushInstruction(QueuedUIInstruction.createPushScreenInstruction(screenUrl)),
+			schedulePopScreen: () => queueU.pushInstruction(QueuedUIInstruction.createPopScreenInstruction()),
+			scheduleDelay: (timeMs) => queueU.pushInstruction(QueuedUIInstruction.createDelayInstruction(timeMs)),
+			scheduleUpdateScreen: (params) => queueU.pushInstruction(QueuedUIInstruction.createUpdateScreenInstruction(cmd.sourceScreen().id, params)),
+			routeDecisions: (routes) => {
+				/*
+					routes = [
+						{
+							scr: undefined|string 	// screenId
+							elm: string				// sourceElement
+							hndl: 					// handler
+						}
+					]
+				*/
+				const scrUndefines = routes.filter(e => e?.scr === null || e?.scr === undefined)
+				const completes = routes.filter(e => e?.scr !== null && e?.scr !== undefined)
+				
+				const seEqValid = (val) => (typeof val === "function" && val(se)) || (typeof val !== 'function' && val == se)
+
+				const se = cmd.clickSourceElement()?.toLowerCase()
+				for (let r of scrUndefines) {
+					if (seEqValid(r.elm)) {
+						r.hndl()
+						return true
+					}
+				}
+				
+				const sourceScreen_ = cmd.sourceScreen()
+				const sourceScreenName = sourceScreen_.screen
+				
+				for (let r of completes) {
+					if (sourceScreenName == r.scr && seEqValid(r.elm)) {
+						r.hndl()
+						return true
+					}
+				}
+				return false
+			}
+		}
+	}
+
+	////////////////////////////////////////////////
+	// astea sa fie SUPRASCRISE
+	_consumeClickCmd(cmd/*:QueuedCommand*/, queueU) {
+		return false // not handled
+	}
+	_consumeAsyncCmd(cmd/*:QueuedCommand*/, queueU) {
+		return false // not handled
+	}
+	_consumeDatabindCmd(cmd/*:QueuedCommand*/, queueU) {
+		return false // not handled
+	}
+	_consumeGenericCmd(cmd/*:QueuedCommand*/, queueU) {
+		return false
 	}
 }
 /////////////////////////////////////////////////////////////////////
 // this should consume rather more generic UI commands (like starting a certain screen with or without timeout, removing a certain screen or something like that) so the whole impl should be in here
-class UIQueueConsumer {
-	consumeUICommand(uiCmd) { // uiCmd is of type QueuedUICommand
-		uiCmd ? {} : {}
-		return false // not able to consume it, the caller will know to trigger an exception, handle this error properly
-	}
-}
+// class UIQueueConsumer {
+// 	consumeUICommand(uiCmd) { // uiCmd is of type QueuedUICommand
+// 		uiCmd ? {} : {}
+// 		return false // not able to consume it, the caller will know to trigger an exception, handle this error properly
+// 	}
+// }
 
 class ModelEvent {
 	constructor(key, propOrOp, valOrPayload) {
@@ -295,8 +467,6 @@ class VM {
 	_initViewMeta() { // to be overriden, and specify view UI elements to be on/off
 		return null
 	}
-	
-	onTransitionTo() {} // called only after the screen associated with this VM was pushed on the screen stack (it means you are on the first time on that screen or you returned on that screen)
 	
 	initView() { // initializes the View (Screen), by passing messages to it, for hiding/showing/formatting widgets on it, so that it will have the final form this VM expects it to have; in our case, the messages are ScriptAPI calls
 	
@@ -446,6 +616,8 @@ class PScreen { // projected screen
 			console.warn(`getVM() returns an invalid VM for screen ${this.constructor.name}`)
 		}
 	}
+
+	onTransitionTo() {} // called only after the screen associated with this VM was pushed on the screen stack (it means you are on the first time on that screen or you returned on that screen)
 	
 	configureUI(params) {
 		params ? {} : {}
@@ -484,8 +656,6 @@ class PScreen { // projected screen
 				console.warn(`uiEvent on the VM failed, for event ${JSON.stringify(ev)}`)
 			}
 		}
-		const nextScr = MVVM_STARTER.context().transitionController().uiEvent(this, ev)
-		return nextScr ? nextScr : (vmSucceeded ? "same_screen" : null)
 	}
 
 	transitionValid() {} // checks if the actual context (previous screen, current UI event (pe)) are valid for this screen to appear
@@ -583,19 +753,14 @@ class ScreenFactory {
 }
 
 class MVVMConfigurator {
-	AsyncScreens() {
-		return {}
-	} 
-	BindedWidgets() {
-		return {}
-	}
-	ScreenTransitionMeta() {
-		return {}
-	}
-	
-	TransitionController() { return null }
+
 	ModelFactory() { return null }
 	VMFactory() { return null }
+
+	TransitionController() { return null }
+	CommandsConsumer() { return null }
+
+	UIOptimizer() { return null }
 }
 
 
@@ -603,89 +768,34 @@ let MVVM_STARTER = null; // will be later instantiated
 
 class MVVMContext {
 	
-	static Controller = class {
-		constructor() {
-			this.evQueue_ = [] // it doesn't support but single events from qux, but we presume we have support for multiple events or an events-queue
-		}
-		pushEvent(ev) { this.evQueue_.push(ev) }
-		consumeLastEvent() { return this.evQueue_.pop() }
-	}
-	
-	
-	manualUpdateBindedWidget(bwid, value) {
-		const bindKey = MVVM_STARTER.configurator().BindedWidgets()[bwid]
-		if (bindKey) {
-			data[bindKey] = value
-			this.saveBindedWidgetsState()
-		}
-	}
-	
-	_saveState() {
+	__saveState() {
 		data.screensStack = JSON.parse(JSON.stringify(this.screensStack_))
-		data.bindedwidgetsstate = JSON.parse(JSON.stringify(this.bwstate_))
+	}
+
+	__generateId() {
+		return Math.random() * 100000000
 	}
 	
-	constructor(asyncEvId = null) {
-		this.valid_ = true
+	constructor() {
 		
 		this.screensStack_ = data.screensStack ? data.screensStack : []
-		this.bwstate_ = data.bindedwidgetsstate ? data.bindedwidgetsstate : {}
-		this.controller_ = new MVVMContext.Controller()
-		const eid = data.__sourceElement ? data.__sourceElement.toLowerCase() : undefined
 		
-		console.log(`asyncEvId: ${asyncEvId}`)
-		if (asyncEvId) {
-			console.log(`*************building async event: ${MVVM_STARTER.configurator().AsyncScreens()[asyncEvId]}`)
-			this.controller_.pushEvent(new UIEvent(asyncEvId, 'async_screen', MVVM_STARTER.configurator().AsyncScreens()[asyncEvId]))
-		}
-		else if (eid) {
-			this.controller_.pushEvent(new UIEvent(eid))
-		}
-		else { // *NU* am un CLICK
-			const changedBind = data.__sourceData
-			const newVal = data.__sourceNewValue
-			let foundChange = false
-			if (changedBind) {
-				const bwidgs = MVVM_STARTER.configurator().BindedWidgets()
-				for (let widgname of Object.keys(bwidgs)) {
-					const binding = bwidgs[widgname]
-					if (binding === changedBind) {
-						console.log(`create bind event with ${newVal}`)
-						this.controller_.pushEvent(new UIEvent(widgname, 'type', newVal))
-						foundChange = true
-						break // only ONE event, it should not be possible to interract with multiple binded-widgets in the same time; if, for some reason, you want to support multiple events, then you must also impl another scheme for the consumeLastEvent call bellow
-					}
-				}
-				if (!foundChange) { // nu am bind
-					this.valid_ = false
-				}
-				else {
-					this.saveBindedWidgetsState()
-				}
-			}
-			else if (changedBind === null) { // nu am bind
-				this.valid_ = false
-			}
-		}
-		
-		if (!this.valid_) {
-			return // no more continuing, to affect data. (state) because the context is not valid (MVVM controller should return immediately) -- this is only possible if you have databinded scripts in QUX, and some non-widgets data. changes were done (and this is the case whenever the data. changes, which is kind of bad, but this is the situation...)
-		}
-		
-		const lastScreenIsNotRegistered = (ps) => ps && this.lastScreen()?.screen && MVVM_STARTER.configurator().ScreenFactory().createScreen(this.lastScreen()?.screen, {})?.screenId()?.toLowerCase() !== ps.toLowerCase()
+		const lastScreenIsNotRegistered = (ps) => ps && this.lastScreen()?.screen && MVVM_STARTER.Configurator().ScreenFactory().createScreen(this.lastScreen()?.screen, {})?.screenId()?.toLowerCase() !== ps.toLowerCase()
 		// this will contain class names
 		
 		// the first screen before this script is starting to run as a MVVM router, will not be registered here, unless we make this as a special case, like so:
 		const ps = data.__sourceScreen ? data.__sourceScreen.toLowerCase() : undefined
 		if (ps && (this.screensStack_.length <= 0 || lastScreenIsNotRegistered(ps))) {
-			const scr_ = MVVM_STARTER.configurator().ScreenFactory().screenClsFromId(ps)
+			const scr_ = MVVM_STARTER.Configurator().ScreenFactory().screenClsFromId(ps)
 			if (scr_) {
 				console.log(`pushing screen to stack MANUALLY: ${scr_}`)
 				this.screensStack_.push({
 					screen: scr_,
-					params: {}
+					params: {},
+
+					id: this.__generateId(),
 				})
-				this._saveState()
+				this.__saveState()
 			}
 			else {
 				console.warn(`Detected unregistered screen (${ps}) but could not instantiate a cls name from it to add it into the screens stack`)
@@ -693,50 +803,38 @@ class MVVMContext {
 		}
 	}
 	
-	controller() { return this.controller_}
-	
-	transitionController() { return MVVM_STARTER.configurator().TransitionController() }
-	modelFactory() { return MVVM_STARTER.configurator().ModelFactory() }
-	vmFactory() { return MVVM_STARTER.configurator().VMFactory() }
-	
-	screenMeta(screenCls) { return MVVM_STARTER.configurator().ScreenTransitionMeta()[screenCls] ? MVVM_STARTER.configurator().ScreenTransitionMeta()[screenCls] : {} }
-	
 	pushScreen(screenClsName, params) {
-		console.log(`PUSHIIINGGGGGGGGGGGG SCREEN ${screenClsName}`)
 		this.screensStack_.push({
 			screen: screenClsName,
-			params
+			params,
+
+			id: __generateId,
 		})
-		this._saveState()
+		this.__saveState()
 	}
-	updateLastScreenParams(params) {
-		if (this.screensStack_.length >= 1) {
-			let cparams = this.screensStack_[this.screensStack_.length - 1].params
+	updateScreenParams(screenId, params) {
+		const selection = this.screensStack_.filter(s => s.id == screenId)
+		if (selection.length > 0) {
+			const selScreen = selection[0]
+			let cparams = selScreen.params
 			for (let k of Object.keys(params)) {
 				cparams[k] = params[k]
 			}
-			this.screensStack_[this.screensStack_.length - 1].params = cparams
-			this._saveState()
+			selScreen.params = cparams
+			this.__saveState()
 			return true
 		}
 		return false
 	}
-	
-	saveBindedWidgetsState() {
-		const bwidgs = MVVM_STARTER.configurator().BindedWidgets()
-		for (let widgname of Object.keys(bwidgs)) {
-			const binding = bwidgs[widgname]
-			this.bwstate_[widgname] = data[binding]
-		}
-		this._saveState()
+
+	screen(screenId) {
+		const selection = this.screensStack_.filter(s => s.id == screenId)
+		return selection.length > 0 ? selection[0] : undefined;
 	}
 	
 	lastScreen() { return this.screensStack_.length >= 1 ? this.screensStack_[this.screensStack_.length - 1] : undefined }
 	previousScreen() { return this.screensStack_.length >= 2 ? this.screensStack_[this.screensStack_.length - 2] : undefined }
-	
 	popLastScreen() { return this.screensStack_.pop() }
-	
-	valid() { return this.valid_ }
 }
 
 class MVVMStarter {
@@ -744,64 +842,99 @@ class MVVMStarter {
 	constructor() {
 		this.context_ = null
 		this.uiUtils_ = new MVVM_UIUtils()
+
+		this.queueC_ = new QueueC()
+		this.queueC_.load()
+
+		this.queueU_ = new QueueU()
+		this.queueU_.load()
 	}
-	
+
 	UIUtils() { return this.uiUtils_ }
 	
-	configurator() { return null } // :MVVMConfigurator
+	// le pun cu litera mare la inceput ca sa arat ca sunt functii, in mod special, publice ce se vrea a fi apelate din afara
+	QueueC() { return this.queueC_ }
+	QueueU() { return this.queueU_ }
+	Configurator() { return null } // :MVVMConfigurator
+
+
+	__private_helpers() {
+		return {
+			'buildScreenByRef': (screen, params, isPush = false) => {
+				//const {screen, params} = MVVMStarter._parseScreenUrl(forceTransitionTo)
+				const ns = this._instantiateScreen(screen, params)
+				const nvm = ns.getVM();
+				console.log(`log1: 112 configured screen for next render, vm name ${nvm?.constructor?.name}`)
+				if (isPush) ns.onTransitionTo()
+				if (nvm) nvm.initView()
+				console.log(`log1: 111 initView done`)
+			},
+			'buildCurrentScreen': (isPush = true) => {
+				const {screen, params} = this.__context().lastScreen()
+				this.__private_helpers.buildScreenByRef(screen, params, isPush)
+				return screen
+			},
+			'buildScreen': (screenId = true, isPush = false) => {
+				const {screen, params} = this.__context().screen(screenId)
+				this.__private_helpers.buildScreenByRef(screen, params, isPush)
+				return screen
+			},
+			'digestCommands': () => {
+				this.Configurator().CommandsConsumer().consume(this.queueC_, this.queueU_)
+			},
+			'sendEventToScreen': (ev) => {
+				const screen = this.__private_helpers.buildScreen(ev.sourceScreen().id)
+				screen.sendUIEvent(ev.toUIEvent())
+			}
+		}
+	}
+
+	pushClickEvent(sourceElement) {
+		const context = this.__context() // context de closure pentru QueuedCommand
+		context ? {} : {}
+
+		const ev = QueuedCommand.createClickCommand(sourceElement)
+		this.__private_helpers().sendEventToScreen(ev)
+
+		this.queueC_.pushCommand(ev)
+		this.__private_helpers().digestCommands()
+	}
+	pushAsyncCommand(cmdId) {
+		const context = this.__context() // context de closure pentru QueuedCommand
+		context ? {} : {}
+
+		const ev = QueuedCommand.createAsyncCommand(cmdId)
+		this.__private_helpers().sendEventToScreen(ev)
+
+		this.queueC_.pushCommand(ev)
+		this.__private_helpers().digestCommands()
+	}
+	pushDataBindEvent(databinding, value) {
+		const context = this.__context() // context de closure pentru QueuedCommand
+		context ? {} : {}
+
+		const ev = QueuedCommand.createDatabindCommand(databinding, value)
+		this.__private_helpers().sendEventToScreen(ev)
+
+		this.queueC_.pushCommand(ev)
+		this.__private_helpers().digestCommands()
+	}
 	
-	buildContext(asyncEvId) { 
-		this.context_ = new MVVMContext(asyncEvId)
+	__context() {
+		if (this.context_ === null) this.context_ = new MVVMContext()
 		return this.context_
 	}
 	
-	context() {
-		if (this.context_ === null) this.buildContext()
-		return this.context_
-	}
-	
-	
-	_instantiateScreen(ctx) {
-		const {screen, params} = ctx.lastScreen()
+	_instantiateScreen(screen, params) {
 		console.log(`log3: creating screen: ${screen} with params ${JSON.stringify(params)}`)
-		const sref = MVVM_STARTER.configurator().ScreenFactory().createScreen(screen, params)
+		const sref = MVVM_STARTER.Configurator().ScreenFactory().createScreen(screen, params)
 		sref.init()
 		console.log(`create screen ${screen} with params ${JSON.stringify(params)}`)
 		return sref
 	}
-	_sendUIEvents(screen, ev) {
-		if (screen) {
-			return screen.sendUIEvent(ev)
-		}
-		return "same"
-	}
 	_updateContextByTarget(ctx, targetScreen) {
 		ctx.pushScreen(targetScreen)
 		return ctx
-	}
-	
-	lastScreenUpdated(params) {
-		console.log(`EVRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR`)
-		MVVM_STARTER.context().updateLastScreenParams(params)
-		return "same_screen"
-	}
-	
-	static _parseParams(raw) {
-		let pa = {}
-		const exprs = raw.split("&")
-		for (let e of exprs) {
-			const tokens = e.split("=")
-			pa[tokens[0]] = tokens[1]
-		}
-		return pa
-	}
-	
-	static _parseScreenUrl(url) {
-		const paramsRaw_ = url && url.includes("?") ? url.substring(url.indexOf("?") + 1) : ""
-		const params = MVVMStarter._parseParams(paramsRaw_)
-		const screen = url && url.includes("?") ? url.substring(0, url.indexOf("?")) : url
-		console.log(`evr111: screen: ${screen}; params: ${JSON.stringify(params)}`)
-		return {screen, params}
 	}
 	
 	// PUBLIC methods
@@ -810,11 +943,61 @@ class MVVMStarter {
 	//	const ctx = new MVVMContext()
 	//	return ctx.lastScreen()?.screen === screenCls
 	//}
-	
+
 	// this is the single function that needs to be called and return its results on the (mvvm-routing) JS script
-	doComputation(params="default") {
+	Compute() {
+		const uiOptimizer = MVVMStarter.Configurator().UIOptimizer()
+
+		uiOptimizer.optimizeQueue(this.queueU_)
+		let nextUIInstruction = uiQueue.consume()
+		if (nextUIInstruction.isDelayInstruction() && uiQueue.previousInstruction()?.isDelayInstruction()) {
+			console.warn(`Invalid state, delay UI instruction after delay UI instruction; the last one will be ignored.`)
+			nextUIInstruction = uiQueue.consume()
+		}
+
+		// aici avem consumatorul de instructiuni UI din coada aferenta
+		// logica e facuta asa:
+		//    -- (1) push&pop screen sunt instructiuni cu efect imediat, deci vor returna de la sine un alt ecran catre QUX, decat cel curent
+		//    -- (2) delay e singura instructiune care isi creaza automat legatura cu urmatoarea instructiune (caci instructiunile nu se executa daca QUX nu apeleaza acest Compute())
+		//    -- (3) updateScreen e instructiune de sine statatoare, se presupune ca se refera la ecranul curent, si ca vrei sa actualizezi ceva in acesta; deci va fi executata si QUX va stii sa lase ecranul curent (doar il va actualiza, la nevoie)
+
+		if (nextUIInstruction) { // daca e undefined, atunci inseamna ca ramanem pe acelasi ecran (nu mai avem nici o instructiune disponibila)
+
+			// -1-apply updateScreen UI instruction
+			if (nextUIInstruction.isUpdateScreenInstruction()) {
+				this.__context().updateScreenParams(nextUIInstruction.updateScreenScreenId(), nextUIInstruction.updateScreenParams())
+				return {} // acelasi ecran, fiindca am aplicat o comanda UI de sine statatoare
+			}
+			
+			// -2-apply delay UI instruction
+			if (nextUIInstruction.isDelayInstruction()) {
+				return {delay: nextUIInstruction.delayTimeMs()} // comanda QUX care face un setTimeout si apoi apeleaza iar functia curenta, pop-uind comanda de delay, pentru a prelua urmatoarea comanda din UI
+			}
+
+			// -3- apply push&pop screen UI instructions
+			let isPush = false
+			if (nextUIInstruction.isPushScreenInstruction()) {
+				isPush = true
+				this.__context().pushScreen(nextUIInstruction.pushScreenScreenName(), nextUIInstruction.pushScreenScreenParams())
+			}
+			else if (nextUIInstruction.isPopScreenInstruction()) {
+				this.__context().popLastScreen()
+			}
+			const builtScreen = this.__private_helpers().buildCurrentScreen(isPush)
+			return {targetTo: MVVM_STARTER.Configurator().ScreenFactory().screenIdFromClsName(builtScreen)}
+		}
+		else {
+			// vom returna cum ca trebuie sa ramana ecranul curent, deci QUX sa nu face nimic
+			return {}
+		}
 		
-		const mode = params && typeof params !== 'string' ? params.mode : (typeof params === "string" ? params : "default")
+		// de fapt, le voi apela lazy atunci cand inserez o comanda in queue-urile de comenzi
+		//cmdOptimizer.optimizeQueue(queueC)
+		//cmdConsumer.consumeCommand(cmd)
+
+		// aici ce fac ?, preiau urmatoarea comanda din UICommand, si o execut (push screen, pop screen, delay); returnez la QUX ce trebuie, dupa ce instantiez ecranul respectiv
+
+		/*const mode = params && typeof params !== 'string' ? params.mode : (typeof params === "string" ? params : "default")
 		const asyncEvId = params && typeof params !== 'string' ? params.asyncEvId : null
 		const popLastScreen = params && typeof params !== 'string' ? params.popLastScreen : null
 		const forceTransitionTo = params && typeof params !== 'string' ? params.forceTransitionTo : null
@@ -836,14 +1019,14 @@ class MVVMStarter {
 			if (nvm) nvm.onTransitionTo()
 			if (nvm) nvm.initView()
 			console.log(`log1: 111 initView done`)
-			let target = {to: MVVM_STARTER.configurator().ScreenFactory().screenIdFromClsName(screen)}
+			let target = {to: MVVM_STARTER.Configurator().ScreenFactory().screenIdFromClsName(screen)}
 			return {...target, ...ctx.screenMeta(screen)}
 		}
 		else if (popLastScreen) {
 			ctx.popLastScreen()
 			const {screen, params} = ctx.lastScreen()
 			console.log(`log4: poplastscreen`)
-			let target = {to: MVVM_STARTER.configurator().ScreenFactory().screenIdFromClsName(screen)}
+			let target = {to: MVVM_STARTER.Configurator().ScreenFactory().screenIdFromClsName(screen)}
 			target = {...target, ...ctx.screenMeta(screen)}
 			if (target.to) {
 				ctx.pushScreen(screen, params)
@@ -865,7 +1048,7 @@ class MVVMStarter {
 			let nextScreenCls = this._sendUIEvents(s, ctx.controller().consumeLastEvent()) // should also send it to the navigation-controller
 			
 			//if (mode.toLowerCase() === "no-transition") {
-			//	ctx.saveBindedWidgetsState()
+			//	ctx.saveDataBindingsState()
 			//	return null
 			//}
 			console.log(`nextScreenCls: ${nextScreenCls}`)
@@ -896,7 +1079,7 @@ class MVVMStarter {
 			console.log(`screen: ${s?.constructor.name}`)
 			console.log(`nextScreenCls1: ${nextScreenCls}`)
 			
-			let target = !nextScreenCls || nextScreenCls.trim().toLowerCase() === "same" ? {loop: "fast_exit"} : {to: MVVM_STARTER.configurator().ScreenFactory().screenIdFromClsName(nextScreenCls)}
+			let target = !nextScreenCls || nextScreenCls.trim().toLowerCase() === "same" ? {loop: "fast_exit"} : {to: MVVM_STARTER.Configurator().ScreenFactory().screenIdFromClsName(nextScreenCls)}
 			target = {...target, ...ctx.screenMeta(nextScreenCls)}
 			// no need to push the new screen to the stack, it will be auto-added next time we instantiate the context, from the qux ScriptMixin ("qux controller")
 			
@@ -919,7 +1102,7 @@ class MVVMStarter {
 		
 			console.warn(`returning target: ${JSON.stringify(target)}`)
 			return target
-		}
+		}*/
 	}
 }
 
@@ -943,13 +1126,11 @@ const dummy14 = new MVVMConfigurator();
 const dummy15 = new MVVMContext();
 const dummy16 = new MVVMStarter();
 const dummy17 = new QueuedCommand();
-const dummy18 = new QueuedUICommand();
+const dummy18 = new QueuedUIInstruction();
 const dummy19 = new QueueC();
 const dummy20 = new QueueU();
-const dummy21 = new CmdQueueOptimizer();
-const dummy22 = new UIQueueOptimizer();
-const dummy23 = new CmdQueueConsumer();
-const dummy24 = new UIQueueConsumer();
+const dummy21 = new UIQueueOptimizer();
+const dummy22 = new CmdQueueConsumer();
 dummy0 ? null : null
 dummy1 ? null : null
 dummy2 ? null : null
@@ -973,8 +1154,6 @@ dummy19 ? null : null
 dummy20 ? null : null
 dummy21 ? null : null
 dummy22 ? null : null
-dummy23 ? null : null
-dummy24 ? null : null
 }
 
 export const code = codeFunction.toString().match(/function[^{]+\{([\s\S]*)\}$/)[1]
