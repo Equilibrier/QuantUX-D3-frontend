@@ -91,16 +91,16 @@ class Model {
 	}
 }
 
-class QueuedCommand {
+class QueuedEvent {
 
-	static createClickCommand(sourceElement) {
-		return new QueuedCommand(QueuedCommand.TYPE__CLICK, QueuedCommand.__insertContext({source_element: sourceElement }))
+	static createClickEvent(sourceElement) {
+		return new QueuedEvent(QueuedEvent.TYPE__CLICK, QueuedEvent.__insertContext({source_element: sourceElement }))
 	}
-	static createAsyncCommand(cmdId) {
-		return new QueuedCommand(QueuedCommand.TYPE__ASYNC, QueuedCommand.__insertContext({cmd_id: cmdId}))
+	static createAsyncEvent(cmdId) {
+		return new QueuedEvent(QueuedEvent.TYPE__ASYNC, QueuedEvent.__insertContext({cmd_id: cmdId}))
 	}
-	static createDatabindCommand(bindingName, value) {
-		return new QueuedCommand(QueuedCommand.TYPE__DATABIND, QueuedCommand.__insertContext({ databinding: bindingName, value }))
+	static createDatabindEvent(bindingName, value) {
+		return new QueuedEvent(QueuedEvent.TYPE__DATABIND, QueuedEvent.__insertContext({ databinding: bindingName, value }))
 	}
 
 
@@ -123,26 +123,26 @@ class QueuedCommand {
 		this.payload_ = payload
 	}
 
-	isClickCommand() { this.type_ === QueuedCommand.TYPE__CLICK }
-	isAsyncCommand() { this.type_ === QueuedCommand.TYPE__ASYNC }
-	isDatabindCommand() { return this.type_ === QueuedCommand.TYPE__DATABIND }
+	isClickEvent() { this.type_ === QueuedEvent.TYPE__CLICK }
+	isAsyncEvent() { this.type_ === QueuedEvent.TYPE__ASYNC }
+	isDatabindEvent() { return this.type_ === QueuedEvent.TYPE__DATABIND }
 
-	clickSourceElement() { return this.isClickCommand() ? this.payload_?.source_element : undefined }
-	asyncCmdId() { return this.isAsyncCommand() ? this.payload_?.cmd_id: undefined }
-	databindBinding() { return this.isDatabindCommand() ? this.payload_?.databinding : undefined }
-	databindNewValue() { return this.isDatabindCommand() ? this.payload_?.value : undefined }
+	clickSourceElement() { return this.isClickEvent() ? this.payload_?.source_element : undefined }
+	asyncCmdId() { return this.isAsyncEvent() ? this.payload_?.cmd_id: undefined }
+	databindBinding() { return this.isDatabindEvent() ? this.payload_?.databinding : undefined }
+	databindNewValue() { return this.isDatabindEvent() ? this.payload_?.value : undefined }
 
 	sourceScreen() { return this.payload_?.source_screen }
 	previousScreen() { return this.payload_?.previous_screen }
 
 	toUIEvent() {
-		if (this.isClickCommand()) {
+		if (this.isClickEvent()) {
 			return new UIEvent(this.clickSourceElement(), "click")
 		}
-		else if (this.isAsyncCommand()) {
+		else if (this.isAsyncEvent()) {
 			return new UIEvent(this.asyncCmdId(), 'async_screen')
 		}
-		else if (this.isDatabindCommand()) {
+		else if (this.isDatabindEvent()) {
 			return new UIEvent(this.databindBinding(), 'type', this.databindNewValue())
 		}
 		console.error(`Could not convert QueuedEvent to UIEvent for type: ${this.type()} and payload ${this.payload()}`)
@@ -265,16 +265,16 @@ class GenericQueue {
 	}
 }
 
-class QueueC extends GenericQueue {
+class QueueE extends GenericQueue {
 	constructor() {
 		super()
 	}
 
 	_queueName() {
-		return "queue_c"
+		return "queue_e"
 	}
 
-	pushCommand(cmd) {
+	pushEvent(cmd) {
 		return this._push(cmd)
 	}
 }
@@ -319,7 +319,7 @@ class ModelFactory {
 //////////////////////////////////////////////////////////////////////
 // classes that should be overwritten on the configurator.js file
 
-// this object can interogate the C/U queues and can surpress (ignore) or concatenate commands and modify the queue by will; it's a filter and optimizer
+// this object can interogate the C/U queues and can surpress (ignore) or concatenate UI instructions and modify the queue by will; it's a filter and optimizer
 class UIQueueOptimizer {
 	optimizeQueue(queueU) {
 		queueU ? {} : {}
@@ -327,28 +327,28 @@ class UIQueueOptimizer {
 	}
 }
 
-// this should consume project-specific commands and the effect should be model-changes + producing UI commands in the U-queue
-class CmdQueueConsumer {
+// this should consume project-specific events and the effect should be model-changes + producing UI instructions in the U-queue
+class EventsQueueConsumer {
 	// asta NU se suprascrie
-	consume(queueC/*:QueueC*/, queueU/*QueueU*/) {
+	consume(queueE/*:QueueE*/, queueU/*QueueU*/) {
 		let cmd;
 		do {
-			cmd = queueC.consume()
+			cmd = queueE.consume()
 			let consumer;
-			if (cmd.isClickCommand()) {
+			if (cmd.isClickEvent()) {
 				consumer = this.consumeClickCmd
 			}
-			else if (cmd.isAsyncCommand()) {
+			else if (cmd.isAsyncEvent()) {
 				consumer = this.consumeAsyncCmd
 			}
-			else if (cmd.isDatabindCommand()) {
+			else if (cmd.isDatabindEvent()) {
 				consumer = this.consumeDatabindCmd
 			}
 			else {
 				consumer = this.consumeGenericCmd
 			}
 			if (!consumer(cmd, queueU)) {
-				console.error(`Consumer ${consumer.name} was not able to consume command ${cmd.type()}, payload: ${JSON.stringify(cmd.payload())}`)
+				console.error(`Consumer ${consumer.name} was not able to consume event ${cmd.type()}, payload: ${JSON.stringify(cmd.payload())}`)
 			}
 		}
 		while (cmd !== undefined) // consum toata coada (continutul disponibil in prezent)
@@ -410,27 +410,20 @@ class CmdQueueConsumer {
 
 	////////////////////////////////////////////////
 	// astea sa fie SUPRASCRISE
-	_consumeClickCmd(cmd/*:QueuedCommand*/, queueU) {
+	_consumeClickCmd(cmd/*:QueuedEvent*/, queueU) {
 		return false // not handled
 	}
-	_consumeAsyncCmd(cmd/*:QueuedCommand*/, queueU) {
+	_consumeAsyncCmd(cmd/*:QueuedEvent*/, queueU) {
 		return false // not handled
 	}
-	_consumeDatabindCmd(cmd/*:QueuedCommand*/, queueU) {
+	_consumeDatabindCmd(cmd/*:QueuedEvent*/, queueU) {
 		return false // not handled
 	}
-	_consumeGenericCmd(cmd/*:QueuedCommand*/, queueU) {
+	_consumeGenericCmd(cmd/*:QueuedEvent*/, queueU) {
 		return false
 	}
 }
 /////////////////////////////////////////////////////////////////////
-// this should consume rather more generic UI commands (like starting a certain screen with or without timeout, removing a certain screen or something like that) so the whole impl should be in here
-// class UIQueueConsumer {
-// 	consumeUICommand(uiCmd) { // uiCmd is of type QueuedUICommand
-// 		uiCmd ? {} : {}
-// 		return false // not able to consume it, the caller will know to trigger an exception, handle this error properly
-// 	}
-// }
 
 class ModelEvent {
 	constructor(key, propOrOp, valOrPayload) {
@@ -758,7 +751,7 @@ class MVVMConfigurator {
 	VMFactory() { return null }
 
 	TransitionController() { return null }
-	CommandsConsumer() { return null }
+	EventsConsumer() { return null }
 
 	UIOptimizer() { return null }
 }
@@ -843,8 +836,8 @@ class MVVMStarter {
 		this.context_ = null
 		this.uiUtils_ = new MVVM_UIUtils()
 
-		this.queueC_ = new QueueC()
-		this.queueC_.load()
+		this.queueE_ = new QueueE()
+		this.queueE_.load()
 
 		this.queueU_ = new QueueU()
 		this.queueU_.load()
@@ -853,8 +846,6 @@ class MVVMStarter {
 	UIUtils() { return this.uiUtils_ }
 	
 	// le pun cu litera mare la inceput ca sa arat ca sunt functii, in mod special, publice ce se vrea a fi apelate din afara
-	QueueC() { return this.queueC_ }
-	QueueU() { return this.queueU_ }
 	Configurator() { return null } // :MVVMConfigurator
 
 
@@ -879,8 +870,8 @@ class MVVMStarter {
 				this.__private_helpers.buildScreenByRef(screen, params, isPush)
 				return screen
 			},
-			'digestCommands': () => {
-				this.Configurator().CommandsConsumer().consume(this.queueC_, this.queueU_)
+			'digestEvents': () => {
+				this.Configurator().EventsConsumer().consume(this.queueE_, this.queueU_)
 			},
 			'sendEventToScreen': (ev) => {
 				const screen = this.__private_helpers.buildScreen(ev.sourceScreen().id)
@@ -890,34 +881,34 @@ class MVVMStarter {
 	}
 
 	pushClickEvent(sourceElement) {
-		const context = this.__context() // context de closure pentru QueuedCommand
+		const context = this.__context() // context de closure pentru QueuedEvent
 		context ? {} : {}
 
-		const ev = QueuedCommand.createClickCommand(sourceElement)
+		const ev = QueuedEvent.createClickEvent(sourceElement)
 		this.__private_helpers().sendEventToScreen(ev)
 
-		this.queueC_.pushCommand(ev)
-		this.__private_helpers().digestCommands()
+		this.queueE_.pushEvent(ev)
+		this.__private_helpers().digestEvents()
 	}
-	pushAsyncCommand(cmdId) {
-		const context = this.__context() // context de closure pentru QueuedCommand
+	pushAsyncEvent(cmdId) {
+		const context = this.__context() // context de closure pentru QueuedEvent
 		context ? {} : {}
 
-		const ev = QueuedCommand.createAsyncCommand(cmdId)
+		const ev = QueuedEvent.createAsyncEvent(cmdId)
 		this.__private_helpers().sendEventToScreen(ev)
 
-		this.queueC_.pushCommand(ev)
-		this.__private_helpers().digestCommands()
+		this.queueE_.pushEvent(ev)
+		this.__private_helpers().digestEvents()
 	}
 	pushDataBindEvent(databinding, value) {
-		const context = this.__context() // context de closure pentru QueuedCommand
+		const context = this.__context() // context de closure pentru QueuedEvent
 		context ? {} : {}
 
-		const ev = QueuedCommand.createDatabindCommand(databinding, value)
+		const ev = QueuedEvent.createDatabindEvent(databinding, value)
 		this.__private_helpers().sendEventToScreen(ev)
 
-		this.queueC_.pushCommand(ev)
-		this.__private_helpers().digestCommands()
+		this.queueE_.pushEvent(ev)
+		this.__private_helpers().digestEvents()
 	}
 	
 	__context() {
@@ -1125,12 +1116,12 @@ const dummy13 = new ScreenFactory();
 const dummy14 = new MVVMConfigurator();
 const dummy15 = new MVVMContext();
 const dummy16 = new MVVMStarter();
-const dummy17 = new QueuedCommand();
+const dummy17 = new QueuedEvent();
 const dummy18 = new QueuedUIInstruction();
-const dummy19 = new QueueC();
+const dummy19 = new QueueE();
 const dummy20 = new QueueU();
 const dummy21 = new UIQueueOptimizer();
-const dummy22 = new CmdQueueConsumer();
+const dummy22 = new EventsQueueConsumer();
 dummy0 ? null : null
 dummy1 ? null : null
 dummy2 ? null : null
