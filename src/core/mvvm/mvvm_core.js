@@ -1,5 +1,3 @@
-import { _ } from "core-js"
-
 const codeFunction = function(){
 let data = null // this must stay on line 1, as it is hardcode-removed from the sources, when building the Qux script
 
@@ -106,6 +104,7 @@ class QueuedEvent {
 
 	static __insertContext(payload) {
 		// caller closure must contain the 'context' variable (so the ancestor-caller should be MVVM_CONTROLLER, which has rights on the context)
+		let context = undefined // @strict-remove // this will be removed before sending as worker script; the only exception is this where we want to use closures, otherwise a simple "context ? {} : {}" would have worked just fine
 
 		return {
 			...payload,
@@ -236,6 +235,7 @@ class GenericQueue {
 	_save() {
 		const _qn = this.__formattedQueueName()
 		data[_qn].head_c = this.c_head_
+		data[_qn].data = JSON.parse(JSON.stringify(this.elements_))
 		return true
 	}
 
@@ -256,7 +256,7 @@ class GenericQueue {
 		}
 	}
 
-	size() { return this._elements.length }
+	size() { return this.elements_.length }
 	consume() {
 		if (this.c_head_ >= this.size()) return undefined
 		this.c_head_ ++;
@@ -411,15 +411,23 @@ class EventsQueueConsumer {
 	////////////////////////////////////////////////
 	// astea sa fie SUPRASCRISE
 	_consumeClickCmd(cmd/*:QueuedEvent*/, queueU) {
+		cmd ? {} : {}
+		queueU ? {} : {}
 		return false // not handled
 	}
 	_consumeAsyncCmd(cmd/*:QueuedEvent*/, queueU) {
+		cmd ? {} : {}
+		queueU ? {} : {}
 		return false // not handled
 	}
 	_consumeDatabindCmd(cmd/*:QueuedEvent*/, queueU) {
+		cmd ? {} : {}
+		queueU ? {} : {}
 		return false // not handled
 	}
 	_consumeGenericCmd(cmd/*:QueuedEvent*/, queueU) {
+		cmd ? {} : {}
+		queueU ? {} : {}
 		return false
 	}
 }
@@ -801,7 +809,7 @@ class MVVMContext {
 			screen: screenClsName,
 			params,
 
-			id: __generateId,
+			id: this.__generateId(),
 		})
 		this.__saveState()
 	}
@@ -830,7 +838,7 @@ class MVVMContext {
 	popLastScreen() { return this.screensStack_.pop() }
 }
 
-class MVVMStarter {
+class MVVMController {
 	
 	constructor() {
 		this.context_ = null
@@ -937,13 +945,13 @@ class MVVMStarter {
 
 	// this is the single function that needs to be called and return its results on the (mvvm-routing) JS script
 	Compute() {
-		const uiOptimizer = MVVMStarter.Configurator().UIOptimizer()
+		const uiOptimizer = MVVM_CONTROLLER.Configurator().UIOptimizer()
 
 		uiOptimizer.optimizeQueue(this.queueU_)
-		let nextUIInstruction = uiQueue.consume()
-		if (nextUIInstruction.isDelayInstruction() && uiQueue.previousInstruction()?.isDelayInstruction()) {
+		let nextUIInstruction = this.queueU_.consume()
+		if (nextUIInstruction && nextUIInstruction.isDelayInstruction() && this.queueU_.previousInstruction()?.isDelayInstruction()) {
 			console.warn(`Invalid state, delay UI instruction after delay UI instruction; the last one will be ignored.`)
-			nextUIInstruction = uiQueue.consume()
+			nextUIInstruction = this.queueU_.consume()
 		}
 
 		// aici avem consumatorul de instructiuni UI din coada aferenta
@@ -1115,7 +1123,7 @@ const dummy12 = new TransitionController();
 const dummy13 = new ScreenFactory();
 const dummy14 = new MVVMConfigurator();
 const dummy15 = new MVVMContext();
-const dummy16 = new MVVMStarter();
+const dummy16 = new MVVMController();
 const dummy17 = new QueuedEvent();
 const dummy18 = new QueuedUIInstruction();
 const dummy19 = new QueueE();

@@ -148,6 +148,8 @@ export default {
                         if (l.trim() === "//REMOVE FROM HERE") {
                             break
                         }
+                        if (l.toLowerCase().includes("//") && l.toLowerCase().includes("@strict-remove")) continue
+
                         _llinesFinal.push(l)
                     }
                     lib = _llinesFinal.join("\n")
