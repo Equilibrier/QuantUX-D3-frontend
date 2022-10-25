@@ -36,7 +36,8 @@ self.addEventListener('message', e => {
             result = code(qux, viewModel, console)
 
             self.postMessage({
-                to: result !== undefined ? (typeof result === 'string' ? result : result.to) : undefined,
+                to: result !== undefined ? (typeof result === 'string' ? result : result.targetTo) : undefined,
+                delayMs: result !== undefined ? result?.delay : undefined,
                 delayedBackMs: result !== undefined ? result.backTimeout : undefined,
                 runCode: result?.runCode ? result.runCode : undefined,
                 loop: result !== undefined ? result.loop : undefined,

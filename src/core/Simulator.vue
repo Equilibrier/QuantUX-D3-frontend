@@ -691,7 +691,7 @@ export default {
 						if(screen.style.overlay){
 							this.renderOverlay(backLine, lastScreenID); // FIXME: was line before
 						} else {
-							this.renderTransition(backLine,lastScreenID);
+							this.renderTransition(backLine,lastScreenID, widgetID);
 						}
 					}
 
@@ -700,11 +700,13 @@ export default {
 		},
 
 		onTransition (screenID, widgetID, line, e){
-			// console.error(`--- WIDGET click ${widgetID}: ${JSON.stringify(this.model.widgets[widgetID])}`)
-
+			
 			this.logger.log(1,"onTransition","enter >  sreen:" + screenID + " > widget:" + widgetID);
 			this.stopEvent(e);
 			this.log("WidgetClick",screenID, widgetID, e);
+
+			DIProvider.transitionsNotifier().notifyTransition(screenID, line.to, widgetID)
+
 			this.executeLine(screenID, widgetID, line);
 		},
 
@@ -734,7 +736,7 @@ export default {
 						this.renderOverlay(line, screenID);
 					} else {
 						this.logLine(line, screenID);
-						this.renderTransition(line,screenID);
+						this.renderTransition(line,screenID, widgetID);
 					}
 				} else {
 					/**
@@ -793,7 +795,7 @@ export default {
 				 */
 				if (this.abSelector) {
 					this.abSelector(lines, (matchedLIne) => {
-						this.excuteMatchedLine(matchedLIne, screenID, orginalLine)
+						this.excuteMatchedLine(matchedLIne, screenID, orginalLine, widgetID)
 					})
 					this.logger.warn("executeLogic"," delagte to external selctor!");
 					return
@@ -806,7 +808,7 @@ export default {
 				matchedLine = this.getRuleMatchingLine(lines, screenID, restSuccess)
 			}
 
-			this.excuteMatchedLine(matchedLine, screenID, orginalLine)
+			this.excuteMatchedLine(matchedLine, screenID, orginalLine, widgetID)
 		},
 
 		getABLine (lines, widget) {
@@ -880,7 +882,7 @@ export default {
 			}
 		},
 
-		excuteMatchedLine (matchedLine, screenID, orginalLine) {
+		excuteMatchedLine (matchedLine, screenID, orginalLine, widgetID) {
 			if (matchedLine){
 				const screen = this.model.screens[matchedLine.to];
 				if(screen){
@@ -895,7 +897,7 @@ export default {
 					if(screen.style.overlay){
 						this.renderOverlay(newLine, screenID);
 					} else {
-						this.renderTransition(newLine,screenID);
+						this.renderTransition(newLine,screenID, widgetID);
 					}
 				} else {
 					/**

@@ -296,6 +296,7 @@ export default {
 				if(lines && lines.length > 0){
 					var line = this.getLineForGesture(lines, "timer");
 					if(line){
+
 						this.logger.log(0,"afterScreenCreated","Found timer");
 						var delay = Math.round(line.timer * 1000);
 						if(!isNaN(delay) && delay >= 0){
@@ -845,7 +846,10 @@ export default {
 			this.currentScreenDiv.appendChild(node);
 		},
 
-		renderTransition (line, screenID, isGestureAnimation){
+		renderTransition (line, screenID, widgetId=null, isGestureAnimation){
+
+			DIProvider.transitionsNotifier().notifyTransition(screenID, line.to, widgetId)
+
 			this.logger.log(-1,"renderTransition","enter > from " + screenID + " to " + line.to);
 			let to = line.to;
 			const screen = this.model.screens[to];

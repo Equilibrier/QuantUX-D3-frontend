@@ -148,6 +148,11 @@ export default {
 			 *
 			 *     - log state for player this.log("WidgetInit", screenID, e.id, null, state);
 			 */
+
+			if (newValue == oldValue) {
+				return
+			}
+
 			const widgets = this.renderFactory.getAllUIWidgets();
 			for(let id in widgets){
 				const uiWidget = widgets[id];

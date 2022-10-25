@@ -555,7 +555,7 @@ export default {
 					if(screen.style.overlay){
 						this._screenGestureAnim = this.renderOverlay(line, screenID, true);
 					} else {
-						this._screenGestureAnim = this.renderTransition(line,screenID, true);
+						this._screenGestureAnim = this.renderTransition(line,screenID, null, true);
 					}
 					// FIXME: Add widget stuff
 				}

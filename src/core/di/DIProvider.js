@@ -10,6 +10,7 @@ import { ScalingComputer } from 'core/di/ScalingComputer'
 import { AsyncScheduler } from 'core/di/AsyncScheduler'
 import { GlobalCache } from 'core/di/GlobalCache'
 import { JSRunController } from 'core/di/JSRunController'
+import { TransitionsNotifier } from 'core/di/TransitionsNotifier'
 
 class DIProvider {
 
@@ -28,6 +29,7 @@ class DIProvider {
         this._asyncScheduler = new AsyncScheduler();
         this._globalCache = new GlobalCache();
         this._jsRunCtrl = new JSRunController();
+        this._transitionsNotif = new TransitionsNotifier()
 
         this._listeners = {};
 
@@ -55,10 +57,8 @@ class DIProvider {
         });
 
         const buildJSUrls = async () => {
-            console.log(`evr1`)
             let model = await this.modelAsync();
             if (model !== null) {
-                console.log(`evr2`)
                 const globalScripts = [];
                 try {
                     let comments = await Services.getCommentService().find(model.id, 'ScreenComment')
@@ -164,7 +164,6 @@ class DIProvider {
     } 
 
     setSimulatorRef(sim) {
-        console.error(`evr1: simulator ref set`)
         this.__set("_simulator")(sim)
     }
 
@@ -199,6 +198,8 @@ class DIProvider {
     globalJSScripts() { return this.__clone(this._globalScripts) }
 
     simulatorRef() { return this._simulator }
+
+    transitionsNotifier() { return this._transitionsNotif }
 }
 
 export default new DIProvider();

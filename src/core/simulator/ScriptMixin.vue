@@ -46,8 +46,6 @@ export default {
         }
         this.__resetSourceMetadata();
 
-        console.error(`sourceData: ${databind}; oldval: ${oldVal}; newVal: ${newVal}`)
-
         this.dataBindingValues.__sourceData = databind;
         this.dataBindingValues.__sourceOldValue = oldVal;
         this.dataBindingValues.__sourceNewValue = newVal;
@@ -75,14 +73,15 @@ export default {
         }
 
         this.__resetSourceMetadata();
-        const elk = DIProvider.elementsLookup();
-        this.dataBindingValues.__sourceScreen = !elk.isScreen(orginalLine.from) ? elk.screenOf(orginalLine.from)?.name : elk.getObjectFromId(orginalLine.from)?.name;
-        this.dataBindingValues.__sourceElement = !elk.isScreen(orginalLine.from) ? elk.getObjectFromId(orginalLine.from)?.name : undefined;
-        //console.error(`Set prevScreen to ${this.dataBindingValues.__sourceScreen} && previousElement to ${this.dataBindingValues.__sourceElement}`)
+        
+        this.dataBindingValues.__sourceScreen = DIProvider.transitionsNotifier().lastScreen()
+        this.dataBindingValues.__sourceElement = DIProvider.transitionsNotifier().lastWidget()
 
         let widget = this.model.widgets[widgetID]
         if (widget && widget.props.script) {
-            const result = await this.runScript(widget.props.script, widget, orginalLine)
+            const result = await this.runScript(`${widget.props.script}`, widget, orginalLine)
+            console.log(`rezultat executeScript TO: '${JSON.stringify(result?.to)}'`)
+
             // for user triggers scripts, we must ensure that we call
             // also all the data scripts
             //await this.executeDataScripts()
@@ -256,8 +255,23 @@ export default {
 
                     //console.error(`targetScreen: ${JSON.stringify(targetScreen)}; \n\tresult: ${JSON.stringify(result)}`)
 
+                    if (!targetScreen && result.delayMs !== undefined) {
+                        setTimeout(async() => {
 
-                    if (targetScreen && result.delayedBackMs !== undefined) {
+                            resolve(await this.runScript("\
+                                const _ns = MVVM_CONTROLLER.Compute();\
+                                if (_ns) {\
+                                    console.warn(`transition to ${JSON.stringify(_ns)}`);\
+                                    return _ns;\
+                                }\
+                                console.error('DEFAULT route, MMenu activated...');\
+                                return 'MMenu';\
+                            ", widget, orginalLine))
+
+                        }, result.delayMs)
+                    }
+
+                    else if (targetScreen && result.delayedBackMs !== undefined) {
                         setTimeout(async () => {
                             if (!result.runCode) {
                                 this.onTransitionBack(targetScreen.id, null, null);
@@ -395,7 +409,7 @@ export default {
             if (lines && lines.length === 1) {
                 const tempLine = this.createTempLine(lines[0].to, orginalLine)
                 this.logLine(tempLine, this.currentScreen.id);
-                this.renderTransition(tempLine,this.currentScreen.id);
+                this.renderTransition(tempLine,this.currentScreen.id, widget.id);
             }
         }
     },

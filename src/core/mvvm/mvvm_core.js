@@ -91,25 +91,30 @@ class Model {
 
 class QueuedEvent {
 
-	static createClickEvent(sourceElement) {
-		return new QueuedEvent(QueuedEvent.TYPE__CLICK, QueuedEvent.__insertContext({source_element: sourceElement }))
-	}
-	static createAsyncEvent(cmdId) {
-		return new QueuedEvent(QueuedEvent.TYPE__ASYNC, QueuedEvent.__insertContext({cmd_id: cmdId}))
-	}
-	static createDatabindEvent(bindingName, value) {
-		return new QueuedEvent(QueuedEvent.TYPE__DATABIND, QueuedEvent.__insertContext({ databinding: bindingName, value }))
-	}
+	static Factory = (context) => {
 
+		console.log(`ctx: ${JSON.stringify(context)}`)
+		console.log(`ctx-ecrane: ${JSON.stringify(context.screensStack_)}`)
 
-	static __insertContext(payload) {
-		// caller closure must contain the 'context' variable (so the ancestor-caller should be MVVM_CONTROLLER, which has rights on the context)
-		let context = undefined // @strict-remove // this will be removed before sending as worker script; the only exception is this where we want to use closures, otherwise a simple "context ? {} : {}" would have worked just fine
+		const __insertContext = (payload) => {
+			return {
+				...payload,
+				source_screen: context.lastScreen(), 
+				previous_screen: context.previousScreen()
+			}
+		}
 
 		return {
-			...payload,
-			source_screen: context.lastScreen(), 
-			previous_screen: context.previousScreen()
+			createClickEvent: (sourceElement) => {
+				console.log(`se: ${JSON.stringify(sourceElement)}; `)
+				return new QueuedEvent(QueuedEvent.TYPE__CLICK, __insertContext({source_element: sourceElement }))
+			},
+			createAsyncEvent: (cmdId) => {
+				return new QueuedEvent(QueuedEvent.TYPE__ASYNC, __insertContext({cmd_id: cmdId}))
+			},
+			createDatabindEvent: (bindingName, value) => {
+				return new QueuedEvent(QueuedEvent.TYPE__DATABIND, __insertContext({ databinding: bindingName, value }))
+			}
 		}
 	}
 
@@ -122,8 +127,8 @@ class QueuedEvent {
 		this.payload_ = payload
 	}
 
-	isClickEvent() { this.type_ === QueuedEvent.TYPE__CLICK }
-	isAsyncEvent() { this.type_ === QueuedEvent.TYPE__ASYNC }
+	isClickEvent() { return this.type_ === QueuedEvent.TYPE__CLICK }
+	isAsyncEvent() { return this.type_ === QueuedEvent.TYPE__ASYNC }
 	isDatabindEvent() { return this.type_ === QueuedEvent.TYPE__DATABIND }
 
 	clickSourceElement() { return this.isClickEvent() ? this.payload_?.source_element : undefined }
@@ -144,7 +149,7 @@ class QueuedEvent {
 		else if (this.isDatabindEvent()) {
 			return new UIEvent(this.databindBinding(), 'type', this.databindNewValue())
 		}
-		console.error(`Could not convert QueuedEvent to UIEvent for type: ${this.type()} and payload ${this.payload()}`)
+		console.error(`Could not convert QueuedEvent to UIEvent for type: ${this.type()} and payload ${JSON.stringify(this.payload())}`)
 		return null
 	}
 
@@ -193,8 +198,8 @@ class QueuedUIInstruction {
 		this.payload_ = payload
 	}
 
-	isDelayInstruction() { this.type_ === QueuedUIInstruction.TYPE__DELAY }
-	isPushScreenInstruction() { this.type_ === QueuedUIInstruction.TYPE__PUSHSCREEN }
+	isDelayInstruction() { return this.type_ === QueuedUIInstruction.TYPE__DELAY }
+	isPushScreenInstruction() { return this.type_ === QueuedUIInstruction.TYPE__PUSHSCREEN }
 	isPopScreenInstruction() { return this.type_ === QueuedUIInstruction.TYPE__POPSCREEN }
 	isUpdateScreenInstruction() { return this.type_ === QueuedUIInstruction.TYPE__UPDATESCREEN }
 
@@ -209,9 +214,12 @@ class QueuedUIInstruction {
 }
 
 class GenericQueue {
+
 	constructor() {
 		this.elements_ = []
 		this.c_head_ = -1 // consume head
+
+		this._load()
 	}
 
 	_queueName() {
@@ -224,7 +232,7 @@ class GenericQueue {
 		return qn
 	}
 
-	load() {
+	_load() {
 		const _qn = this.__formattedQueueName()
 
 		this.elements_ = data[_qn] && data[_qn]?.data ? data[_qn].data : []
@@ -234,6 +242,9 @@ class GenericQueue {
 
 	_save() {
 		const _qn = this.__formattedQueueName()
+		if (data[_qn] === undefined) {
+			data[_qn] = {}
+		}
 		data[_qn].head_c = this.c_head_
 		data[_qn].data = JSON.parse(JSON.stringify(this.elements_))
 		return true
@@ -258,10 +269,12 @@ class GenericQueue {
 
 	size() { return this.elements_.length }
 	consume() {
+		console.log(`voi consuma din queue ${this.__formattedQueueName()}, elements: ${JSON.stringify(this.elements_)} si head: ${this.c_head_}`)
 		if (this.c_head_ >= this.size()) return undefined
+		const val = this.elements_[this.c_head_]
 		this.c_head_ ++;
 		this._save()
-		return this._elements[this.c_head_ - 1]
+		return val
 	}
 }
 
@@ -274,8 +287,9 @@ class QueueE extends GenericQueue {
 		return "queue_e"
 	}
 
-	pushEvent(cmd) {
-		return this._push(cmd)
+	pushEvent(ev) {
+		console.log(`push event: ${JSON.stringify(ev)}`)
+		return this._push(ev)
 	}
 }
 
@@ -331,30 +345,30 @@ class UIQueueOptimizer {
 class EventsQueueConsumer {
 	// asta NU se suprascrie
 	consume(queueE/*:QueueE*/, queueU/*QueueU*/) {
-		let cmd;
+		let ev, consumer;
 		do {
-			cmd = queueE.consume()
-			let consumer;
-			if (cmd.isClickEvent()) {
-				consumer = this.consumeClickCmd
+			ev = queueE.consume(); if (!ev) break
+
+			if (ev.isClickEvent()) {
+				consumer = { _label: '_consumeClickCmd', f: (cmd, queueU) => this._consumeClickCmd(cmd, queueU) }
 			}
-			else if (cmd.isAsyncEvent()) {
-				consumer = this.consumeAsyncCmd
+			else if (ev.isAsyncEvent()) {
+				consumer = { _label: '_consumeAsyncCmd', f: (cmd, queueU) => this._consumeAsyncCmd(cmd, queueU) }
 			}
-			else if (cmd.isDatabindEvent()) {
-				consumer = this.consumeDatabindCmd
+			else if (ev.isDatabindEvent()) {
+				consumer = { _label: '_consumeDatabindCmd', f: (cmd, queueU) => this._consumeDatabindCmd(cmd, queueU) }
 			}
 			else {
-				consumer = this.consumeGenericCmd
+				consumer = { _label: '_consumeGenericCmd', f: (cmd, queueU) => this._consumeGenericCmd(cmd, queueU) }
 			}
-			if (!consumer(cmd, queueU)) {
-				console.error(`Consumer ${consumer.name} was not able to consume event ${cmd.type()}, payload: ${JSON.stringify(cmd.payload())}`)
+			if (!consumer.f(ev, queueU)) {
+				console.error(`Consumer ${consumer._label} was not able to consume event '${ev.type()}', payload: ${JSON.stringify(ev.payload())}`)
 			}
 		}
-		while (cmd !== undefined) // consum toata coada (continutul disponibil in prezent)
+		while (ev !== undefined) // consum toata coada (continutul disponibil in prezent)
 	}
 
-	_getHelpers(cmd, queueU) {
+	_getHelpers(ev, queueU) {
 		return {
 			buildScreenQuery: (screen, params) => {
 				let p = ""
@@ -370,7 +384,7 @@ class EventsQueueConsumer {
 			schedulePushScreen: (screenUrl) => queueU.pushInstruction(QueuedUIInstruction.createPushScreenInstruction(screenUrl)),
 			schedulePopScreen: () => queueU.pushInstruction(QueuedUIInstruction.createPopScreenInstruction()),
 			scheduleDelay: (timeMs) => queueU.pushInstruction(QueuedUIInstruction.createDelayInstruction(timeMs)),
-			scheduleUpdateScreen: (params) => queueU.pushInstruction(QueuedUIInstruction.createUpdateScreenInstruction(cmd.sourceScreen().id, params)),
+			scheduleUpdateScreen: (params) => queueU.pushInstruction(QueuedUIInstruction.createUpdateScreenInstruction(ev.sourceScreen().id, params)),
 			routeDecisions: (routes) => {
 				/*
 					routes = [
@@ -380,13 +394,14 @@ class EventsQueueConsumer {
 							hndl: 					// handler
 						}
 					]
-				*/
+					*/
+				const se = ev.clickSourceElement()?.toLowerCase()
+
 				const scrUndefines = routes.filter(e => e?.scr === null || e?.scr === undefined)
 				const completes = routes.filter(e => e?.scr !== null && e?.scr !== undefined)
 				
-				const seEqValid = (val) => (typeof val === "function" && val(se)) || (typeof val !== 'function' && val == se)
+				const seEqValid = (val) => (typeof val === "function" && val(se)) || (typeof val !== 'function' && !val && !se) || (typeof val !== 'function' && val?.toLowerCase() === se?.toLowerCase())
 
-				const se = cmd.clickSourceElement()?.toLowerCase()
 				for (let r of scrUndefines) {
 					if (seEqValid(r.elm)) {
 						r.hndl()
@@ -394,11 +409,11 @@ class EventsQueueConsumer {
 					}
 				}
 				
-				const sourceScreen_ = cmd.sourceScreen()
+				const sourceScreen_ = ev.sourceScreen()
 				const sourceScreenName = sourceScreen_.screen
 				
 				for (let r of completes) {
-					if (sourceScreenName == r.scr && seEqValid(r.elm)) {
+					if (sourceScreenName.toLowerCase() == r.scr.toLowerCase() && seEqValid(r.elm)) {
 						r.hndl()
 						return true
 					}
@@ -750,7 +765,7 @@ class ScreenFactory {
 	
 	// to be overwritten
 	createScreen(clsName, params) { clsName ? {} : {}; params ? {} : {}; return null }
-	screenClsFromId(screenId) { screenId ? {} : {}; return null }
+	screenQuxLabelToClsName(screenQuxLabel) { screenQuxLabel ? {} : {}; return null }
 }
 
 class MVVMConfigurator {
@@ -780,14 +795,29 @@ class MVVMContext {
 	constructor() {
 		
 		this.screensStack_ = data.screensStack ? data.screensStack : []
+
+		const quxScreenLabel_ = data?.__sourceScreen?.name
+		const quxScreenClsName_ = quxScreenLabel_ ? MVVM_CONTROLLER.Configurator().ScreenFactory().screenQuxLabelToClsName(quxScreenLabel_) : undefined
+		const lastStackedScreenClsName_ = this.lastScreen()?.screen
+
+		console.log(`quxScreenLabel_: ${quxScreenLabel_};\nquxScreenClsName_: ${quxScreenClsName_};\nlastStackedScreenClsName_: ${lastStackedScreenClsName_}`)
+
+		if (quxScreenClsName_ && quxScreenClsName_.toLowerCase() !== lastStackedScreenClsName_?.toLowerCase()) {
+			console.log(`pushing screen ${quxScreenClsName_}`)
+			this.pushScreen(quxScreenClsName_) // aici facem trecerea de la ecrane QUX de care MVVM nu stie (tranzitii netrecute prin MVVM) la logica MVVM; daca nu facem asta, atunci inconsistenta asta strica toata logica MVVM (chiar daca nu stiu ce alte tranzitii a facut QUX intre timp, fara MVVM, ma intereseaza acest ultim ecran) -- in general nu o idee prea buna mixul asta intre MVVM si QUX, dar e greu sa impl ceva foarte bine delimitat
+		}
 		
-		const lastScreenIsNotRegistered = (ps) => ps && this.lastScreen()?.screen && MVVM_CONTROLLER.Configurator().ScreenFactory().createScreen(this.lastScreen()?.screen, {})?.screenId()?.toLowerCase() !== ps.toLowerCase()
+		// const lastScreenIsNotRegistered = (ps) => ps && this.lastScreen()?.screen && MVVM_CONTROLLER.Configurator().ScreenFactory().createScreen(this.lastScreen()?.screen, {})?.screenId()?.toLowerCase() !== ps.toLowerCase()
 		// this will contain class names
+
+		console.log(`screenStack: ${JSON.stringify(this.screensStack_)}`)
 		
 		// the first screen before this script is starting to run as a MVVM router, will not be registered here, unless we make this as a special case, like so:
-		const ps = data.__sourceScreen ? data.__sourceScreen.toLowerCase() : undefined
+		/*const ps = data.__sourceScreen ? data.__sourceScreen.toLowerCase() : undefined
+		console.log(`screen from qux: ${ps}`)
 		if (ps && (this.screensStack_.length <= 0 || lastScreenIsNotRegistered(ps))) {
-			const scr_ = MVVM_CONTROLLER.Configurator().ScreenFactory().screenClsFromId(ps)
+			console.log(`screens empty, do we have a screen from QUX?: ${ps}`)
+			const scr_ = MVVM_CONTROLLER.Configurator().ScreenFactory().screenQuxLabelToClsName(ps)
 			if (scr_) {
 				console.log(`pushing screen to stack MANUALLY: ${scr_}`)
 				this.screensStack_.push({
@@ -801,7 +831,7 @@ class MVVMContext {
 			else {
 				console.warn(`Detected unregistered screen (${ps}) but could not instantiate a cls name from it to add it into the screens stack`)
 			}
-		}
+		}*/
 	}
 	
 	pushScreen(screenClsName, params) {
@@ -812,6 +842,8 @@ class MVVMContext {
 			id: this.__generateId(),
 		})
 		this.__saveState()
+
+		console.log(`screen stack changed to ${JSON.stringify(this.screensStack_)}`)
 	}
 	updateScreenParams(screenId, params) {
 		const selection = this.screensStack_.filter(s => s.id == screenId)
@@ -845,10 +877,7 @@ class MVVMController {
 		this.uiUtils_ = new MVVM_UIUtils()
 
 		this.queueE_ = new QueueE()
-		this.queueE_.load()
-
 		this.queueU_ = new QueueU()
-		this.queueU_.load()
 	}
 
 	UIUtils() { return this.uiUtils_ }
@@ -862,57 +891,52 @@ class MVVMController {
 			'buildScreenByRef': (screen, params, isPush = false) => {
 				//const {screen, params} = MVVMStarter._parseScreenUrl(forceTransitionTo)
 				const ns = this._instantiateScreen(screen, params)
-				const nvm = ns.getVM();
-				console.log(`log1: 112 configured screen for next render, vm name ${nvm?.constructor?.name}`)
+				const nvm = ns.getVM()
+				// console.log(`log1: 112 configured screen for next render, vm name ${nvm?.constructor?.name}`)
 				if (isPush) ns.onTransitionTo()
 				if (nvm) nvm.initView()
-				console.log(`log1: 111 initView done`)
+				// console.log(`log1: 111 initView done`)
+				return ns
 			},
 			'buildCurrentScreen': (isPush = true) => {
 				const {screen, params} = this.__context().lastScreen()
-				this.__private_helpers.buildScreenByRef(screen, params, isPush)
-				return screen
+				return this.__private_helpers().buildScreenByRef(screen, params, isPush)
 			},
-			'buildScreen': (screenId = true, isPush = false) => {
+			'buildScreen': (screenId, isPush = false) => {
 				const {screen, params} = this.__context().screen(screenId)
-				this.__private_helpers.buildScreenByRef(screen, params, isPush)
-				return screen
+				return this.__private_helpers().buildScreenByRef(screen, params, isPush)
 			},
 			'digestEvents': () => {
 				this.Configurator().EventsConsumer().consume(this.queueE_, this.queueU_)
 			},
 			'sendEventToScreen': (ev) => {
-				const screen = this.__private_helpers.buildScreen(ev.sourceScreen().id)
+				const screen = this.__private_helpers().buildScreen(ev.sourceScreen().id)
 				screen.sendUIEvent(ev.toUIEvent())
 			}
 		}
 	}
 
 	pushClickEvent(sourceElement) {
-		const context = this.__context() // context de closure pentru QueuedEvent
-		context ? {} : {}
-
-		const ev = QueuedEvent.createClickEvent(sourceElement)
+		if (sourceElement === undefined) {
+			// getting from data.__sourceElement and data.__sourceScreen instead
+			sourceElement = data.__sourceElement?.name
+		}
+		const ev = QueuedEvent.Factory(this.__context()).createClickEvent(sourceElement)
+		console.log(`ev_: ${JSON.stringify(ev)}`)
 		this.__private_helpers().sendEventToScreen(ev)
 
 		this.queueE_.pushEvent(ev)
 		this.__private_helpers().digestEvents()
 	}
 	pushAsyncEvent(cmdId) {
-		const context = this.__context() // context de closure pentru QueuedEvent
-		context ? {} : {}
-
-		const ev = QueuedEvent.createAsyncEvent(cmdId)
+		const ev = QueuedEvent.Factory(this.__context()).createAsyncEvent(cmdId)
 		this.__private_helpers().sendEventToScreen(ev)
 
 		this.queueE_.pushEvent(ev)
 		this.__private_helpers().digestEvents()
 	}
 	pushDataBindEvent(databinding, value) {
-		const context = this.__context() // context de closure pentru QueuedEvent
-		context ? {} : {}
-
-		const ev = QueuedEvent.createDatabindEvent(databinding, value)
+		const ev = QueuedEvent.Factory(this.__context()).createDatabindEvent(databinding, value)
 		this.__private_helpers().sendEventToScreen(ev)
 
 		this.queueE_.pushEvent(ev)
@@ -925,10 +949,10 @@ class MVVMController {
 	}
 	
 	_instantiateScreen(screen, params) {
-		console.log(`log3: creating screen: ${screen} with params ${JSON.stringify(params)}`)
+		// console.log(`log3: creating screen: ${screen} with params ${JSON.stringify(params)}`)
 		const sref = MVVM_CONTROLLER.Configurator().ScreenFactory().createScreen(screen, params)
 		sref.init()
-		console.log(`create screen ${screen} with params ${JSON.stringify(params)}`)
+		// console.log(`create screen ${screen} with params ${JSON.stringify(params)}`)
 		return sref
 	}
 	_updateContextByTarget(ctx, targetScreen) {
@@ -965,28 +989,40 @@ class MVVMController {
 			// -1-apply updateScreen UI instruction
 			if (nextUIInstruction.isUpdateScreenInstruction()) {
 				this.__context().updateScreenParams(nextUIInstruction.updateScreenScreenId(), nextUIInstruction.updateScreenParams())
+
+				console.log(`UI INSTRUCTION consumed: screen UPDATE `)
 				return {} // acelasi ecran, fiindca am aplicat o comanda UI de sine statatoare
 			}
 			
 			// -2-apply delay UI instruction
 			if (nextUIInstruction.isDelayInstruction()) {
-				return {delay: nextUIInstruction.delayTimeMs()} // comanda QUX care face un setTimeout si apoi apeleaza iar functia curenta, pop-uind comanda de delay, pentru a prelua urmatoarea comanda din UI
+
+				console.log(`UI INSTRUCTION consumed: screen DELAY `)
+				return {delay: nextUIInstruction.delayTimeMs()} // comanda QUX care face un setTimeout si apoi apeleaza iar functia curenta, pentru a prelua urmatoarea comanda din UI; comanda de delay curenta s-a popuit deja aici mai inainte
 			}
 
 			// -3- apply push&pop screen UI instructions
 			let isPush = false
 			if (nextUIInstruction.isPushScreenInstruction()) {
 				isPush = true
+
+				console.log(`UI INSTRUCTION consumed: screen PUSH ${nextUIInstruction.pushScreenScreenName()}`)
 				this.__context().pushScreen(nextUIInstruction.pushScreenScreenName(), nextUIInstruction.pushScreenScreenParams())
 			}
 			else if (nextUIInstruction.isPopScreenInstruction()) {
+				console.log(`UI INSTRUCTION consumed: screen POP`)
+
 				this.__context().popLastScreen()
 			}
 			const builtScreen = this.__private_helpers().buildCurrentScreen(isPush)
-			return {targetTo: MVVM_CONTROLLER.Configurator().ScreenFactory().screenIdFromClsName(builtScreen)}
+
+			const ret = {targetTo: MVVM_CONTROLLER.Configurator().ScreenFactory().screenIdFromClsName(builtScreen.constructor.name)}
+			console.log(`UI INSTRUCTION (${JSON.stringify(nextUIInstruction)}) consumed: current screen built; returning ${JSON.stringify(ret)}`)
+			return ret
 		}
 		else {
-			// vom returna cum ca trebuie sa ramana ecranul curent, deci QUX sa nu face nimic
+			// vom returna cum ca trebuie sa ramana ecranul curent, deci QUX sa nu faca nimic
+			console.log(`NO next UI instruction: returning {} (same screen: ${this.__context().lastScreen()?.screen})`)
 			return {}
 		}
 		
