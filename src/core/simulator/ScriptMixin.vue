@@ -75,7 +75,14 @@ export default {
         this.__resetSourceMetadata();
         
         this.dataBindingValues.__sourceScreen = DIProvider.transitionsNotifier().lastScreen()
-        this.dataBindingValues.__sourceElement = DIProvider.transitionsNotifier().lastWidget()
+        // this.dataBindingValues.__sourceElement = DIProvider.transitionsNotifier().lastWidget()
+
+        const wid = DIProvider.transitionsNotifier().lastWidget().id
+        const seObj = DIProvider.elementsLookup().getObjectFromId(wid)
+        const parent = DIProvider.elementsLookup().groupOf(wid)
+        console.error(`se: ${JSON.stringify(seObj)}; parent: ${JSON.stringify(parent)}`)
+
+        this.dataBindingValues.__sourceElement = {name: parent?.name, id: parent?.id}
 
         let widget = this.model.widgets[widgetID]
         if (widget && widget.props.script) {

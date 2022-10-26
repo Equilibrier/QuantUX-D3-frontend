@@ -1,6 +1,8 @@
 import DIProvider from '../di/DIProvider';
 
+
 export class ElementsLookup {
+
     constructor() {
         this.model = null;
         
@@ -66,6 +68,11 @@ export class ElementsLookup {
             const screens = Object.values(this.model.screens).filter(screen => Object.values(this.groupFromId(id).children).filter(childId => this.isChildOfScreen(childId, screen)).length > 0);
             return screens.length > 0 ? screens[0] : null;
         }
+    }
+    groupOf(id) {
+        this.__checkPreconditions();
+        const groups = Object.values(this.model.groups).filter(group => this.isChildOfGroup(id, group))
+        return groups.length > 0 ? groups[0] : null;
     }
 
     __childLookup(id, group, clbk, childGetterClbkOrValue) {
