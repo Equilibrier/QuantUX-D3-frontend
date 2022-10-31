@@ -413,7 +413,7 @@ class EventsQueueConsumer {
 				const sourceScreenName = sourceScreen_.screen
 				
 				for (let r of completes) {
-					if (sourceScreenName.toLowerCase() == r.scr.toLowerCase() && seEqValid(r.elm)) {
+					if (sourceScreenName.toLowerCase() == r.scr.toLowerCase() && ((r.elm && seEqValid(r.elm)) || !r.elm)) {
 						r.hndl()
 						return true
 					}

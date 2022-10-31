@@ -54,7 +54,7 @@ export default {
         for (let i=0; i< widgets.length; i++) {
             const widget = widgets[i]
             if (widget.props.script) {
-                console.log(`databind run script for ${databind}=${newVal}`)
+                console.log(`databind run script for ${databind}=${JSON.stringify(newVal)}`)
                 
                 /*const rresult = await this.justRunScript(widget.props.script)
                 this.applyApiDeltas(rresult)
@@ -74,15 +74,16 @@ export default {
 
         this.__resetSourceMetadata();
         
-        this.dataBindingValues.__sourceScreen = DIProvider.transitionsNotifier().lastScreen()
-        // this.dataBindingValues.__sourceElement = DIProvider.transitionsNotifier().lastWidget()
+        this.dataBindingValues.__sourceScreen = DIProvider.transitionsNotifier().lastClickSourceScreen()
+        console.log(`lastScreen: ${JSON.stringify(DIProvider.transitionsNotifier().lastClickSourceScreen())}`)
+        // this.dataBindingValues.__sourceElement = DIProvider.transitionsNotifier().lastClickWidget()
 
-        const wid = DIProvider.transitionsNotifier().lastWidget().id
+        const wid = DIProvider.transitionsNotifier().lastClickWidget().id
         const seObj = DIProvider.elementsLookup().getObjectFromId(wid)
         const parent = DIProvider.elementsLookup().groupOf(wid)
         console.error(`se: ${JSON.stringify(seObj)}; parent: ${JSON.stringify(parent)}`)
 
-        this.dataBindingValues.__sourceElement = {name: parent?.name, id: parent?.id}
+        this.dataBindingValues.__sourceElement = {name: parent ? parent.name : seObj.name, id: parent ? parent.id : seObj.id}
 
         let widget = this.model.widgets[widgetID]
         if (widget && widget.props.script) {
@@ -226,7 +227,7 @@ export default {
                 const ts = this.retrieveTargetScreen(result)
                 if (ts) { // only if a transition is present
                     this.dataBindingValues.__sourceElement = null;
-                    this.dataBindingValues.__sourceScreen = ts.name;
+                    this.dataBindingValues.__sourceScreen = ts;
                     const rresult = await this.justRunScript(script)
                     this.applyApiDeltas(rresult)
                     this.rerenderWidgetsFromDataBindingAndUpdateViewModel(rresult)
@@ -249,7 +250,7 @@ export default {
                         const ts = this.retrieveTargetScreen(result)
                         if (ts) { // only if a transition is present
                             this.dataBindingValues.__sourceElement = null;
-                            this.dataBindingValues.__sourceScreen = ts.name;
+                            this.dataBindingValues.__sourceScreen = ts;
                             const rresult = await runScript() // it will run async, but I don't care, it's ok, this function doesn't need to be waited for end-call
                             this.applyApiDeltas(rresult)
                             this.rerenderWidgetsFromDataBindingAndUpdateViewModel(rresult)
@@ -285,7 +286,7 @@ export default {
                             }
                             else {
                                 this.__resetSourceMetadata();
-                                this.dataBindingValues.__sourceScreen = targetScreen.name;
+                                this.dataBindingValues.__sourceScreen = targetScreen;
                                 
                                 const rrresult = await this.justRunScript(result.runCode)
                                 this.applyApiDeltas(rrresult)
@@ -309,7 +310,7 @@ export default {
                         // let sched1;
                         let sched2;
 
-                        this.dataBindingValues.loopScreen = result.to !== undefined ? result.to : this.dataBindingValues.__sourceScreen;
+                        this.dataBindingValues.loopScreen = result.to !== undefined ? result.to : this.dataBindingValues.__sourceScreen.name;
 
                         const doLoopbackScriptRun = async () => {
                             const rresult = await this.justRunScript(script)

@@ -62,6 +62,12 @@ export class TransitionsNotifier {
             // @TODO vazut daca cu timpul mai detectez si alte situatii speciale
 
             // stiva de tranzitii rezultata de aici nu concorda mereu cu realitatea (de ex tranzitia in SmartBasket de la HACK-screen-ro la HACK2-screen care se facea via un widget rest dar aici apare ca o tranzitie cu delay ("by-time")), dar nu din cauza logicii de aici ci pentru ca evenimentele de tranzitie (this.evStack_) nu sunt concludent primite de la QUX, insa chiar daca vor lipsi unele componente widget rest/js-script si raman, astfel, anonime, totusi ecranele vor aparea in ordinea corecta si poate ca e suficient pentru MVVM, pentru care am dezvoltat acest modul
+        },
+        _transitionOf: (idx) => { return idx < 0 || idx >= this.transitionsStack_.length ? null : this.transitionsStack_[idx] },
+        _transitionCount: () => { return this.transitionsStack_.length },
+        _isClick: (idx) => {
+            const t = this.__private()._transitionOf(idx)
+            return t.from_widget && t.from_widget.id && t.from_widget.name
         }
     })
 
@@ -96,6 +102,28 @@ export class TransitionsNotifier {
         // console.log(`new stack: ${JSON.stringify(this.evStack_)}`)
     }
 
-    lastScreen() { return this.transitionsStack_.length > 0 ? this.transitionsStack_[this.transitionsStack_.length - 1].to : undefined }
-    lastWidget() { return this.transitionsStack_.length > 0 ? this.transitionsStack_[this.transitionsStack_.length - 1].from_widget : undefined }
+    // lastWidget() { 
+
+    //     return this.transitionsStack_.length > 0 ? this.transitionsStack_[this.transitionsStack_.length - 1].from_widget : null 
+    // }
+
+
+
+    lastIsClick() { return this.__private()._isClick(this.__private()._transitionCount() - 1) }
+    lastClickSourceScreen() {
+        for (let i = this.__private()._transitionCount() - 1; i > 0; i --) {
+            if (this.__private()._isClick(i)) {
+                return this.transitionsStack_[i].from
+            }
+        }
+        return null
+    }
+    lastClickWidget() {
+        for (let i = this.__private()._transitionCount() - 1; i > 0; i --) {
+            if (this.__private()._isClick(i)) {
+                return this.transitionsStack_[i].from_widget
+            }
+        }
+        return null
+    }
 }
