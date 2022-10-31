@@ -713,15 +713,6 @@ class PScreen { // projected screen
 			}
 		}
 	}
-
-	transitionValid() {} // checks if the actual context (previous screen, current UI event (pe)) are valid for this screen to appear
-	
-	//transitionTarget() { return null } // this instructs quantUX to instantiate this screen, next render time, when the context is ready (transitionValid) -- null means, the caller will decide what screen to instantiate (a default one)
-
-	build() {
-		if (!this.transitionValid()) return;
-		this._ibuild()
-	} // both methods are dealing with GUI contents, but this one is trigered only one time, before transitioning to the screen, and the second one, virtually any time you are modifying something in the model
 }
 
 
