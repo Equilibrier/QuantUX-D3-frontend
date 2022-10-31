@@ -122,9 +122,15 @@ class QueuedEvent {
 	static TYPE__ASYNC = "async"
 	static TYPE__DATABIND = "databind"
 
-	constructor(type, payload) {
-		this.type_ = type
-		this.payload_ = payload
+	constructor(typeOrData, payload, instantiateConstructor = false) {
+		if (instantiateConstructor) {
+			this.type_ = typeOrData.type_
+			this.payload_ = typeOrData.payload_ 
+		}
+		else {
+			this.type_ = typeOrData
+			this.payload_ = payload
+		}
 	}
 
 	isClickEvent() { return this.type_ === QueuedEvent.TYPE__CLICK }
@@ -193,9 +199,15 @@ class QueuedUIInstruction {
 		return new QueuedUIInstruction(QueuedUIInstruction.TYPE__UPDATESCREEN, { screen_id: screenId, params: updatedParamsSection })
 	}
 
-	constructor(type, payload) {
-		this.type_ = type
-		this.payload_ = payload
+	constructor(typeOrData, payload, instantiateConstructor = false) {
+		if (instantiateConstructor) {
+			this.type_ = typeOrData.type_
+			this.payload_ = typeOrData.payload_ 
+		}
+		else {
+			this.type_ = typeOrData
+			this.payload_ = payload
+		}
 	}
 
 	isDelayInstruction() { return this.type_ === QueuedUIInstruction.TYPE__DELAY }
@@ -219,28 +231,29 @@ class GenericQueue {
 		this.elements_ = []
 		this.c_head_ = -1 // consume head
 
-		this._load()
+		this.__load()
 	}
 
-	_queueName() {
-		return "some_queue"
-	}
 
+	// functii interne, ne-suprascriibile, de regula, in clasele derivate
 	__formattedQueueName() {
 		let qn = this._queueName()
 		qn = qn.replaceAll(" ", "_")
 		return qn
 	}
 
-	_load() {
+	__load() {
 		const _qn = this.__formattedQueueName()
 
-		this.elements_ = data[_qn] && data[_qn]?.data ? data[_qn].data : []
+		const data_ = data[_qn] && data[_qn]?.data ? data[_qn].data : []
+		for (let d of data_) {
+			this.elements_.push(this._instantiateElement(d))
+		}
 		this.c_head_ = data[_qn] && data[_qn]?.head_c ? data[_qn].head_c : 0
 		return true
 	}
 
-	_save() {
+	__save() {
 		const _qn = this.__formattedQueueName()
 		if (data[_qn] === undefined) {
 			data[_qn] = {}
@@ -250,31 +263,48 @@ class GenericQueue {
 		return true
 	}
 
+	// interne dar folosibile si din clasele derivate
 	_push(element) {
 		this.elements_.push(element)
-		this._save()
+		this.__save()
 	}
 	_pop() {
 		this.elements_.pop()
-		this._save()
+		this.__save()
 	}
-	_remove(idx) {
-		if (idx < 0 || idx >= this.elements_.length) {
-			console.warn(`Could not remove element ${idx} from ${this._queueName()}, element does not exist`)
-		}
-		else {
-			this.elements_.splice(idx, 1)
-		}
+	// _remove(idx) {
+	// 	if (idx < 0 || idx >= this.elements_.length) {
+	// 		console.warn(`Could not remove element ${idx} from ${this._queueName()}, element does not exist`)
+	// 	}
+	// 	else {
+	// 		this.elements_.splice(idx, 1)
+	// 	}
+	// }
+
+
+	// FUNCTII ce trebuie SUPRASCRISE
+	_queueName() {
+		return "some_queue"
+	}
+	_instantiateElement(data) {
+		data ? {} : {}
+		return null
 	}
 
+
+	// functii publice
 	size() { return this.elements_.length }
 	consume() {
 		//console.log(`voi consuma din queue ${this.__formattedQueueName()}, elements: ${JSON.stringify(this.elements_)} si head: ${this.c_head_}`)
 		if (this.c_head_ >= this.size()) return undefined
 		const val = this.elements_[this.c_head_]
 		this.c_head_ ++;
-		this._save()
+		this.__save()
 		return val
+	}
+
+	previousInstruction() {
+		return this.size() >= 2 ? this.elements_[this.size() - 2] : undefined
 	}
 }
 
@@ -285,6 +315,10 @@ class QueueE extends GenericQueue {
 
 	_queueName() {
 		return "queue_e"
+	}
+
+	_instantiateElement(data) {
+		return new QueuedEvent(data, null, true)
 	}
 
 	pushEvent(ev) {
@@ -300,6 +334,10 @@ class QueueU extends GenericQueue {
 
 	_queueName() {
 		return "queue_u"
+	}
+
+	_instantiateElement(data) {
+		return new QueuedUIInstruction(data, null, true)
 	}
 
 	pushInstruction(uiInstruction/*:QueuedUIInstruction*/) {
@@ -989,7 +1027,7 @@ class MVVMController {
 
 		uiOptimizer.optimizeQueue(this.queueU_)
 		let nextUIInstruction = this.queueU_.consume()
-		console.log(`nextI: ${JSON.stringify(nextUIInstruction)} -- ${typeof nextUIInstruction?.isDelayInstruction}`)
+		// console.log(`nextI: ${JSON.stringify(nextUIInstruction)} -- ${typeof nextUIInstruction?.isDelayInstruction}`)
 		if (nextUIInstruction && nextUIInstruction.isDelayInstruction() && this.queueU_.previousInstruction()?.isDelayInstruction()) {
 			console.warn(`Invalid state, delay UI instruction after delay UI instruction; the last one will be ignored.`)
 			nextUIInstruction = this.queueU_.consume()
