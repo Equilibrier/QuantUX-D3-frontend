@@ -1016,11 +1016,7 @@ class MVVMController {
 	
 	// PUBLIC methods
 	
-	//lastScreenIs(screenCls) {
-	//	const ctx = new MVVMContext()
-	//	return ctx.lastScreen()?.screen === screenCls
-	//}
-
+	
 	// this is the single function that needs to be called and return its results on the (mvvm-routing) JS script
 	Compute() {
 		const uiOptimizer = MVVM_CONTROLLER.Configurator().UIOptimizer()
@@ -1081,119 +1077,6 @@ class MVVMController {
 			console.log(`NO next UI instruction: returning {} (same screen: ${this.__context().lastScreen()?.screen})`)
 			return {}
 		}
-		
-		// de fapt, le voi apela lazy atunci cand inserez o comanda in queue-urile de comenzi
-		//cmdOptimizer.optimizeQueue(queueC)
-		//cmdConsumer.consumeCommand(cmd)
-
-		// aici ce fac ?, preiau urmatoarea comanda din UICommand, si o execut (push screen, pop screen, delay); returnez la QUX ce trebuie, dupa ce instantiez ecranul respectiv
-
-		/*const mode = params && typeof params !== 'string' ? params.mode : (typeof params === "string" ? params : "default")
-		const asyncEvId = params && typeof params !== 'string' ? params.asyncEvId : null
-		const popLastScreen = params && typeof params !== 'string' ? params.popLastScreen : null
-		const forceTransitionTo = params && typeof params !== 'string' ? params.forceTransitionTo : null
-		
-		console.log(`computation mode: ${mode}; asyncEvId: ${asyncEvId} popLastScreen: ${popLastScreen}; force transition to: ${forceTransitionTo}`)
-		
-		const ctx = this.buildContext(asyncEvId)
-		console.log(`ctx screens: ${JSON.stringify(ctx.screensStack_)}; \n${JSON.stringify(data.screensStack)}`)
-		if (!ctx.valid()) {
-			return {ignore: "dummy"}
-		}
-		
-		if (forceTransitionTo) {
-			const {screen, params} = MVVMStarter._parseScreenUrl(forceTransitionTo)
-			ctx.pushScreen(screen, params)
-			const ns = this._instantiateScreen(ctx)
-			const nvm = ns.getVM();
-			console.log(`log1: 112 configured screen for next render, vm name ${nvm?.constructor?.name}`)
-			if (nvm) nvm.onTransitionTo()
-			if (nvm) nvm.initView()
-			console.log(`log1: 111 initView done`)
-			let target = {to: MVVM_CONTROLLER.Configurator().ScreenFactory().screenIdFromClsName(screen)}
-			return {...target, ...ctx.screenMeta(screen)}
-		}
-		else if (popLastScreen) {
-			ctx.popLastScreen()
-			const {screen, params} = ctx.lastScreen()
-			console.log(`log4: poplastscreen`)
-			let target = {to: MVVM_CONTROLLER.Configurator().ScreenFactory().screenIdFromClsName(screen)}
-			target = {...target, ...ctx.screenMeta(screen)}
-			if (target.to) {
-				ctx.pushScreen(screen, params)
-				const ns = this._instantiateScreen(ctx)
-				const nvm = ns.getVM();
-				console.log(`log1: 111 configured screen for next render, vm name ${nvm?.constructor?.name}`)
-				if (nvm) nvm.onTransitionTo()
-				if (nvm) nvm.initView()
-				console.log(`log1: 111 initView done`)
-			}
-			return target
-		}
-		else {
-			const s = this._instantiateScreen(ctx) // s este folosit numai pentru sendUIEvents, ATAT, configurarea se face mai jos...
-			//const vm = s.getVM();// if (vm) vm.initView()
-				
-			console.log(`log1: screen instantiated`)
-			
-			let nextScreenCls = this._sendUIEvents(s, ctx.controller().consumeLastEvent()) // should also send it to the navigation-controller
-			
-			//if (mode.toLowerCase() === "no-transition") {
-			//	ctx.saveDataBindingsState()
-			//	return null
-			//}
-			console.log(`nextScreenCls: ${nextScreenCls}`)
-			
-			let params = {}
-			if (!nextScreenCls) {
-				return null
-			}
-			
-			let noPush = false
-			if (nextScreenCls.toLowerCase() === "same_screen") {
-				const ls_ = ctx.lastScreen()
-				params = ls_.params
-				nextScreenCls = ls_.screen
-				noPush = true
-				
-				console.log(`log1: same-screen: ${ls_.screen}`)
-			}
-			else {
-				// here, the "same" ret-code should be interpretted as loop="something", to refresh the same screen again
-				const ns__ = MVVMStarter._parseScreenUrl(nextScreenCls)
-				nextScreenCls = ns__.screen
-				params = ns__.params
-				
-				console.log(`log1: normal screen transition to ${nextScreenCls}, params: ${JSON.stringify(params)}`)
-			}
-			
-			console.log(`screen: ${s?.constructor.name}`)
-			console.log(`nextScreenCls1: ${nextScreenCls}`)
-			
-			let target = !nextScreenCls || nextScreenCls.trim().toLowerCase() === "same" ? {loop: "fast_exit"} : {to: MVVM_CONTROLLER.Configurator().ScreenFactory().screenIdFromClsName(nextScreenCls)}
-			target = {...target, ...ctx.screenMeta(nextScreenCls)}
-			// no need to push the new screen to the stack, it will be auto-added next time we instantiate the context, from the qux ScriptMixin ("qux controller")
-			
-			console.warn(`target: ${JSON.stringify(target)}`)
-			
-			if (target.to) {
-				console.log(`log1: target.to: ${target.to}`)
-				
-				if (!noPush) {
-					console.log(`log1: pushing screen on stack`)
-					ctx.pushScreen(nextScreenCls, params)
-				}
-				const ns = this._instantiateScreen(ctx)
-				const nvm = ns.getVM();
-				console.log(`log1: configured screen for next render, vm name ${nvm?.constructor?.name}`)
-				if (!noPush && nvm) nvm.onTransitionTo()
-				if (nvm) nvm.initView()
-				console.log(`log1: initView done`)
-			}
-		
-			console.warn(`returning target: ${JSON.stringify(target)}`)
-			return target
-		}*/
 	}
 }
 
