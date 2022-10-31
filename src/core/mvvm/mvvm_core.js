@@ -799,10 +799,11 @@ class MVVMContext {
 		const quxScreenLabel_ = data?.__sourceScreen?.name
 		const quxScreenClsName_ = quxScreenLabel_ ? MVVM_CONTROLLER.Configurator().ScreenFactory().screenQuxLabelToClsName(quxScreenLabel_) : undefined
 		const lastStackedScreenClsName_ = this.lastScreen()?.screen
+		const lastStackedScreenInstance_ = lastStackedScreenClsName_ ? MVVM_CONTROLLER.Configurator().ScreenFactory().createScreen(lastStackedScreenClsName_, {}) : null
 
 		console.log(`quxScreenLabel_: ${quxScreenLabel_};\nquxScreenClsName_: ${quxScreenClsName_};\nlastStackedScreenClsName_: ${lastStackedScreenClsName_}`)
 
-		if (quxScreenClsName_ && quxScreenClsName_.toLowerCase() !== lastStackedScreenClsName_?.toLowerCase()) {
+		if (quxScreenClsName_ && quxScreenClsName_.toLowerCase() !== lastStackedScreenClsName_?.toLowerCase() && lastStackedScreenInstance_?.screenId() !== quxScreenLabel_) {
 			console.log(`pushing screen ${quxScreenClsName_}`)
 			this.pushScreen(quxScreenClsName_) // aici facem trecerea de la ecrane QUX de care MVVM nu stie (tranzitii netrecute prin MVVM) la logica MVVM; daca nu facem asta, atunci inconsistenta asta strica toata logica MVVM (chiar daca nu stiu ce alte tranzitii a facut QUX intre timp, fara MVVM, ma intereseaza acest ultim ecran) -- in general nu o idee prea buna mixul asta intre MVVM si QUX, dar e greu sa impl ceva foarte bine delimitat
 		}
