@@ -269,7 +269,7 @@ class GenericQueue {
 
 	size() { return this.elements_.length }
 	consume() {
-		console.log(`voi consuma din queue ${this.__formattedQueueName()}, elements: ${JSON.stringify(this.elements_)} si head: ${this.c_head_}`)
+		//console.log(`voi consuma din queue ${this.__formattedQueueName()}, elements: ${JSON.stringify(this.elements_)} si head: ${this.c_head_}`)
 		if (this.c_head_ >= this.size()) return undefined
 		const val = this.elements_[this.c_head_]
 		this.c_head_ ++;
@@ -348,6 +348,8 @@ class EventsQueueConsumer {
 		let ev, consumer;
 		do {
 			ev = queueE.consume(); if (!ev) break
+
+			console.log(`Consum eveniment ${JSON.stringify(ev)}`)
 
 			if (ev.isClickEvent()) {
 				consumer = { _label: '_consumeClickCmd', f: (cmd, queueU) => this._consumeClickCmd(cmd, queueU) }
@@ -855,6 +857,7 @@ class MVVMContext {
 				cparams[k] = params[k]
 			}
 			selScreen.params = cparams
+
 			this.__saveState()
 			return true
 		}
@@ -931,14 +934,26 @@ class MVVMController {
 	}
 	pushAsyncEvent(cmdId) {
 		const ev = QueuedEvent.Factory(this.__context()).createAsyncEvent(cmdId)
-		this.__private_helpers().sendEventToScreen(ev)
+		if (ev.sourceScreen()) {
+			this.__private_helpers().sendEventToScreen(ev)
+		}
 
 		this.queueE_.pushEvent(ev)
 		this.__private_helpers().digestEvents()
 	}
 	pushDataBindEvent(databinding, value) {
+		if (databinding === undefined) {
+			databinding = data.__sourceData
+			if (!databinding) {
+				console.warn(`pushDataBindEvent invalidated by null/undefined implicit databinding (key)`)
+				return
+			}
+			value = data.__sourceNewValue
+		}
 		const ev = QueuedEvent.Factory(this.__context()).createDatabindEvent(databinding, value)
-		this.__private_helpers().sendEventToScreen(ev)
+		if (ev.sourceScreen()) {
+			this.__private_helpers().sendEventToScreen(ev)
+		}
 
 		this.queueE_.pushEvent(ev)
 		this.__private_helpers().digestEvents()
@@ -974,6 +989,7 @@ class MVVMController {
 
 		uiOptimizer.optimizeQueue(this.queueU_)
 		let nextUIInstruction = this.queueU_.consume()
+		console.log(`nextI: ${JSON.stringify(nextUIInstruction)} -- ${typeof nextUIInstruction?.isDelayInstruction}`)
 		if (nextUIInstruction && nextUIInstruction.isDelayInstruction() && this.queueU_.previousInstruction()?.isDelayInstruction()) {
 			console.warn(`Invalid state, delay UI instruction after delay UI instruction; the last one will be ignored.`)
 			nextUIInstruction = this.queueU_.consume()
@@ -992,6 +1008,7 @@ class MVVMController {
 				this.__context().updateScreenParams(nextUIInstruction.updateScreenScreenId(), nextUIInstruction.updateScreenParams())
 
 				console.log(`UI INSTRUCTION consumed: screen UPDATE `)
+				this.__private_helpers().buildScreen(nextUIInstruction.updateScreenScreenId(), false)
 				return {} // acelasi ecran, fiindca am aplicat o comanda UI de sine statatoare
 			}
 			
