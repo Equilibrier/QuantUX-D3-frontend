@@ -291,20 +291,28 @@ class GenericQueue {
 		return null
 	}
 
+	__decorateValue(value, attribOrFunc, valueOrBody) {
+		value[attribOrFunc] = valueOrBody
+	}
+
 
 	// functii publice
 	size() { return this.elements_.length }
 	consume() {
 		//console.log(`voi consuma din queue ${this.__formattedQueueName()}, elements: ${JSON.stringify(this.elements_)} si head: ${this.c_head_}`)
 		if (this.c_head_ >= this.size()) return undefined
+		const oldCHead = this.c_head_
 		const val = this.elements_[this.c_head_]
 		this.c_head_ ++;
 		this.__save()
-		return val
-	}
 
-	previousInstruction() {
-		return this.size() >= 2 ? this.elements_[this.size() - 2] : undefined
+
+		this.__decorateValue(val, 'previousInstruction', () => { // DECORATE returned value with a seek to previous function
+			const idx = oldCHead - 1
+			return idx >= 0 && idx < this.size() ? this.elements_[idx] : undefined
+		})
+		// pot urma si alte decorari, am ales ideea asta in dauna crearii unei clase speciale wrapper pentru val si alte mecanisme cu care acum decorez val-ul --> e mai simplificat asa
+		return val
 	}
 }
 
@@ -1015,7 +1023,7 @@ class MVVMController {
 		uiOptimizer.optimizeQueue(this.queueU_)
 		let nextUIInstruction = this.queueU_.consume()
 		// console.log(`nextI: ${JSON.stringify(nextUIInstruction)} -- ${typeof nextUIInstruction?.isDelayInstruction}`)
-		if (nextUIInstruction && nextUIInstruction.isDelayInstruction() && this.queueU_.previousInstruction()?.isDelayInstruction()) {
+		if (nextUIInstruction && nextUIInstruction.isDelayInstruction() && nextUIInstruction.previousInstruction()?.isDelayInstruction()) {
 			console.warn(`Invalid state, delay UI instruction after delay UI instruction; the last one will be ignored.`)
 			nextUIInstruction = this.queueU_.consume()
 		}
@@ -1066,7 +1074,7 @@ class MVVMController {
 		else {
 			// vom returna cum ca trebuie sa ramana ecranul curent, deci QUX sa nu faca nimic
 			console.log(`NO next UI instruction: returning {} (same screen: ${this.__context().lastScreen()?.screen})`)
-			return {}
+			return {nothing_to_process: true}
 		}
 	}
 }

@@ -237,7 +237,7 @@ export default {
 
             const result = await this.justRunScript(script)
 
-            if (result.status === 'ok' && result.ignore === undefined) {
+            if (result.status === 'ok' && !result.nothingToProcess) {
                 requestAnimationFrame( async () => {
 
                     this.applyApiDeltas(result)
@@ -264,6 +264,9 @@ export default {
                     //console.error(`targetScreen: ${JSON.stringify(targetScreen)}; \n\tresult: ${JSON.stringify(result)}`)
 
                     if (!targetScreen && result.delayMs !== undefined) {
+
+                        console.log(`Will wait ${result.delayMs/1000.0} seconds and then consume the next MVVM UI command`)
+
                         setTimeout(async() => {
 
                             resolve(await this.runScript("\
@@ -279,6 +282,7 @@ export default {
                         }, result.delayMs)
                     }
 
+                    // TODO: ramura asta NU cred ca se mai foloseste
                     else if (targetScreen && result.delayedBackMs !== undefined) {
                         setTimeout(async () => {
                             if (!result.runCode) {
@@ -364,15 +368,19 @@ export default {
                         }, true)
                     }
 
-                    else if (targetScreen === undefined && result.to !== undefined) {
-                        console.error(`<>script's target screen was not found for screen-name ${result.to}`);
-                        resolve(result)
+                    else {
+                        if (targetScreen === undefined && result.to !== undefined) {
+                            console.error(`<>script's target screen was not found for screen-name ${result.to}`);
+                        }
+                        setTimeout(async () => { // incercam sa consumam urmatoarea comanda UI din MVVM, pana cand nu mai e niciuna de executat (nothingToProcess e true)
+                            resolve(await this.runScript("return MVVM_CONTROLLER.Compute()", widget, orginalLine))
+                        }, 100)
                     }
 
-                    resolve(result)
+                    //resolve(result)
                 })
             } else {
-                if (result.ignore) {
+                if (result.nothingToProcess) {
                     console.log(`run-script result (transition.to/loop) IGNORED`)
                 }
                 resolve(result)

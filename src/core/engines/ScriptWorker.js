@@ -39,6 +39,7 @@ self.addEventListener('message', e => {
                 to: result !== undefined ? (typeof result === 'string' ? result : result.targetTo) : undefined,
                 delayMs: result !== undefined ? result?.delay : undefined,
                 delayedBackMs: result !== undefined ? result.backTimeout : undefined,
+                nothingToProcess: result?.nothing_to_process ? true : false,
                 runCode: result?.runCode ? result.runCode : undefined,
                 loop: result !== undefined ? result.loop : undefined,
                 immediateTransition: result !== undefined && result.immediateTransition !== undefined ? result.immediateTransition : false,
