@@ -37,6 +37,7 @@ self.addEventListener('message', e => {
 
             self.postMessage({
                 to: result !== undefined ? (typeof result === 'string' ? result : result.targetTo) : undefined,
+                refreshNeed: result?.refresh ? result.refresh : false,
                 delayMs: result !== undefined ? result?.delay : undefined,
                 delayedBackMs: result !== undefined ? result.backTimeout : undefined,
                 nothingToProcess: result?.nothing_to_process ? true : false,

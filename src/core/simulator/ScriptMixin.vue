@@ -237,6 +237,12 @@ export default {
 
             const result = await this.justRunScript(script)
 
+            if (result.refreshNeed) {
+                console.log('triggering refresh on current QUX screen...')
+                this.applyApiDeltas(result)
+                this.rerenderWidgetsFromDataBindingAndUpdateViewModel(result)
+            }
+
             if (result.status === 'ok' && !result.nothingToProcess) {
                 requestAnimationFrame( async () => {
 

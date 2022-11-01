@@ -168,6 +168,7 @@ class QueuedUIInstruction {
 	static TYPE__PUSHSCREEN = "push-screen"
 	static TYPE__POPSCREEN = "pop-screen"
 	static TYPE__UPDATESCREEN = "update-screen"
+	static TYPE_REFRESHSCREEN = "refresh-screen"
 
 	static createDelayInstruction(timeMs) {
 		return new QueuedUIInstruction(QueuedUIInstruction.TYPE__DELAY, timeMs)
@@ -198,6 +199,9 @@ class QueuedUIInstruction {
 	static createUpdateScreenInstruction(screenId, updatedParamsSection) {
 		return new QueuedUIInstruction(QueuedUIInstruction.TYPE__UPDATESCREEN, { screen_id: screenId, params: updatedParamsSection })
 	}
+	static createRefreshScreenInstruction() {
+		return new QueuedUIInstruction(QueuedUIInstruction.TYPE__REFRESHSCREEN, {})
+	}
 
 	constructor(typeOrData, payload, instantiateConstructor = false) {
 		if (instantiateConstructor) {
@@ -214,6 +218,7 @@ class QueuedUIInstruction {
 	isPushScreenInstruction() { return this.type_ === QueuedUIInstruction.TYPE__PUSHSCREEN }
 	isPopScreenInstruction() { return this.type_ === QueuedUIInstruction.TYPE__POPSCREEN }
 	isUpdateScreenInstruction() { return this.type_ === QueuedUIInstruction.TYPE__UPDATESCREEN }
+	isRefreshScreenInstruction() { return this.type_ === QueuedUIInstruction.TYPE_REFRESHSCREEN }
 
 	delayTimeMs() { return this.isDelayInstruction() ? parseFloat(this.payload_) : undefined }
 	pushScreenScreenName() { return this.isPushScreenInstruction() ? this.payload_?.screen_name : undefined }
@@ -314,6 +319,7 @@ class GenericQueue {
 		// pot urma si alte decorari, am ales ideea asta in dauna crearii unei clase speciale wrapper pentru val si alte mecanisme cu care acum decorez val-ul --> e mai simplificat asa
 		return val
 	}
+	availableToConsume() { return this.c_head_ >= 0 && this.c_head_ < this.size() }
 }
 
 class QueueE extends GenericQueue {
@@ -410,7 +416,7 @@ class EventsQueueConsumer {
 				consumer = { _label: '_consumeGenericCmd', f: (cmd, queueU) => this._consumeGenericCmd(cmd, queueU) }
 			}
 			if (!consumer.f(ev, queueU)) {
-				console.error(`Consumer ${consumer._label} was not able to consume event '${ev.type()}', payload: ${JSON.stringify(ev.payload())}`)
+				console.error(`Selected consumer ${consumer._label} was not able to consume event '${ev.type()}', payload: ${JSON.stringify(ev.payload())}. Maybe the event is a VM consuming event and it got handled by the VM instead (it which case it triggered a refresh-screen instruction).`)
 			}
 		}
 		while (ev !== undefined) // consum toata coada (continutul disponibil in prezent)
@@ -709,17 +715,18 @@ class PScreen { // projected screen
 	}
 	
 	sendUIEvent(ev) {
-		let vmSucceeded = false
 		const vm = this.getVM()
 		if (!vm) {
 			console.warn(`current screen ${this.constructor.name} doesn't have a valid VM`)
 		}
 		else {
-			vmSucceeded = vm.uiEvent(ev)
+			const vmSucceeded = vm.uiEvent(ev)
 			if (!vmSucceeded) {
 				console.warn(`uiEvent on the VM failed, for event ${JSON.stringify(ev)}`)
 			}
+			return vmSucceeded
 		}
+		return false
 	}
 }
 
@@ -952,7 +959,7 @@ class MVVMController {
 			},
 			'sendEventToScreen': (ev) => {
 				const screen = this.__private_helpers().buildScreen(ev.sourceScreen().id)
-				screen.sendUIEvent(ev.toUIEvent())
+				return screen.sendUIEvent(ev.toUIEvent())
 			}
 		}
 	}
@@ -964,19 +971,28 @@ class MVVMController {
 		}
 		const ev = QueuedEvent.Factory(this.__context()).createClickEvent(sourceElement)
 		console.log(`ev_: ${JSON.stringify(ev)}`)
-		this.__private_helpers().sendEventToScreen(ev)
+		const somethingChangedOnVM = this.__private_helpers().sendEventToScreen(ev)
 
 		this.queueE_.pushEvent(ev)
 		this.__private_helpers().digestEvents()
+
+		if (somethingChangedOnVM && !this.queueU_.availableToConsume()) { // daca nu s-a facut nici o tranzitie, dar VM-ul a facut ceva modificari, atunci trimitem un refresh-screen
+			this.queueU_.pushInstruction(QueuedUIInstruction.createRefreshScreenInstruction())
+		}
 	}
 	pushAsyncEvent(cmdId) {
 		const ev = QueuedEvent.Factory(this.__context()).createAsyncEvent(cmdId)
+		let somethingChangedOnVM = false
 		if (ev.sourceScreen()) {
-			this.__private_helpers().sendEventToScreen(ev)
+			somethingChangedOnVM = this.__private_helpers().sendEventToScreen(ev)
 		}
 
 		this.queueE_.pushEvent(ev)
 		this.__private_helpers().digestEvents()
+
+		if (somethingChangedOnVM && !this.queueU_.availableToConsume()) { // daca nu s-a facut nici o tranzitie, dar VM-ul a facut ceva modificari, atunci trimitem un refresh-screen
+			this.queueU_.pushInstruction(QueuedUIInstruction.createRefreshScreenInstruction())
+		}
 	}
 	pushDataBindEvent(databinding, value) {
 		if (databinding === undefined) {
@@ -988,12 +1004,18 @@ class MVVMController {
 			value = data.__sourceNewValue
 		}
 		const ev = QueuedEvent.Factory(this.__context()).createDatabindEvent(databinding, value)
+
+		let somethingChangedOnVM = false
 		if (ev.sourceScreen()) {
-			this.__private_helpers().sendEventToScreen(ev)
+			somethingChangedOnVM = this.__private_helpers().sendEventToScreen(ev)
 		}
 
 		this.queueE_.pushEvent(ev)
 		this.__private_helpers().digestEvents()
+
+		if (somethingChangedOnVM && !this.queueU_.availableToConsume()) { // daca nu s-a facut nici o tranzitie, dar VM-ul a facut ceva modificari, atunci trimitem un refresh-screen
+			this.queueU_.pushInstruction(QueuedUIInstruction.createRefreshScreenInstruction())
+		}
 	}
 	
 	__context() {
@@ -1033,26 +1055,34 @@ class MVVMController {
 		//    -- (1) push&pop screen sunt instructiuni cu efect imediat, deci vor returna de la sine un alt ecran catre QUX, decat cel curent
 		//    -- (2) delay e singura instructiune care isi creaza automat legatura cu urmatoarea instructiune (caci instructiunile nu se executa daca QUX nu apeleaza acest Compute())
 		//    -- (3) updateScreen e instructiune de sine statatoare, se presupune ca se refera la ecranul curent, si ca vrei sa actualizezi ceva in acesta; deci va fi executata si QUX va stii sa lase ecranul curent (doar il va actualiza, la nevoie)
+		//    -- (4) refreshScreen e instructiune de sine statatoare, se refera la ecranul curent, si vrei doar ca QUX sa redeseneze acel ecran (databindingurile sunt deja actualizate)
 
 		if (nextUIInstruction) { // daca e undefined, atunci inseamna ca ramanem pe acelasi ecran (nu mai avem nici o instructiune disponibila)
 
-			// -1-apply updateScreen UI instruction
+			// -1-apply refreshScreen UI instruction
+			if (nextUIInstruction.isRefreshScreenInstruction()) {
+				console.log(`UI INSTRUCTION consumed: screen UPDATE `)
+				this.__private_helpers().buildCurrentScreen(false)
+				return {refresh: true} // acelasi ecran, fiindca am aplicat o comanda UI de sine statatoare
+			}
+
+			// -2-apply updateScreen UI instruction
 			if (nextUIInstruction.isUpdateScreenInstruction()) {
 				this.__context().updateScreenParams(nextUIInstruction.updateScreenScreenId(), nextUIInstruction.updateScreenParams())
 
 				console.log(`UI INSTRUCTION consumed: screen UPDATE `)
 				this.__private_helpers().buildScreen(nextUIInstruction.updateScreenScreenId(), false)
-				return {} // acelasi ecran, fiindca am aplicat o comanda UI de sine statatoare
+				return {refresh: true} // acelasi ecran, fiindca am aplicat o comanda UI de sine statatoare
 			}
 			
-			// -2-apply delay UI instruction
+			// -3-apply delay UI instruction
 			if (nextUIInstruction.isDelayInstruction()) {
 
 				console.log(`UI INSTRUCTION consumed: screen DELAY `)
 				return {delay: nextUIInstruction.delayTimeMs()} // comanda QUX care face un setTimeout si apoi apeleaza iar functia curenta, pentru a prelua urmatoarea comanda din UI; comanda de delay curenta s-a popuit deja aici mai inainte
 			}
 
-			// -3- apply push&pop screen UI instructions
+			// -4- apply push&pop screen UI instructions
 			let isPush = false
 			if (nextUIInstruction.isPushScreenInstruction()) {
 				isPush = true
