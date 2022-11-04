@@ -148,8 +148,6 @@ export default {
                     ]
                     let lib = MvvmCodebase.toString()
                     const _llines = lib.split("\n") // removing the first line ("let data = null") from the script
-                    _llines.splice(0, 1)
-                    _llines.splice(0, 1) // this is the first line, the previous one was an additional one (don't know why) -- so this removes the "let data..."
                     let _llinesFinal = []
                     for (let l of _llines) {
                         if (l.trim() === "//REMOVE FROM HERE") {

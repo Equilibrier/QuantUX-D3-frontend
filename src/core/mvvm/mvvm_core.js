@@ -1,5 +1,6 @@
 const codeFunction = function(){
-let data = null // this must stay on line 1, as it is hardcode-removed from the sources, when building the Qux script
+let data = null // @strict-remove
+let qux = null // @strict-remove
 
 class Model {
 
@@ -190,6 +191,8 @@ class QueuedUIInstruction {
 			return {screen, params}
 		}
 		const {screen, params} = _parseScreenUrl(screenUrl)
+
+		console.error(`parsed screen url: ${JSON.stringify(screen)}; ${JSON.stringify(params)}`)
 
 		return new QueuedUIInstruction(QueuedUIInstruction.TYPE__PUSHSCREEN, {screen_name: screen, params})
 	}
@@ -615,7 +618,9 @@ class VMFactory {
 	
 	__registerVM(key, viewRef, params) { // this should NOT be overwritten, only _createVM method
 		const vm = this._createVM(key, viewRef, params)
-		vm.init()
+		if (vm) {
+			vm.init()
+		}
 		return vm
 	}
 	
@@ -623,7 +628,7 @@ class VMFactory {
 		const create_ = () => {
 			return this.__registerVM(key.trim().toLowerCase(), viewRef, params)
 		}
-		const k = `${key.trim().toLowerCase()}_${viewRef.constructor.name.toLowerCase()}`
+		const k = `${key.trim().toLowerCase()}_${viewRef.class_name().toLowerCase()}`
 		if (resetInstance) {
 			this.vmrefs_[k] = create_()
 		}
@@ -683,7 +688,7 @@ class PScreen { // projected screen
 			})
 		}
 		else {
-			console.warn(`getVM() returns an invalid VM for screen ${this.constructor.name}`)
+			console.warn(`getVM() returns an invalid VM for screen ${this.class_name()}`)
 		}
 	}
 
@@ -717,7 +722,7 @@ class PScreen { // projected screen
 	sendUIEvent(ev) {
 		const vm = this.getVM()
 		if (!vm) {
-			console.warn(`current screen ${this.constructor.name} doesn't have a valid VM`)
+			console.warn(`current screen ${this.class_name()} doesn't have a valid VM`)
 		}
 		else {
 			const vmSucceeded = vm.uiEvent(ev)
@@ -728,6 +733,97 @@ class PScreen { // projected screen
 		}
 		return false
 	}
+}
+
+// doar astea sunt 'protected'/'publice'; se mai pot adauga
+// daca ai ales sa creezi o clasa ce extinde PScreen si definesti o functie care nu e din cele de mai jos, vei primi un avertisment; asta ajuta sa fie eliminate greselile de tipografiere
+const PSCREEN_DEFINABLE_METHODS = {
+	"onTransitionTo": null,
+	"configureUI": null,
+	"refreshView": null,
+	"applyVMChange": null
+}
+
+class ScreenMetaFactory {
+
+	constructor() {
+		this.classes_ = {}
+	}
+
+	defineScreenCls(clsName, quxId, vmName, funcOverridesDict = {}, baseCls=PScreen, printLogs = true) {
+		if (this.classes_[clsName] !== undefined) {
+			if (printLogs) console.warn(`Screen class ${clsName} already defined, now overriding it`)
+		}
+
+		if (typeof baseCls == "string") {
+			const bcname = baseCls
+			if (baseCls.toLowerCase() === "pscreen") {
+				baseCls = PScreen
+			}
+			else {
+				baseCls = this.cls(baseCls) // preluam clasa intermediara tot cu ajutorul acestui factory (clasa trebuie neaparat sa fie definita anterior, deci ordinea definirii conteaza, evident)
+				if (baseCls === undefined) {
+					if (printLogs) console.error(`Intermerdiary screen class ${bcname} was not defined previously. You must define it first, if you plan to use it as super-class (in this case, for ${clsName})`)
+					return
+				}
+			}
+		}
+
+		this.classes_[clsName] = class extends baseCls {
+
+			constructor(params) {
+				super()
+
+				this.params_ = params
+				this.scr_ = qux.getScreen(this.screenId())
+			}
+
+			class_name() { // because the class is anonymous and constructor.name will be an empty string, we can retrieve the class name from this function instead
+				return clsName
+			}
+		}
+
+		// -1- adaugam metodele (override) definite in funcOverridesDict
+		for (let m of Object.keys(funcOverridesDict)) {
+			if (funcOverridesDict[m] !== undefined) {
+				if (baseCls == PScreen && PSCREEN_DEFINABLE_METHODS[m] === undefined) {
+					if (printLogs) console.warn(`Pushed a non-PScreen eligible method to the defined class (${clsName}): ${m}`)
+				}
+				else {
+					const func = funcOverridesDict[m]
+					this.classes_[clsName].prototype[m] = function (...params) { return func(this, ...params) }
+				}
+			}
+		}
+
+		// -2- adaugam metoda 'screenId', obligatorie pentru clasele care exting direct PScreen, optionala pentru clasele intermediare/extinse din clase intermediare
+		if (baseCls == PScreen && quxId === undefined) {
+			if (printLogs) console.error(`You wanted to define screen class ${clsName} which extends PScreen but you did not specified a qux-screen-id`)
+		}
+		else if (quxId === undefined) {
+			if (printLogs) console.warn(`Shouldn't you define qux-screen-id for screen-class ${clsName} ?... Just a thought`)
+		}
+		else {
+			this.classes_[clsName].prototype['screenId'] = () => quxId
+		}
+
+		// -3- adaugam metoda '_getVM', iarasi, optional, pentru ecranele care au logica dinamica de business
+		if (vmName === undefined) {
+			if (printLogs) console.warn(`You did not defined a vmName for screen-class ${clsName}. It's not mandatory, this is just a reminder to check if you did this intentionally or not`)
+		}
+		else {
+			this.classes_[clsName].prototype['_getVM'] = function(resetFactoryInstance) {
+				console.log(`trying to instantiate vm ${JSON.stringify(vmName)} with params ${JSON.stringify(this.params)}`)
+				const ref_ = MVVM_CONTROLLER.Configurator().VMFactory().getVM(vmName, this, this.params_, resetFactoryInstance)
+				console.log(`obtained vm with cls name: ${JSON.stringify(ref_.constructor.name)} - ${JSON.stringify(ref_?.pageSize_)}`)
+				//if (printLogs) console.log(`getting vm of type list and params ${JSON.stringify(this.params_)}...${ref_?.constructor?.name}`)
+				return ref_
+			}
+		}
+	}
+
+	cls(clsName) { return this.classes_[clsName] }
+	// allClasses() { return this.classes_ }
 }
 
 
@@ -802,27 +898,82 @@ class TransitionController {
 
 
 class ScreenFactory {
-	instantiate_(scrCls, params) { return new scrCls(params) }
+	// instantiate_(scrCls, params) { return new scrCls(params) }
 	
 	screenIdFromClsName(clsName) {
-		const scrInst = this.createScreen(clsName)
-		return scrInst ? scrInst.screenId() : null
+		console.log(`caller: screenIdFromClsName`)
+
+		const searchScreenMetaByClsName_ = (clsName) => {
+			const clss_ = MVVM_CONTROLLER.Configurator().ScreenClassesDefinitions()
+			const selected_ = Object.values(clss_).map((cm, index) => ({...cm, cls_name: Object.keys(clss_)[index]})).filter(cm => cm.cls_name === clsName)
+			if (selected_.length <= 0) {
+				console.warn(`Could not find qux name for screen class ${JSON.stringify(clsName)}`)
+			}
+			return selected_.length > 0 ? selected_[0] : undefined	
+		}
+
+		const getQuxByClsName = (clsName) => {
+			const scrMeta = searchScreenMetaByClsName_(clsName)
+			if (scrMeta.base == "PScreen") {
+				return scrMeta.qux
+			}
+			return getQuxByClsName(scrMeta.base)
+		}
+		return getQuxByClsName(clsName)
 	}
-	
-	// to be overwritten
-	createScreen(clsName, params) { clsName ? {} : {}; params ? {} : {}; return null }
-	screenQuxLabelToClsName(screenQuxLabel) { screenQuxLabel ? {} : {}; return null }
+	createScreen(clsName, params) {	
+		const cls = MVVM_CONTROLLER.Configurator().ScreenClass(clsName.trim())
+		if (!cls) {
+			console.error(`Could not instantiate screen by cls name ${JSON.stringify(clsName)}, the literal is not recognized`)
+			return null
+		}
+		console.log(`Instantiating screen class ${JSON.stringify(cls.name)} with params ${JSON.stringify(params)}`)
+		const i_ = new cls(params)
+		return i_
+	}
+	screenQuxLabelToClsName(screenQuxLabel) {
+		const clss_ = MVVM_CONTROLLER.Configurator().ScreenClassesDefinitions()
+		const selected_ = Object.values(clss_).map((cm, index) => ({...cm, cls_name: Object.keys(clss_)[index]})).filter(cm => cm.qux === screenQuxLabel)
+		if (selected_.length <= 0) {
+			console.warn(`Could not find screen class for qux name ${JSON.stringify(screenQuxLabel)}`)
+		}
+		return selected_.length > 0 ? selected_[0].cls_name : null
+	}
 }
 
 class MVVMConfigurator {
 
+	constructor() {
+		this.screenMetaFactory_ = new ScreenMetaFactory()
+		this.screenFactory_ = new ScreenFactory()
+
+		const defs_ = this.ScreenClassesDefinitions()
+
+		const logIt_ = false
+		// const logIt_ = !data['__logCreateClasses']
+		// data['__logCreateClasses'] = true
+		for (let clsName in defs_) {
+			const clsMeta = defs_[clsName]
+			if (logIt_) console.log(`Creating class meta for class ${clsName}`)
+			this.screenMetaFactory_.defineScreenCls(clsName, clsMeta.qux, clsMeta.vm, clsMeta.overrides, clsMeta.base, logIt_)
+			// if (logIt_) console.log(`Check: ${JSON.stringify(this.screenMetaFactory_.cls(clsName)?.name)}`)
+		}
+	}
+
+	ScreenFactory() { return this.screenFactory_ }
+	// astea nu se suprascriu, ci se folosesc
+	ScreenClass(clsName) { return this.screenMetaFactory_.cls(clsName) }
+	//ScreenClasses() { return this.screenMetaFactory_.allClasses() }
+
+
+	// astea se definesc in clasa proiectului, pentru a returna instante specifice proiectului
 	ModelFactory() { return null }
 	VMFactory() { return null }
 
-	TransitionController() { return null }
 	EventsConsumer() { return null }
-
 	UIOptimizer() { return null }
+
+	ScreenClassesDefinitions() { return {} }
 }
 
 
@@ -845,6 +996,7 @@ class MVVMContext {
 		const quxScreenLabel_ = data?.__sourceScreen?.name
 		const quxScreenClsName_ = quxScreenLabel_ ? MVVM_CONTROLLER.Configurator().ScreenFactory().screenQuxLabelToClsName(quxScreenLabel_) : undefined
 		const lastStackedScreenClsName_ = this.lastScreen()?.screen
+		console.log(`caller: context constructor`)
 		const lastStackedScreenInstance_ = lastStackedScreenClsName_ ? MVVM_CONTROLLER.Configurator().ScreenFactory().createScreen(lastStackedScreenClsName_, {}) : null
 
 		console.log(`quxScreenLabel_: ${quxScreenLabel_};\nquxScreenClsName_: ${quxScreenClsName_};\nlastStackedScreenClsName_: ${lastStackedScreenClsName_}`)
@@ -1025,8 +1177,15 @@ class MVVMController {
 	
 	_instantiateScreen(screen, params) {
 		// console.log(`log3: creating screen: ${screen} with params ${JSON.stringify(params)}`)
+
+		console.log(`caller: _instantiateScreen`)
 		const sref = MVVM_CONTROLLER.Configurator().ScreenFactory().createScreen(screen, params)
-		sref.init()
+		if (!sref) {
+			console.error(`Could not instantiate screen ${screen}, although the class should be defined...`)
+		}
+		else {
+			sref.init()
+		}
 		// console.log(`create screen ${screen} with params ${JSON.stringify(params)}`)
 		return sref
 	}
@@ -1095,9 +1254,8 @@ class MVVMController {
 
 				this.__context().popLastScreen()
 			}
-			const builtScreen = this.__private_helpers().buildCurrentScreen(isPush)
-
-			const ret = {targetTo: MVVM_CONTROLLER.Configurator().ScreenFactory().screenIdFromClsName(builtScreen.constructor.name)}
+			const builtScreen_ = this.__private_helpers().buildCurrentScreen(isPush)
+			const ret = {targetTo: MVVM_CONTROLLER.Configurator().ScreenFactory().screenIdFromClsName(builtScreen_.class_name())}
 			console.log(`UI INSTRUCTION (${JSON.stringify(nextUIInstruction)}) consumed: current screen built; returning ${JSON.stringify(ret)}`)
 			return ret
 		}
@@ -1134,6 +1292,7 @@ const dummy19 = new QueueE();
 const dummy20 = new QueueU();
 const dummy21 = new UIQueueOptimizer();
 const dummy22 = new EventsQueueConsumer();
+const dummy23 = new ScreenMetaFactory();
 dummy0 ? null : null
 dummy1 ? null : null
 dummy2 ? null : null
@@ -1157,6 +1316,7 @@ dummy19 ? null : null
 dummy20 ? null : null
 dummy21 ? null : null
 dummy22 ? null : null
+dummy23 ? null : null
 }
 
 export const code = codeFunction.toString().match(/function[^{]+\{([\s\S]*)\}$/)[1]
