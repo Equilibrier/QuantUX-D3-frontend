@@ -308,6 +308,8 @@ class GenericQueue {
 	size() { return this.elements_.length }
 	consume() {
 		const val = this.peek()
+		if (!val) return undefined
+
 		this.c_head_ ++;
 		this.__save()
 
@@ -361,6 +363,7 @@ class QueueU extends GenericQueue {
 	}
 
 	pushInstruction(uiInstruction/*:QueuedUIInstruction*/) {
+		console.log(`Pushing UI instruction: ${JSON.stringify(uiInstruction)}`)
 		this._push(uiInstruction)
 	}
 }
@@ -1207,6 +1210,7 @@ class MVVMController {
 		const uiOptimizer = MVVM_CONTROLLER.Configurator().UIOptimizer()
 
 		uiOptimizer.optimizeQueue(this.queueU_)
+
 		let nextUIInstruction = this.queueU_.consume()
 		// console.log(`nextI: ${JSON.stringify(nextUIInstruction)} -- ${typeof nextUIInstruction?.isDelayInstruction}`)
 		if (nextUIInstruction && nextUIInstruction.isDelayInstruction() && nextUIInstruction.previousInstruction()?.isDelayInstruction()) {
