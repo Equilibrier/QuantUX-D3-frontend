@@ -307,13 +307,16 @@ class GenericQueue {
 	// functii publice
 	size() { return this.elements_.length }
 	consume() {
-		//console.log(`voi consuma din queue ${this.__formattedQueueName()}, elements: ${JSON.stringify(this.elements_)} si head: ${this.c_head_}`)
-		if (this.c_head_ >= this.size()) return undefined
-		const oldCHead = this.c_head_
-		const val = this.elements_[this.c_head_]
+		const val = this.peek()
 		this.c_head_ ++;
 		this.__save()
 
+		return val
+	}
+	peek() {
+		if (this.c_head_ >= this.size()) return undefined
+		const oldCHead = this.c_head_
+		const val = this.elements_[this.c_head_]
 
 		this.__decorateValue(val, 'previousInstruction', () => { // DECORATE returned value with a seek to previous function
 			const idx = oldCHead - 1
@@ -989,21 +992,23 @@ class MVVMContext {
 		return Math.random() * 100000000
 	}
 	
-	constructor() {
+	constructor(syncContextFromQux = true) {
 		
 		this.screensStack_ = data.screensStack ? data.screensStack : []
 
-		const quxScreenLabel_ = data?.__sourceScreen?.name
-		const quxScreenClsName_ = quxScreenLabel_ ? MVVM_CONTROLLER.Configurator().ScreenFactory().screenQuxLabelToClsName(quxScreenLabel_) : undefined
-		const lastStackedScreenClsName_ = this.lastScreen()?.screen
-		console.log(`caller: context constructor`)
-		const lastStackedScreenInstance_ = lastStackedScreenClsName_ ? MVVM_CONTROLLER.Configurator().ScreenFactory().createScreen(lastStackedScreenClsName_, {}) : null
+		if (syncContextFromQux) {
+			const quxScreenLabel_ = data?.__sourceScreen?.name
+			const quxScreenClsName_ = quxScreenLabel_ ? MVVM_CONTROLLER.Configurator().ScreenFactory().screenQuxLabelToClsName(quxScreenLabel_) : undefined
+			const lastStackedScreenClsName_ = this.lastScreen()?.screen
+			console.log(`caller: context constructor`)
+			const lastStackedScreenInstance_ = lastStackedScreenClsName_ ? MVVM_CONTROLLER.Configurator().ScreenFactory().createScreen(lastStackedScreenClsName_, {}) : null
 
-		console.log(`quxScreenLabel_: ${quxScreenLabel_};\nquxScreenClsName_: ${quxScreenClsName_};\nlastStackedScreenClsName_: ${lastStackedScreenClsName_}`)
+			console.log(`quxScreenLabel_: ${quxScreenLabel_};\nquxScreenClsName_: ${quxScreenClsName_};\nlastStackedScreenClsName_: ${lastStackedScreenClsName_}`)
 
-		if (quxScreenClsName_ && quxScreenClsName_.toLowerCase() !== lastStackedScreenClsName_?.toLowerCase() && lastStackedScreenInstance_?.screenId() !== quxScreenLabel_) {
-			console.log(`pushing screen ${quxScreenClsName_}`)
-			this.pushScreen(quxScreenClsName_) // aici facem trecerea de la ecrane QUX de care MVVM nu stie (tranzitii netrecute prin MVVM) la logica MVVM; daca nu facem asta, atunci inconsistenta asta strica toata logica MVVM (chiar daca nu stiu ce alte tranzitii a facut QUX intre timp, fara MVVM, ma intereseaza acest ultim ecran) -- in general nu o idee prea buna mixul asta intre MVVM si QUX, dar e greu sa impl ceva foarte bine delimitat
+			if (quxScreenClsName_ && quxScreenClsName_.toLowerCase() !== lastStackedScreenClsName_?.toLowerCase() && lastStackedScreenInstance_?.screenId() !== quxScreenLabel_) {
+				console.log(`pushing screen ${quxScreenClsName_}`)
+				this.pushScreen(quxScreenClsName_) // aici facem trecerea de la ecrane QUX de care MVVM nu stie (tranzitii netrecute prin MVVM) la logica MVVM; daca nu facem asta, atunci inconsistenta asta strica toata logica MVVM (chiar daca nu stiu ce alte tranzitii a facut QUX intre timp, fara MVVM, ma intereseaza acest ultim ecran) -- in general nu o idee prea buna mixul asta intre MVVM si QUX, dar e greu sa impl ceva foarte bine delimitat
+			}
 		}
 		
 		// const lastScreenIsNotRegistered = (ps) => ps && this.lastScreen()?.screen && MVVM_CONTROLLER.Configurator().ScreenFactory().createScreen(this.lastScreen()?.screen, {})?.screenId()?.toLowerCase() !== ps.toLowerCase()
@@ -1171,7 +1176,7 @@ class MVVMController {
 	}
 	
 	__context() {
-		if (this.context_ === null) this.context_ = new MVVMContext()
+		if (this.context_ === null) this.context_ = new MVVMContext(!this.queueU_.peek()?.isPopScreenInstruction())
 		return this.context_
 	}
 	
