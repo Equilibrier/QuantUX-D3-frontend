@@ -1178,8 +1178,8 @@ class MVVMController {
 		}
 	}
 	
-	__context() {
-		if (this.context_ === null) this.context_ = new MVVMContext(!this.queueU_.peek()?.isPopScreenInstruction())
+	__context(repairContext=true) {
+		if (this.context_ === null) this.context_ = new MVVMContext(!this.queueU_.peek()?.isPopScreenInstruction() && repairContext)
 		return this.context_
 	}
 	
@@ -1261,7 +1261,7 @@ class MVVMController {
 			else if (nextUIInstruction.isPopScreenInstruction()) {
 				console.log(`UI INSTRUCTION consumed: screen POP`)
 
-				this.__context().popLastScreen()
+				this.__context(false).popLastScreen()
 			}
 			const builtScreen_ = this.__private_helpers().buildCurrentScreen(isPush)
 			const ret = {targetTo: MVVM_CONTROLLER.Configurator().ScreenFactory().screenIdFromClsName(builtScreen_.class_name())}
