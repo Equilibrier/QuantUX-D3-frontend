@@ -274,13 +274,7 @@ export default {
                         setTimeout(async() => {
 
                             resolve(await this.runScript("\
-                                const _ns = MVVM_CONTROLLER.Compute();\
-                                if (_ns) {\
-                                    console.warn(`transition to ${JSON.stringify(_ns)}`);\
-                                    return _ns;\
-                                }\
-                                console.error('DEFAULT route, MMenu activated...');\
-                                return 'MMenu';\
+                                return MVVM_CONTROLLER.Compute();\
                             ", widget, orginalLine))
 
                         }, result.delayMs)
