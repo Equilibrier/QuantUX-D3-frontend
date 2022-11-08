@@ -11,6 +11,7 @@ module.exports = {
     }
   },
   chainWebpack: config => {
+    config.optimization.minimize(false)
     config.resolve.alias.set('src', path.resolve('src'))
     config.resolve.alias.set('assets', path.resolve('src/assets'))
     config.resolve.alias.set('components', path.resolve('src/components'))
