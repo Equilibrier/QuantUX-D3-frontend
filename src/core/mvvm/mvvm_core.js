@@ -693,6 +693,7 @@ class MVVMOutputQueryModule { // clasa FINALA, a NU se mai extinde
 			this.prototype['query'] = function(queryMsg) { // functie implicita
 				console.log(`Am primit query spre exterior, ${queryMsg.id} (payload ${JSON.stringify(queryMsg.payload || queryMsg.data)}), o sa raspund cu NULL, fiindca e implementarea implicita...`)
 				return new Promise((resolve, reject) => {
+					reject ? {} : {}
 					resolve(null)
 				})
 			}
