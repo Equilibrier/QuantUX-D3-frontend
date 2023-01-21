@@ -139,7 +139,7 @@ export default {
                     const scripts = [
                         //mvvm_lib.js
                         "io_modules.js",
-                        "ext_modules.js",
+                        "sim_ext_modules.js", // fisierele cu sim_ sunt fisiere care nu o sa fie in proiectul React final, ci numai pentru demo-ul QuantUX, in schimb, la proiectul ReactJS o sa fie rescrise de generatorul de cod; aici ai posibilitatea sa scrii outputModuleSendMessage si outputQueryModuleQuery cu care sa poti inregistra apelurile spre afara, incat sa poti simula ceva; @TODO: pentru o simulare completa, mi-ar trebuie in QuantUX, aici, pe parcursul simularii, si o platforma de timere, pe care sa le pot accesa cumva din aceste fisiere si sa execut ceva evenimente asincrone la un anumit timp
                         "models.js",
                         "viewmodels.js",
                         "views.js",

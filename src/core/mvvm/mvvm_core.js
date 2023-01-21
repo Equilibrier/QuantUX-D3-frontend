@@ -1,6 +1,9 @@
 const codeFunction = function(){
 let data = null // @strict-remove
 let qux = null // @strict-remove
+let inputModuleNotify = null // @strict-remove
+let outputModuleSendMessage = null // @strict-remove
+let outputQueryModuleQuery = null // @strict-remove
 
 class Model {
 
@@ -110,8 +113,8 @@ class QueuedEvent {
 				console.log(`se: ${JSON.stringify(sourceElement)}; `)
 				return new QueuedEvent(QueuedEvent.TYPE__CLICK, __insertContext({source_element: sourceElement }))
 			},
-			createAsyncEvent: (cmdId) => {
-				return new QueuedEvent(QueuedEvent.TYPE__ASYNC, __insertContext({cmd_id: cmdId}))
+			createAsyncEvent: (cmdId, payload) => {
+				return new QueuedEvent(QueuedEvent.TYPE__ASYNC, __insertContext({cmd_id: cmdId, payload}))
 			},
 			createDatabindEvent: (bindingName, value) => {
 				return new QueuedEvent(QueuedEvent.TYPE__DATABIND, __insertContext({ databinding: bindingName, value }))
@@ -140,6 +143,7 @@ class QueuedEvent {
 
 	clickSourceElement() { return this.isClickEvent() ? this.payload_?.source_element : undefined }
 	asyncCmdId() { return this.isAsyncEvent() ? this.payload_?.cmd_id: undefined }
+	asyncPayload() { return this.isAsyncEvent() ? this.payload_?.payload: undefined }
 	databindBinding() { return this.isDatabindEvent() ? this.payload_?.databinding : undefined }
 	databindNewValue() { return this.isDatabindEvent() ? this.payload_?.value : undefined }
 
@@ -151,7 +155,7 @@ class QueuedEvent {
 			return new UIEvent(this.clickSourceElement(), "click")
 		}
 		else if (this.isAsyncEvent()) {
-			return new UIEvent(this.asyncCmdId(), 'async_screen')
+			return new UIEvent(this.asyncCmdId(), 'async_screen', this.asyncPayload())
 		}
 		else if (this.isDatabindEvent()) {
 			return new UIEvent(this.databindBinding(), 'type', this.databindNewValue())
@@ -645,25 +649,54 @@ class VMFactory {
 	}
 }
 
-class MVVMInputMessage {
-
-}
-
-class MVVMOutputMessage {
-
-}
-
-class MVVMInputModule {
-	notify(ev) { // MVVMInputMessage type
-		ev ? null : null
-		// doing nothing, this method should be overriden by io_modules.js unit
+class MVVMInputModule { // clasa FINALA, a NU se mai extinde
+	constructor() {
+		if (inputModuleNotify) {
+			this.prototype['notify'] = function(inputMsg) { // daca a fost suprascrisa de generator/proiectul concret
+				return inputModuleNotify(this, inputMsg) // functiile astea au un parametru _this, si apoi ceilalti parametrii (aici, unul singur, mesajul)
+			}
+		}
+		else {
+			this.prototype['notify'] = function(inputMsg) { // functie implicita
+				MVVM_CONTROLLER.createAsyncEvent(inputMsg.id, inputMsg.payload || inputMsg.data)
+			}
+		}
 	}
 }
 
-class MVVMOutputModule {
-	sendMessage(payload) {
-		payload ? null : null
-		// doing nothing, but after being overriden by io_modules.js unit, it should build a MVVMOutputMessage and should send it to the responsible external module
+class MVVMOutputModule { // clasa FINALA, a NU se mai extinde
+
+	constructor() {
+		if (outputModuleSendMessage) {
+			this.prototype['sendMessage'] = function(msg) { // daca a fost suprascrisa de generator/proiectul concret
+				return outputModuleSendMessage(this, msg) // functiile astea au un parametru _this, si apoi ceilalti parametrii (aici, unul singur, mesajul)
+			}
+		}
+		else {
+			this.prototype['sendMessage'] = function(msg) { // functie implicita
+				console.log(`Am trimis (virtual) mesajul ${msg.id} (payload ${JSON.stringify(msg.payload || msg.data)}) in afara...`)
+			}
+		}
+	}
+}
+
+class MVVMOutputQueryModule { // clasa FINALA, a NU se mai extinde
+
+	constructor() {
+		if (outputQueryModuleQuery) {
+			this.prototype['query'] = function(queryMsg) { // daca a fost suprascrisa de generator/proiectul concret
+				return outputQueryModuleQuery(this, queryMsg) // functiile astea au un parametru _this, si apoi ceilalti parametrii (aici, unul singur, mesajul)
+				// asta trebuie sa returneze un Promise, fiindca, in implementarea din generator, va apela modulul-de-emisie-receptie-React-js, care, implementand un timeout, va trimite mesajul la oricine il asculta, si va astepta sa vada daca raspunde cineva, altfel, va trimite un Promise cu NULL ca rezultat (timeout ca sa nu blocheze MVVM-ul in cazul in care nimeni nu raspunde) -- oricum se vor scrie loguri, avertismente, si daca nu a fost gasit cineva sa raspunda, dar si daca intre timp raspunde dar el trimisese deja NULL la Promise
+			}
+		}
+		else {
+			this.prototype['query'] = function(queryMsg) { // functie implicita
+				console.log(`Am primit query spre exterior, ${queryMsg.id} (payload ${JSON.stringify(queryMsg.payload || queryMsg.data)}), o sa raspund cu NULL, fiindca e implementarea implicita...`)
+				return new Promise((resolve, reject) => {
+					resolve(null)
+				})
+			}
+		}
 	}
 }
 
@@ -876,10 +909,10 @@ class MVVM_UIUtils {
 	
 	setVisibility(visible, widgName, scr) {
 		if (visible) {
-			return MVVM_CONTROLLER.UIUtils().__showIfExists(widgName, scr)
+			return this.__showIfExists(widgName, scr)
 		}
 		else {
-			return MVVM_CONTROLLER.UIUtils().__hideIfExists(widgName, scr)
+			return this.__hideIfExists(widgName, scr)
 		}
 	}
 
@@ -1086,13 +1119,20 @@ class MVVMController {
 
 		this.queueE_ = new QueueE()
 		this.queueU_ = new QueueU()
+
+		this.inputsModule_ = new MVVMInputModule()
+		this.outputingModule_ = new MVVMOutputModule()
+		this.extQueryModule_ = new MVVMOutputQueryModule()
 	}
 
 	UIUtils() { return this.uiUtils_ }
 	
-	// le pun cu litera mare la inceput ca sa arat ca sunt functii, in mod special, publice ce se vrea a fi apelate din afara
+	// le pun cu litera mare la inceput ca sa arat ca sunt functii, in mod special, publice, ce se vrea a fi apelate din afara
 	Configurator() { return null } // :MVVMConfigurator
 
+	EXT_INPUTS() { return this.inputsModule_ }
+	EXT_OUTPUTS() { return this.outputingModule_ }
+	EXT_QUERIES() { return this.extQueryModule_ }
 
 	__private_helpers() {
 		return {
@@ -1140,8 +1180,8 @@ class MVVMController {
 			this.queueU_.pushInstruction(QueuedUIInstruction.createRefreshScreenInstruction())
 		}
 	}
-	pushAsyncEvent(cmdId) {
-		const ev = QueuedEvent.Factory(this.__context()).createAsyncEvent(cmdId)
+	pushAsyncEvent(cmdId, payload) {
+		const ev = QueuedEvent.Factory(this.__context()).createAsyncEvent(cmdId, payload)
 		let somethingChangedOnVM = false
 		if (ev.sourceScreen()) {
 			somethingChangedOnVM = this.__private_helpers().sendEventToScreen(ev)
@@ -1284,8 +1324,7 @@ const dummy2 = new ModelEvent()
 const dummy3 = new UIEvent()
 const dummy4 = new VM()
 const dummy5 = new VMFactory()
-const dummy6 = new MVVMInputMessage()
-const dummy7 = new MVVMOutputMessage()
+const dummy7 = new MVVMOutputQueryModule();
 const dummy8 = new MVVMInputModule()
 const dummy9 = new MVVMOutputModule()
 const dummy10 = new PScreen();
@@ -1308,7 +1347,6 @@ dummy2 ? null : null
 dummy3 ? null : null
 dummy4 ? null : null
 dummy5 ? null : null
-dummy6 ? null : null
 dummy7 ? null : null
 dummy8 ? null : null
 dummy9 ? null : null
