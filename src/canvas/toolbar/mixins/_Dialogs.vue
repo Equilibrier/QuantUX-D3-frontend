@@ -618,20 +618,6 @@ export default {
 			gridSnapTopLeftChkBox.setValue(settings.snapGridOnlyToTopLeft);
 			gridSnapTopLeftChkBox.placeAt(gridSnapTopLeftCntr);
 
-
-			db.label("MatcMarginTop", "JS global scripts - switches just for debugging purposes (just add screen comments with JS_GLOBAL: as prefix and followed by the url):").build(cntr);
-			var urlCntr = db.div("form-group").build(cntr);
-
-			var globalScriptsCBs = {};
-			for (let url of Object.keys(settings.globalScriptUrlsEnabled)) {
-				let urlCB = this.$new(CheckBox);
-				urlCB.setLabel(url);
-				urlCB.setValue(settings.globalScriptUrlsEnabled[url]);
-				urlCB.placeAt(urlCntr);
-
-				globalScriptsCBs[url] = urlCB;
-			}
-
 			var mygrp = db.div("form-group").build(cntr);
 			var mvvmSettingsComps = {}
 			const mvvmSettingsValues_ = DIProvider.mvvmSettings().data()
@@ -680,7 +666,7 @@ export default {
 			dialog.own(on(dialog, "close", lang.hitch(this, "closeDialog")));
 			dialog.own(on(cancel, touch.press, lang.hitch(dialog, "close")));
 			dialog.own(on(save, touch.press, lang.hitch(
-				this, "onSaveSettings", dialog, themeList, mouseWheelList, colorPicker, zoomChkBox, protoMotoCheckBox, gridSnapTopLeftChkBox, selectMoveBox, designTokenCheckBox, globalScriptsCBs, mvvmSettingsComps
+				this, "onSaveSettings", dialog, themeList, mouseWheelList, colorPicker, zoomChkBox, protoMotoCheckBox, gridSnapTopLeftChkBox, selectMoveBox, designTokenCheckBox, mvvmSettingsComps
 			)));
 
 			dialog.popup(popup, this.template);
@@ -691,11 +677,7 @@ export default {
 			this.logger.log(0,"onShowSettings", "exit > ");
 		},
 
-		onSaveSettings (dialog, themeList, mouseWheelList, colorPicker, zoomChkBox, protoMotoCheckBox, gridSnapTopLeftChkBox, selectMoveBox, designTokenCheckBox, globalScriptsCBs, mvvmSettingsComps){
-
-			Object.keys(globalScriptsCBs).map(url => {
-				globalScriptsCBs[url] = globalScriptsCBs[url].getValue()
-			});
+		onSaveSettings (dialog, themeList, mouseWheelList, colorPicker, zoomChkBox, protoMotoCheckBox, gridSnapTopLeftChkBox, selectMoveBox, designTokenCheckBox, mvvmSettingsComps){
 
 			var settings = {
 				canvasTheme: themeList.getValue(),
@@ -706,7 +688,6 @@ export default {
 				snapGridOnlyToTopLeft: gridSnapTopLeftChkBox.getValue(),
 				selectMove: selectMoveBox.getValue(),
 				hasDesignToken: designTokenCheckBox.getValue(),
-				globalScriptUrlsEnabled: globalScriptsCBs
 			};
 
 			for (let sk of Object.keys(mvvmSettingsComps)) {
@@ -910,7 +891,6 @@ export default {
 			
 			DIProvider.uiWidgetsActionQueue().reset()
 			DIProvider.tempModelContext().resetModel(this.model)
-			DIProvider.globalCache().resetGlobalJSScript()
 			DIProvider.setSimulatorStartState(true)
 
 			this.logger.log(0,"startSimulator", "entry");

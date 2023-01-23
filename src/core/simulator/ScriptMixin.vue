@@ -7,7 +7,6 @@
 import * as ScriptToModel from '../../core/engines/ScriptToModel'
 
 import DIProvider from '../../core/di/DIProvider'
-import {code as MvvmCodebase} from 'core/mvvm/mvvm_core'
 
 export default {
   name: 'ScriptMixin',
@@ -99,110 +98,12 @@ export default {
         }
     },
 
-    async _prefetchGlobalJS() {
-
-        console.log(`_prefetchGlobalJS,...`)
-
-        if (!DIProvider.globalCache().globalJSPrefetched()) {
-            console.log(`not retrieved, retrieving now...`)
-            let outp = "";
-            const noCacheOptions = () => {
-                var myHeaders = new Headers();
-                myHeaders.append('pragma', 'no-cache');
-                myHeaders.append('cache-control', 'no-cache');
-                myHeaders.append('Content-Type', 'text/javascript');
-                var myInit = {
-                    method: 'GET',
-                    headers: myHeaders,
-                };
-                return myInit;
-            }
-
-            let canvas = DIProvider.globalJSScripts();
-            if (canvas && canvas?.settings?.globalScriptUrlsEnabled) {
-                for (let url of Object.keys(canvas.settings.globalScriptUrlsEnabled)) {
-                    const enabled = canvas.settings.globalScriptUrlsEnabled[url];
-                    if (enabled) {
-                        //let jsgCode = await (await fetch(url, noCacheOptions())).text();
-                        const resp = await fetch(url, noCacheOptions());
-                        const jsgCode = await resp.text()
-                        console.log(`response: ${JSON.stringify(resp)}`)
-                        outp += jsgCode + "\n";
-                    }
-                }
-            }
-            else {
-                // we are in test mode, no canvas in here; we are retrieving the jss code directly from DIProvider, and we ignore the enabled-checks
-                const jss = DIProvider.globalJSScripts();
-                if (jss && jss.length > 0) {
-                    const baseUrl = jss[0]
-                    const scripts = [
-                        //mvvm_lib.js
-                        "io_modules.js",
-                        "sim_ext_modules.js", // fisierele cu sim_ sunt fisiere care nu o sa fie in proiectul React final, ci numai pentru demo-ul QuantUX, in schimb, la proiectul ReactJS o sa fie rescrise de generatorul de cod; aici ai posibilitatea sa scrii outputModuleSendMessage si outputQueryModuleQuery cu care sa poti inregistra apelurile spre afara, incat sa poti simula ceva; @TODO: pentru o simulare completa, mi-ar trebuie in QuantUX, aici, pe parcursul simularii, si o platforma de timere, pe care sa le pot accesa cumva din aceste fisiere si sa execut ceva evenimente asincrone la un anumit timp
-                        "models.js",
-                        "viewmodels.js",
-                        "views.js",
-                        "configurator.js",
-                        //qux-script
-                    ]
-                    let lib = MvvmCodebase.toString()
-                    const _llines = lib.split("\n") // removing the first line ("let data = null") from the script
-                    let _llinesFinal = []
-                    for (let l of _llines) {
-                        if (l.trim() === "//REMOVE FROM HERE") {
-                            break
-                        }
-                        if (l.toLowerCase().includes("//") && l.toLowerCase().includes("@strict-remove")) continue
-
-                        _llinesFinal.push(l)
-                    }
-                    lib = _llinesFinal.join("\n")
-                    outp = lib + "\n\n"
-                    // for (let url of jss) {
-                    //     //let jsgCode = await (await fetch(url, noCacheOptions())).text();
-                    //     const resp = await fetch(url, noCacheOptions());
-                    //     const jsgCode = await resp.text()
-                    //     console.log(`response: ${JSON.stringify(resp)}`)
-                    //     outp += jsgCode + "\n";
-                    // }
-                    for (let s of scripts) {
-                        let js = ""
-                        try {
-                            const resp = await fetch(`${baseUrl}?filename=${s}`, noCacheOptions());
-                            js = await resp.text()
-                        }
-                        catch(e) {
-                            // file not found on server, just ignoring
-                        }
-                        //console.log(`response: ${JSON.stringify(resp)}`)
-                        outp += js + "\n";
-                    }
-                    console.log(`js code prefetched:\n${outp}`)
-                }
-                else {
-                    console.error(`DIProvider could not retrieve global JS code, for some reason`)
-                }
-            }
-            console.log(`prefetched, setting in DI: ${outp}`)
-            DIProvider.globalCache().setGlobalJSScript(outp)
-        }
-        return DIProvider.globalCache().globalJSScript();
-    },
-
     retrieveTargetScreen(scriptResult) {
         return Object.values(this.model.screens).find(s => scriptResult?.to !== undefined && s.name.toLowerCase() === scriptResult?.to?.toLowerCase())
     },
 
     async justRunScript(script) {
-        let glbJS = await this._prefetchGlobalJS();
-        /*const engine = new ScriptEngine()
-        //console.log("Running script: \n", script);
-        
-        console.log(`TRACE-justRunScript: `)
-        console.trace()
-
-        let result = await engine.run(glbJS + script, this.model, this.dataBindingValues, this.renderFactory)*/
+        const glbJS = await DIProvider.mvvmRuntimeCodeRetriever().cachedCode();
         const result = await DIProvider.jsRunController().scheduleRun(glbJS + script, this.model, this.dataBindingValues, this.renderFactory)
         return result
     },

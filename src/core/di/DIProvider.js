@@ -8,16 +8,15 @@ import { UIWidgetsActionQueue } from 'core/di/UIWidgetsActionQueue'
 import { TempModelContext } from 'core/di/TempModelContext'
 import { ScalingComputer } from 'core/di/ScalingComputer'
 import { AsyncScheduler } from 'core/di/AsyncScheduler'
-import { GlobalCache } from 'core/di/GlobalCache'
 import { JSRunController } from 'core/di/JSRunController'
 import { TransitionsNotifier } from 'core/di/TransitionsNotifier'
 import { MvvmSettingsService } from 'core/di/MvvmSettingsService'
+import { MvvmRuntimeCodeService } from 'core/di/MvvmRuntimeCodeService'
 
 class DIProvider {
 
     constructor() {
         this._simulator = null
-        this._globalScripts = null;
         this._canvas = null;
         this._model = null;
         this._route = null;
@@ -28,11 +27,11 @@ class DIProvider {
         this._scaleComputer = new ScalingComputer();
         this._simStarted = false;
         this._asyncScheduler = new AsyncScheduler();
-        this._globalCache = new GlobalCache();
         this._jsRunCtrl = new JSRunController();
         this._transitionsNotif = new TransitionsNotifier()
         this._mvvmSettingsService = new MvvmSettingsService()
         this._baseController = null
+        this._mvvmRuntimeCodeRetriever = new MvvmRuntimeCodeService()
 
         this._listeners = {};
 
@@ -52,39 +51,6 @@ class DIProvider {
                 console.error("DIProvider: _route was not properly fed in 5 secs");
             }
         });
-
-        this.__waitUntil('_globalScripts', 5000, () => {
-            console.error(`DIProvider: timeout reached waiting for _globalScripts to be set. We will have NO global JS scripts`)
-        }).then(async _globalScripts => {
-            console.log(`Set global JS scripts: ${JSON.stringify(_globalScripts)}`)
-        });
-
-        const buildJSUrls = async () => {
-            let model = await this.modelAsync();
-            if (model !== null) {
-                const globalScripts = [];
-                try {
-                    let comments = await Services.getCommentService().find(model.id, 'ScreenComment')
-                    for (let c of comments) {
-                        console.log(`evr3`)
-                        if (c.message.toLowerCase().trim().startsWith("js_global:")) {
-                                const url = c.message.substring(c.message.toLowerCase().indexOf("js_global:") + "js_global:".length).trim();
-                                globalScripts.push(url)
-                        }
-                    }
-                    console.log(`evr4: ${JSON.stringify(globalScripts)}`)
-                    this._globalScripts = globalScripts
-                }
-                catch(e) {
-                    console.error(`buildJSUrls: Error trying to retrieve comments from CommentsService: ${JSON.stringify(e)}`)
-                    this._globalScripts = ['https://equilibrium.go.ro/quantux-apis/smartbasket/js']
-                }
-            }
-            else {
-                console.log(`evr22:`)
-            }
-        }
-        buildJSUrls()
     }
 
     __set(fieldName) {
@@ -199,11 +165,7 @@ class DIProvider {
 
     asyncScheduler() { return this._asyncScheduler }
 
-    globalCache() { return this._globalCache }
-
     jsRunController() { return this._jsRunCtrl }
-
-    globalJSScripts() { return this.__clone(this._globalScripts) }
 
     simulatorRef() { return this._simulator }
 
@@ -212,6 +174,8 @@ class DIProvider {
     mvvmSettings() { return this._mvvmSettingsService }
 
     editingModelDBController() { return this._baseController }
+
+    mvvmRuntimeCodeRetriever() { return this._mvvmRuntimeCodeRetriever }
 }
 
 export default new DIProvider();

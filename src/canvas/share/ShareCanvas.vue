@@ -353,7 +353,6 @@ export default {
 		startSimulator (e, model) {
 			DIProvider.uiWidgetsActionQueue().reset()
 			DIProvider.tempModelContext().resetModel(this.model)
-			DIProvider.globalCache().resetGlobalJSScript()
 			DIProvider.setSimulatorStartState(true)
 
 			this.logger.log(1,"startSimulator", "enter > " );

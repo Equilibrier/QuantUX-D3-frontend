@@ -353,12 +353,6 @@ export default {
 		},
 
 
-		async initGlobalScripts() {
-			const jss = DIProvider.globalJSScripts()
-			this.settings.globalScriptUrlsEnabled = jss ? jss.reduce((a,v) => ({...a, [v]: true}), {}) : {}
-		},
-
-
 		/***************************************************************************
 		 * Settings
 		 ***************************************************************************/
@@ -387,10 +381,7 @@ export default {
 				zoomSnapp: true,
 				selectMove: true,
 				hasDesignToken: true,
-				globalScriptUrlsEnabled: {}
 			};
-
-			this.initGlobalScripts() // not using await because this will delay initSettings, and some other mechanisms will crash --> the original source code isn't well written, it lacks async mechanism for not-ready data
 
 			var s = this._getStatus("matcSettings");
 			if (s){
@@ -451,9 +442,6 @@ export default {
 			}
 			if (s.hasDesignToken === true || s.hasDesignToken === false) {
 				this.settings.hasDesignToken = s.hasDesignToken
-			}
-			if (s.globalScriptUrlsEnabled !== undefined && s.globalScriptUrlsEnabled !== null) {
-				this.settings.globalScriptUrlsEnabled = s.globalScriptUrlsEnabled;
 			}
 		},
 
