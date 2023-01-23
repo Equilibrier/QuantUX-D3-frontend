@@ -11,6 +11,7 @@ import { AsyncScheduler } from 'core/di/AsyncScheduler'
 import { GlobalCache } from 'core/di/GlobalCache'
 import { JSRunController } from 'core/di/JSRunController'
 import { TransitionsNotifier } from 'core/di/TransitionsNotifier'
+import { MvvmSettingsService } from 'core/di/MvvmSettingsService'
 
 class DIProvider {
 
@@ -30,6 +31,8 @@ class DIProvider {
         this._globalCache = new GlobalCache();
         this._jsRunCtrl = new JSRunController();
         this._transitionsNotif = new TransitionsNotifier()
+        this._mvvmSettingsService = new MvvmSettingsService()
+        this._baseController = null
 
         this._listeners = {};
 
@@ -139,6 +142,11 @@ class DIProvider {
         }
     }
 
+    setBaseController(ref) {
+        console.warn(`setez base controller la `, ref)
+        this.__set("_baseController")(ref)
+    }
+
     setCanvas(canvas) {
         this.__set("_canvas")(canvas);
     }
@@ -200,6 +208,10 @@ class DIProvider {
     simulatorRef() { return this._simulator }
 
     transitionsNotifier() { return this._transitionsNotif }
+
+    mvvmSettings() { return this._mvvmSettingsService }
+
+    editingModelDBController() { return this._baseController }
 }
 
 export default new DIProvider();

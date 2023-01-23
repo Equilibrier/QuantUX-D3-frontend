@@ -8,6 +8,9 @@ import ModelDB from './ModelDB'
 import * as CollabUtil from './CollabUtil'
 import CollabService from './CollabService'
 import ModelFixer from './ModelFixer'
+
+import DIProvider from 'core/di/DIProvider'
+
 export default class BaseController extends Core {
 
   constructor (params){
@@ -29,6 +32,9 @@ export default class BaseController extends Core {
 		this.logger.log(1,"constructor", "entry > " + this.mode);
 		this.commandStack =  {stack : [], pos : 0, id:0};
 		this._lastChangedWidgets = {};
+
+		console.warn('BASE_CONTROLLER...')
+		DIProvider.setBaseController(this)
 	}
 
 
@@ -69,6 +75,8 @@ export default class BaseController extends Core {
 	 */
 	setModel (m, screenID){
 		this.logger.log(1,"setModel", "entry > " + screenID);
+
+		console.warn(`BaseController->setModel -> apelant ??...`)
 
 		this.model = m;
 		this.oldModel = lang.clone(m);
@@ -249,7 +257,7 @@ export default class BaseController extends Core {
 
 			/**
 			 * Update the view model too! This is super important
-			 * for all child widgets that might other wise not be
+			 * for all child widgets that might otherwise not be
 			 * correctly updated. This should normally
 			 * not require a new rendering!
 			 */
@@ -1236,6 +1244,22 @@ export default class BaseController extends Core {
 		this.modelLineAllProperties(command.modelId, command.delta.n);
 		this.render();
 	}
+
+	/**********************************************************************
+	 * MVVMSettings
+	 **********************************************************************/
+	updateMvvmSettings(settings) { // array with dicts of key and value
+		let dirty = false
+		this.model.mvvm_settings = this.model.mvvm_settings ? this.model.mvvm_settings : {}
+		for (let sett of settings) {
+			if (this.model.mvvm_settings[sett.key] !== sett.value) dirty = true
+			this.model.mvvm_settings[sett.key] = sett.value
+		}
+		if (dirty) {
+			this.setDirty() // this will save the model
+		}
+	}
+
 
 	/**********************************************************************
 	 * Box

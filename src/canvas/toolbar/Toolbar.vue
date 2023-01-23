@@ -184,7 +184,7 @@ import ViewConfig from 'canvas/toolbar/components/ViewConfig'
 import EditModeButton from "canvas/toolbar/components/EditModeButton"
 import CollabUser from "canvas/toolbar/components/CollabUser"
 import HelpButton from 'help/HelpButton'
-
+import ModelDB from '../controller/ModelDB'
 
 
 export default {
@@ -250,6 +250,8 @@ export default {
 			btn.setOptions(this.getMainMenu());
 			btn.placeAt(this.home);
 			css.add(btn.domNode, "MatcToolbarItem");
+
+			this.modelDB = new ModelDB()
 		},
 
 

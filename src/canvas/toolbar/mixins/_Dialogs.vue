@@ -547,7 +547,7 @@ export default {
 
 			var db = new DomBuilder();
 			var popup = db.div("MatcDialog MatcHeaderDialog MatcPadding").build();
-			var cntr = db.div("").build(popup);
+			var cntr = db.scrollingDiv("70vh").build(popup);
 			var settings = this.canvas.getSettings();
 
 			/**
@@ -633,23 +633,43 @@ export default {
 			}
 
 			var mygrp = db.div("form-group").build(cntr);
-			var mycheckb1 = this.$new(CheckBox);
-			var mycheckb2 = this.$new(CheckBox);
-			var mycheckb3 = this.$new(CheckBox);
-			const countInputs = 4;
-			for (let i = 0; i < countInputs; i++) {
-				var myinput = this.$new(Input);
-				myinput.placeAt(mygrp);
+			var mvvmSettingsComps = {}
+			const mvvmSettingsValues_ = DIProvider.mvvmSettings().data()
+			for (let m of DIProvider.mvvmSettings().meta()) {
+				let mycomp;
+
+				// selecting instance and optionally insert pre-elements
+				switch (m.type.toLowerCase()) {
+					case "checkb":
+						mycomp = this.$new(CheckBox)
+						mycomp.setLabel(m.label)
+						db.label("MatcMarginTop", "").build(mygrp)
+						break
+					case "text":
+						db.label("MatcMarginTop",`${m.label} :`).build(mygrp);
+						mycomp = this.$new(Input)
+						break
+					default:
+						mycomp = this.$new(Input)
+				}
+
+				// setting the current value
+				mycomp.setValue(mvvmSettingsValues_[m.key])
+
+				// place the built instance
+				mycomp.placeAt(mygrp)
+				mvvmSettingsComps[m.key] = mycomp
+
+				// optionally inject post-elements
+				switch (m.type.toLowerCase()) {
+					case "checkb":
+						// db.label("MatcMarginTop",``).build(mygrp);
+						//this.$new(Input).placeAt(mygrp)
+						db.break().build(mygrp)
+						break
+					default:
+				}
 			}
-			mycheckb1.setLabel("Enable something1");
-			mycheckb1.setValue(true);
-			mycheckb1.placeAt(mygrp);
-			mycheckb2.setLabel("Enable something2");
-			mycheckb2.setValue(true);
-			mycheckb2.placeAt(mygrp);
-			mycheckb3.setLabel("Enable something3");
-			mycheckb3.setValue(true);
-			mycheckb3.placeAt(mygrp);
 
 			var bar = db.div("MatcButtonBar MatcMarginTopXL").build(popup);
 
@@ -660,7 +680,7 @@ export default {
 			dialog.own(on(dialog, "close", lang.hitch(this, "closeDialog")));
 			dialog.own(on(cancel, touch.press, lang.hitch(dialog, "close")));
 			dialog.own(on(save, touch.press, lang.hitch(
-				this, "onSaveSettings", dialog, themeList, mouseWheelList, colorPicker, zoomChkBox, protoMotoCheckBox, gridSnapTopLeftChkBox, selectMoveBox, designTokenCheckBox, globalScriptsCBs
+				this, "onSaveSettings", dialog, themeList, mouseWheelList, colorPicker, zoomChkBox, protoMotoCheckBox, gridSnapTopLeftChkBox, selectMoveBox, designTokenCheckBox, globalScriptsCBs, mvvmSettingsComps
 			)));
 
 			dialog.popup(popup, this.template);
@@ -671,7 +691,7 @@ export default {
 			this.logger.log(0,"onShowSettings", "exit > ");
 		},
 
-		onSaveSettings (dialog, themeList, mouseWheelList, colorPicker, zoomChkBox, protoMotoCheckBox, gridSnapTopLeftChkBox, selectMoveBox, designTokenCheckBox, globalScriptsCBs){
+		onSaveSettings (dialog, themeList, mouseWheelList, colorPicker, zoomChkBox, protoMotoCheckBox, gridSnapTopLeftChkBox, selectMoveBox, designTokenCheckBox, globalScriptsCBs, mvvmSettingsComps){
 
 			Object.keys(globalScriptsCBs).map(url => {
 				globalScriptsCBs[url] = globalScriptsCBs[url].getValue()
@@ -688,6 +708,10 @@ export default {
 				hasDesignToken: designTokenCheckBox.getValue(),
 				globalScriptUrlsEnabled: globalScriptsCBs
 			};
+
+			for (let sk of Object.keys(mvvmSettingsComps)) {
+				DIProvider.mvvmSettings().updateSettingsRow(sk, mvvmSettingsComps[sk].getValue())
+			}
 
 			this.canvas.setSettings(settings);
 			dialog.close();

@@ -63,8 +63,22 @@ export default class DomBuilder {
 		return cols
 	}
 
+	break() {
+		const br = document.createElement("span");
+		br.innerHTML = "<br/>";
+		return this.element("", null, null, null, br)
+	}
+
 	div(style, inner, doNotStrip) {
 		return this.element("div", style, inner, doNotStrip);
+	}
+
+	scrollingDiv(heightRaw="300px") {
+		const sdiv = document.createElement("div");
+		sdiv.style["overflow-x"] = 'hidden'
+		sdiv.style["overflow-y"] = 'auto'
+		sdiv.style["height"] = heightRaw
+		return this.element("", null, null, null, sdiv)
 	}
 
 	pre(style, inner) {
@@ -259,8 +273,8 @@ export default class DomBuilder {
 		return this;
 	}
 
-	element(type, style, inner, doNotStrip) {
-		var element = document.createElement(type);
+	element(type, style, inner, doNotStrip, elementAsIs) {
+		var element = elementAsIs ? elementAsIs : document.createElement(type);
 		if (this.current != null) {
 			this.current.appendChild(element);
 		}
