@@ -652,12 +652,12 @@ class VMFactory {
 class MVVMInputModule { // clasa FINALA, a NU se mai extinde
 	constructor() {
 		if (typeof inputModuleNotify === "function") {
-			this.prototype['notify'] = function(inputMsg) { // daca a fost suprascrisa de generator/proiectul concret
+			MVVMInputModule.prototype['notify'] = function(inputMsg) { // daca a fost suprascrisa de generator/proiectul concret
 				return inputModuleNotify(this, inputMsg) // functiile astea au un parametru _this, si apoi ceilalti parametrii (aici, unul singur, mesajul)
 			}
 		}
 		else {
-			this.prototype['notify'] = function(inputMsg) { // functie implicita
+			MVVMInputModule.prototype['notify'] = function(inputMsg) { // functie implicita
 				MVVM_CONTROLLER.createAsyncEvent(inputMsg.id, inputMsg.payload || inputMsg.data)
 			}
 		}
@@ -668,12 +668,12 @@ class MVVMOutputModule { // clasa FINALA, a NU se mai extinde
 
 	constructor() {
 		if (typeof outputModuleSendMessage === "function") {
-			this.prototype['sendMessage'] = function(msg) { // daca a fost suprascrisa de generator/proiectul concret
+			MVVMOutputModule.prototype['sendMessage'] = function(msg) { // daca a fost suprascrisa de generator/proiectul concret
 				return outputModuleSendMessage(this, msg) // functiile astea au un parametru _this, si apoi ceilalti parametrii (aici, unul singur, mesajul)
 			}
 		}
 		else {
-			this.prototype['sendMessage'] = function(msg) { // functie implicita
+			MVVMOutputModule.prototype['sendMessage'] = function(msg) { // functie implicita
 				console.log(`Am trimis (virtual) mesajul ${msg.id} (payload ${JSON.stringify(msg.payload || msg.data)}) in afara...`)
 			}
 		}
@@ -684,13 +684,13 @@ class MVVMOutputQueryModule { // clasa FINALA, a NU se mai extinde
 
 	constructor() {
 		if (typeof outputQueryModuleQuery === "function") {
-			this.prototype['query'] = function(queryMsg) { // daca a fost suprascrisa de generator/proiectul concret
+			MVVMOutputQueryModule.prototype['query'] = function(queryMsg) { // daca a fost suprascrisa de generator/proiectul concret
 				return outputQueryModuleQuery(this, queryMsg) // functiile astea au un parametru _this, si apoi ceilalti parametrii (aici, unul singur, mesajul)
 				// asta trebuie sa returneze un Promise, fiindca, in implementarea din generator, va apela modulul-de-emisie-receptie-React-js, care, implementand un timeout, va trimite mesajul la oricine il asculta, si va astepta sa vada daca raspunde cineva, altfel, va trimite un Promise cu NULL ca rezultat (timeout ca sa nu blocheze MVVM-ul in cazul in care nimeni nu raspunde) -- oricum se vor scrie loguri, avertismente, si daca nu a fost gasit cineva sa raspunda, dar si daca intre timp raspunde dar el trimisese deja NULL la Promise
 			}
 		}
 		else {
-			this.prototype['query'] = function(queryMsg) { // functie implicita
+			MVVMOutputQueryModule.prototype['query'] = function(queryMsg) { // functie implicita
 				console.log(`Am primit query spre exterior, ${queryMsg.id} (payload ${JSON.stringify(queryMsg.payload || queryMsg.data)}), o sa raspund cu NULL, fiindca e implementarea implicita...`)
 				return new Promise((resolve, reject) => {
 					reject ? {} : {}
