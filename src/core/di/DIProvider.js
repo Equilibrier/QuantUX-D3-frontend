@@ -12,6 +12,7 @@ import { JSRunController } from 'core/di/JSRunController'
 import { TransitionsNotifier } from 'core/di/TransitionsNotifier'
 import { MvvmSettingsService } from 'core/di/MvvmSettingsService'
 import { MvvmRuntimeCodeService } from 'core/di/MvvmRuntimeCodeService'
+import { InputsModuleLoadingService } from 'core/mvvm/InputsModuleLoadingService'
 
 class DIProvider {
 
@@ -32,6 +33,7 @@ class DIProvider {
         this._mvvmSettingsService = new MvvmSettingsService()
         this._baseController = null
         this._mvvmRuntimeCodeRetriever = new MvvmRuntimeCodeService()
+        this._mvvmInputsService = new InputsModuleLoadingService()
 
         this._listeners = {};
 
@@ -176,6 +178,8 @@ class DIProvider {
     editingModelDBController() { return this._baseController }
 
     mvvmRuntimeCodeRetriever() { return this._mvvmRuntimeCodeRetriever }
+
+    mvvmInputsService() { return this._mvvmInputsService }
 }
 
 export default new DIProvider();

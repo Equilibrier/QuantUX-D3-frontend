@@ -134,6 +134,11 @@ export default {
                 }
             }
 
+            const q_ = DIProvider.mvvmInputsService().discardQueue()
+            for (let inp of q_) {
+                await this.runScript(`return MVVM_CONTROLLER.EXT_INPUTS().notify(${JSON.stringify(inp)})`, widget, orginalLine)
+            }
+
             const result = await this.justRunScript(script)
 
             if (result.refreshNeed) {
