@@ -12,7 +12,9 @@ import { JSRunController } from 'core/di/JSRunController'
 import { TransitionsNotifier } from 'core/di/TransitionsNotifier'
 import { MvvmSettingsService } from 'core/di/MvvmSettingsService'
 import { MvvmRuntimeCodeService } from 'core/di/MvvmRuntimeCodeService'
+import { ExternalCallsService } from 'core/di/ExternalCallsService'
 import { InputsModuleLoadingService } from 'core/mvvm/InputsModuleLoadingService'
+import { OutputsModuleSendingService } from 'core/mvvm/OutputsModuleSendingService'
 
 class DIProvider {
 
@@ -34,6 +36,8 @@ class DIProvider {
         this._baseController = null
         this._mvvmRuntimeCodeRetriever = new MvvmRuntimeCodeService()
         this._mvvmInputsService = new InputsModuleLoadingService()
+        this._mvvmOutputsService = new OutputsModuleSendingService()
+        this._externalCallsService = new ExternalCallsService()
 
         this._listeners = {};
 
@@ -180,6 +184,9 @@ class DIProvider {
     mvvmRuntimeCodeRetriever() { return this._mvvmRuntimeCodeRetriever }
 
     mvvmInputsService() { return this._mvvmInputsService }
+    mvvmOutputsService() { return this._mvvmOutputsService }
+
+    externalCallsService() { return this._externalCallsService }
 }
 
 export default new DIProvider();

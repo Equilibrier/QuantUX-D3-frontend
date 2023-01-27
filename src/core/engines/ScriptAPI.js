@@ -454,6 +454,16 @@ export default class ScriptAPI {
         return this.appDeltas
     }
 
+    sendExternalNotification(message) {
+        self.postMessage({
+            type: this.type,
+            key: 'ext-notif',
+            props: {
+                message
+            }
+        })
+    }
+
     stopAnimation(animId) {
         // console.log(`cosmin:stopanim: ${animId}`)
 

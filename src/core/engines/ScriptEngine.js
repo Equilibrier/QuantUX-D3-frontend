@@ -8,7 +8,6 @@ let worker = new Worker(new URL('./ScriptWorker.js', import.meta.url))
 
 export default class ScriptEngine {
     
-
     run (js, model, viewModel, renderFactory) {
         Logger.log(1, 'ScriptEngine.run()')
         this.isDone = false
@@ -66,6 +65,11 @@ export default class ScriptEngine {
         if (message.data.key && message.data.key === "stop-animation") {
             const {animId} = message.data.props;
             DIProvider.uiWidgetsActionQueue().stopAnimation(animId)
+            return;
+        }
+        if (message.data.key && message.data.key === "ext-notif") {
+            const {message} = message.data.props;
+            DIProvider.mvvmOutputsService().sendExternalNotification(message)
             return;
         }
 
