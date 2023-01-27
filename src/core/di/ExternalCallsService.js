@@ -1,4 +1,4 @@
-import {generateUuid} from './utils/generic_utils'
+import {generateUuid} from 'util/generic_utils'
 
 export class ExternalCallsService {
 

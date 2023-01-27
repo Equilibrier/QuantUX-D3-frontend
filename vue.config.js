@@ -23,7 +23,7 @@ module.exports = {
     config.resolve.alias.set('page', path.resolve('src/page'))
     config.resolve.alias.set('user', path.resolve('src/user'))
     config.resolve.alias.set('core', path.resolve('src/core'))
-    config.resolve.alias.set('utils', path.resolve('src/utils'))
+    config.resolve.alias.set('util', path.resolve('src/util'))
     config.resolve.alias.set('dash', path.resolve('src/dash'))
     config.resolve.alias.set('public', path.resolve('src/public'))
     config.resolve.alias.set('services', path.resolve('src/services'))
