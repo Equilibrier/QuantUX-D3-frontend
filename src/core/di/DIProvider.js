@@ -29,6 +29,7 @@ class DIProvider {
         this._simulator = null
         this._canvas = null;
         this._model = null;
+        this._jwtToken = null;
         this._route = null;
         this._keyhandler = new KeyboardInputHandler();
         this._elLookup = null;
@@ -51,6 +52,13 @@ class DIProvider {
         this.__waitUntil('_route', 5000, () => {
             console.error(`DIProvider: timeout reached waiting for _route to be set`)
         }).then(async _route => {
+
+            const jwtToken = Services.getUserService()?.getToken()
+            if (jwtToken) {
+                // console.log(`jwtToken: ${jwtToken}`)
+                this.setJwtToken(jwtToken)
+            }
+
             if (_route !== null) {
                 console.error("Setez model-ul")
                 const modelService = Services.getModelService(this._route);
@@ -133,6 +141,10 @@ class DIProvider {
         console.error(`model: \n\t${JSON.stringify(model)}`)
         this.__set("_model")(model);
     }
+    setJwtToken(token) {
+        console.error(`jwtToken: \n\t${JSON.stringify(token)}`)
+        this.__set("_jwtToken")(token);
+    }
     forceUpdateModel(model) {
         if (model !== undefined && model !== null) {
             this._model = model;
@@ -161,6 +173,9 @@ class DIProvider {
     
     model() { return this._model; }
     async modelAsync() { return await this.__waitUntil('_model', 3000); }
+
+    jwtToken() { return this._jwtToken }
+    async jwtTokenAsync() { return await this.__waitUntil('_jwtToken', 3000); }
 
     keyInputHandler() { return this._keyhandler }
     elementsLookup() { // lazy inst because there is a circular dep between DIProvider<->ElementsLookup, and this is how we break it
