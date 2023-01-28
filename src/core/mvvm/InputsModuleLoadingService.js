@@ -36,7 +36,17 @@ export class InputsModuleLoadingService {
                         // body: JSON.stringify(data),
                         headers: this.__private.createDefaultHeader()
                     })
-                    if (res.status === 200) this.queue_.push(await res.json())
+                    if (res.status === 200) {
+                        const result_ = await res.json()
+                        if (Array.isArray(result_)) {
+                            for (let r of result_) {
+                                this.queue_.push(r)
+                            }
+                        }
+                        else {
+                            this.queue_.push(result_)
+                        }
+                    }
                     else throw new Error(`InputsModuleLoadingService: Could not GET from url ${this.url_} for some reason`)
                 }
                 catch(err) {
