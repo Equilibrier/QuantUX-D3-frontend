@@ -55,6 +55,7 @@ export default {
 				this.screenName.value = "";
 			}
 			this.screenName.blur();
+			this.debugId.value = `debug-id: ${model.id}`
 
 			css.add(this.screenSize.domNode, 'MatcHidden')
 			css.remove(this.screenNameDiv, "MatcToolbarSectionHidden");
@@ -135,6 +136,7 @@ export default {
 					this.screenName.value = "";
 				}
 				this.screenName.blur();
+				this.debugId.value = `debug-id: ${model.id}`
 
 				if(this.screenDownLoad) {
 					css.remove(this.screenDownLoad.domNode, "MatcHidden")
@@ -162,6 +164,7 @@ export default {
 					this.screenName.value = "";
 				}
 				this.screenName.blur();
+				this.debugId.value = `debug-id: ${model.id}`
 
 				css.add(this.screenSize.domNode, 'MatcHidden')
 				css.remove(this.screenNameDiv, "MatcToolbarSectionHidden");

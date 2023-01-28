@@ -19,6 +19,13 @@ import { OutputsModuleSendingService } from 'core/mvvm/OutputsModuleSendingServi
 class DIProvider {
 
     constructor() {
+
+        this.__private = {
+            initMvvmRuntimeCodeRetriever: () => new MvvmRuntimeCodeService(),
+            initMvvmInputsService: () => new InputsModuleLoadingService(),
+            initMvvmOutputsService: () => new OutputsModuleSendingService(),
+            initExternalCallsService: () => new ExternalCallsService(),
+        }
         this._simulator = null
         this._canvas = null;
         this._model = null;
@@ -34,10 +41,10 @@ class DIProvider {
         this._transitionsNotif = new TransitionsNotifier()
         this._mvvmSettingsService = new MvvmSettingsService()
         this._baseController = null
-        this._mvvmRuntimeCodeRetriever = new MvvmRuntimeCodeService()
-        this._mvvmInputsService = new InputsModuleLoadingService()
-        this._mvvmOutputsService = new OutputsModuleSendingService()
-        this._externalCallsService = new ExternalCallsService()
+        this._mvvmRuntimeCodeRetriever = null
+        this._mvvmInputsService = null
+        this._mvvmOutputsService = null
+        this._externalCallsService = null
 
         this._listeners = {};
 
@@ -181,12 +188,12 @@ class DIProvider {
 
     editingModelDBController() { return this._baseController }
 
-    mvvmRuntimeCodeRetriever() { return this._mvvmRuntimeCodeRetriever }
+    mvvmRuntimeCodeRetriever() { this._mvvmRuntimeCodeRetriever = this._mvvmRuntimeCodeRetriever ? this._mvvmRuntimeCodeRetriever : this.__private.initMvvmRuntimeCodeRetriever(); return this._mvvmRuntimeCodeRetriever }
 
-    mvvmInputsService() { return this._mvvmInputsService }
-    mvvmOutputsService() { return this._mvvmOutputsService }
+    mvvmInputsService() { this._mvvmInputsService = this._mvvmInputsService ? this._mvvmInputsService : this.__private.initMvvmInputsService(); return this._mvvmInputsService }
+    mvvmOutputsService() { this._mvvmOutputsService = this._mvvmOutputsService ? this._mvvmOutputsService : this.__private.initMvvmOutputsService(); return this._mvvmOutputsService }
 
-    externalCallsService() { return this._externalCallsService }
+    externalCallsService() { this._externalCallsService = this._externalCallsService ? this._externalCallsService : this.__private.initExternalCallsService(); return this._externalCallsService }
 }
 
 export default new DIProvider();

@@ -66,6 +66,7 @@ export class ModelService extends AbstractService{
     }
 
     findImages(id) {
+        console.log(`BLOB: /rest/images/${id}.json`)
         return this._get(`/rest/images/${id}.json`)
     }
 
