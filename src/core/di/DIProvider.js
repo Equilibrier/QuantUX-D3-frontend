@@ -40,7 +40,7 @@ class DIProvider {
         this._jsRunCtrl = new JSRunController();
         this._transitionsNotif = new TransitionsNotifier()
         this._mvvmSettingsService = new MvvmSettingsService()
-        this._baseController = null
+        this._baseController = null // lazy instantiation, see __private init functions and the getters; @TODO: for now I only did for these, as these were using themselves in circular dependencies, but it can be done for everything, and this technique should solve every similar issue
         this._mvvmRuntimeCodeRetriever = null
         this._mvvmInputsService = null
         this._mvvmOutputsService = null

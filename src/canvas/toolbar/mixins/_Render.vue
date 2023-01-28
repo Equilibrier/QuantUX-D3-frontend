@@ -1151,15 +1151,6 @@ export default {
 			this.own(on(this.screenName, "change", lang.hitch(this, "onScreenNameChange")));
 
 			this.debugId = this.createInput(content, "...");
-			// const debugId_ = this.$new(Label);
-			// debugId_.setValue('hhh')
-			// var div_ = document.createElement("div");
-			// // css.add(div, " MatcToolbarItem MatcToolbarGridFull");
-			// content.appendChild(div_);
-			// // let input = document.createElement("input");
-			// // css.add(input, "MatcIgnoreOnKeyPress MatcToobarInlineEdit MatcToobarInput");
-			// div_.appendChild(debugId_);
-
 
 			this.screenSize = this.$new(BoxSize, {mode:"widthAndHeight"});
 			this.own(on(this.screenSize, "change", lang.hitch(this, "setScreenSize")));
