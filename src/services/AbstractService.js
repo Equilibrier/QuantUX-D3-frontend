@@ -101,7 +101,7 @@ export default class AbstractService {
                 } else {
                     this.onError(url, res)
                     if (errorCallback) {
-                        errorCallback(new Error('Could not load ...'))
+                        errorCallback(new Error(`Could not load url ${url}...`))
                     }
                     reject(new Error('Could not load'))
                 }
@@ -134,7 +134,7 @@ export default class AbstractService {
                 } else {
                     this.onError(url, res)
                     if (errorCallback) {
-                        errorCallback(new Error('Could not _post ...'))
+                        errorCallback(new Error(`Could not _post  url ${url}...`))
                     }
                     reject(new Error('Could not post'))
                 }
@@ -166,7 +166,7 @@ export default class AbstractService {
                     })
                 } else {
                     if (errorCallback) {
-                        errorCallback(new Error('Could not _put ...'))
+                        errorCallback(new Error(`Could not _put  url ${url}...`))
                     }
                     reject(new Error('Could not put'))
                 }
@@ -197,7 +197,7 @@ export default class AbstractService {
                 } else {
                     this.onError(url, res)
                     if (errorCallback) {
-                        errorCallback(new Error('Could not delete ...'))
+                        errorCallback(new Error(`Could not delete  url ${url}...`))
                     }
                     reject(new Error('Could not delete'))
                 }
