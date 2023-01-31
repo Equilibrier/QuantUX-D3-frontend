@@ -6,8 +6,8 @@ export class OutputsModuleSendingService {
     constructor() {
     }
 
-    sendExternalNotification(msg) {
-        const url_ = DIProvider.mvvmSettings().data[MvvmSettings.KEY__HOST_OUTPUT_MODULE_SERVER()]
+    async sendExternalNotification(msg) {
+        const url_ = (await DIProvider.mvvmSettings().data())[MvvmSettings.KEY__HOST_OUTPUT_MODULE_SERVER()]
         DIProvider.externalCallsService().registerCall(url_, msg)
     }
     // sendExternalQuery(msg)

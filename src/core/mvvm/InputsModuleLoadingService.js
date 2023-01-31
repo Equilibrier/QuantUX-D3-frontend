@@ -4,21 +4,30 @@ export class InputsModuleLoadingService {
     
     constructor() {
         
-        const mvvmSettings_ = DIProvider.mvvmSettings().data()
-        this.url_ = mvvmSettings_.host_input_module_server
-        this.error_ = false
-        if (!this.url_) {
-            console.error(`InputsModuleLoadingService: Something is wrong, mvvm setting 'host_input_module_server' could not be retrieved !`)
-            this.error_ = true
-        }
-
         this.queue_ = []
 
         this.timer_ = null
 
         this.__private = {
 
+            url: null,
+
+            retrieveUrl: async () => {
+
+                if (this.__private.url) return this.__private.url // lazy instantiation
+
+                const mvvmSettings_ = await DIProvider.mvvmSettings().data()
+                this.__private.url = mvvmSettings_.host_input_module_server
+                this.error_ = false
+                if (!this.__private.url) {
+                    console.error(`InputsModuleLoadingService: Something is wrong, mvvm setting 'host_input_module_server' could not be retrieved !`)
+                    this.error_ = true
+                }
+                return this.__private.url
+            },
+
             createDefaultHeader: () => {
+
                 let headers = new Headers({
                     'Content-Type': 'application/json',
                     'Accept': 'application/json'
@@ -27,10 +36,12 @@ export class InputsModuleLoadingService {
             },
 
             makeExternalCall: async () => {
+
                 if (this.error_) { console.warn('InputsModuleLoadingService: startListening: module is in error mode, call ommited !'); return }
 
                 try {
-                    const res = fetch(this.url_, {
+                    const url_ = await this.__private.retrieveUrl()
+                    const res = await fetch(url_, {
                         method: 'get',
                         // credentials: "same-origin",
                         // body: JSON.stringify(data),
@@ -47,7 +58,7 @@ export class InputsModuleLoadingService {
                             this.queue_.push(result_)
                         }
                     }
-                    else throw new Error(`InputsModuleLoadingService: Could not GET from url ${this.url_} for some reason`)
+                    else throw new Error(`InputsModuleLoadingService: Could not GET from url ${url_} for some reason (status ${res.status})`)
                 }
                 catch(err) {
                     console.error(err)

@@ -15,12 +15,15 @@ import { MvvmRuntimeCodeService } from 'core/di/MvvmRuntimeCodeService'
 import { ExternalCallsService } from 'core/di/ExternalCallsService'
 import { InputsModuleLoadingService } from 'core/mvvm/InputsModuleLoadingService'
 import { OutputsModuleSendingService } from 'core/mvvm/OutputsModuleSendingService'
+import { SimulatorStateService } from 'core/di/SimulatorStateService'
 
 class DIProvider {
 
     constructor() {
 
         this.__private = {
+            initSimulatorStateService: () => new SimulatorStateService(),
+
             initMvvmRuntimeCodeRetriever: () => new MvvmRuntimeCodeService(),
             initMvvmInputsService: () => new InputsModuleLoadingService(),
             initMvvmOutputsService: () => new OutputsModuleSendingService(),
@@ -36,7 +39,6 @@ class DIProvider {
         this._uwActionQueue = new UIWidgetsActionQueue();
         this._tmpModelCtx = new TempModelContext();
         this._scaleComputer = new ScalingComputer();
-        this._simStarted = false;
         this._asyncScheduler = new AsyncScheduler();
         this._jsRunCtrl = new JSRunController();
         this._transitionsNotif = new TransitionsNotifier()
@@ -46,6 +48,7 @@ class DIProvider {
         this._mvvmInputsService = null
         this._mvvmOutputsService = null
         this._externalCallsService = null
+        this._simulatorStateService = null
 
         this._listeners = {};
 
@@ -159,20 +162,20 @@ class DIProvider {
     }
 
     setSimulatorStartState(started) {
-        this._simStarted = started;
-    } 
+        started ? this.simulatorStateService().emitStarted() : this.simulatorStateService().emitStopped()
+    }
 
     setSimulatorRef(sim) {
         this.__set("_simulator")(sim)
     }
 
-    simulatorStarted() { return this._simStarted; }
+    simulatorStarted() { return this.simulatorStateService().started() }
 
     canvas() { return this._canvas; }
     async canvasAsync() { return await this.__waitUntil('_canvas', 3000); }
     
     model() { return this._model; }
-    async modelAsync() { return await this.__waitUntil('_model', 3000); }
+    async waitForAsync() { return await this.__waitUntil('_model', 3000); }
 
     jwtToken() { return this._jwtToken }
     async jwtTokenAsync() { return await this.__waitUntil('_jwtToken', 3000); }
@@ -209,6 +212,8 @@ class DIProvider {
     mvvmOutputsService() { this._mvvmOutputsService = this._mvvmOutputsService ? this._mvvmOutputsService : this.__private.initMvvmOutputsService(); return this._mvvmOutputsService }
 
     externalCallsService() { this._externalCallsService = this._externalCallsService ? this._externalCallsService : this.__private.initExternalCallsService(); return this._externalCallsService }
+
+    simulatorStateService() { this._simulatorStateService = this._simulatorStateService ? this._simulatorStateService : this.__private.initSimulatorStateService(); return this._simulatorStateService }
 }
 
 export default new DIProvider();

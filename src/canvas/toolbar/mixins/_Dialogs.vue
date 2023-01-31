@@ -620,7 +620,7 @@ export default {
 
 			var mygrp = db.div("form-group").build(cntr);
 			var mvvmSettingsComps = {}
-			const mvvmSettingsValues_ = DIProvider.mvvmSettings().data()
+			const mvvmSettingsValues_ = await DIProvider.mvvmSettings().data()
 			for (let m of DIProvider.mvvmSettings().meta()) {
 				let mycomp;
 

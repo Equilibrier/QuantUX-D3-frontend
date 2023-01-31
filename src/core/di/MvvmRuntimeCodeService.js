@@ -37,7 +37,7 @@ export class MvvmRuntimeCodeService {
 
             downloadMvvmCode: async () => {
                 const codeMeta_ = DIProvider.mvvmSettings().filteredMeta('ext_mvvm_code')
-                const settingsData_ = DIProvider.mvvmSettings().data()
+                const settingsData_ = await DIProvider.mvvmSettings().data()
                 let outp = {}
                 for (let m of codeMeta_) {
                     const url_ = settingsData_[m.key]

@@ -657,7 +657,8 @@ class MVVMInputModule { // clasa FINALA, a NU se mai extinde
 			}
 		}
 		else {
-			MVVMInputModule.prototype['notify'] = function(inputMsg) { // functie implicita
+			MVVMInputModule.prototype['notify'] = function(inputMsg) { // functie implicita (pentru DEMO-uri (simulator) myqux)
+				console.log(`MVVM: am primit mesaj de la modulul de inputs: ${JSON.stringify(inputMsg)}`)
 				MVVM_CONTROLLER.createAsyncEvent(inputMsg.id, inputMsg.payload || inputMsg.data)
 			}
 		}
@@ -673,7 +674,7 @@ class MVVMOutputModule { // clasa FINALA, a NU se mai extinde
 			}
 		}
 		else {
-			MVVMOutputModule.prototype['sendMessage'] = function(msg) { // functie implicita
+			MVVMOutputModule.prototype['sendMessage'] = function(msg) { // functie implicita (pentru DEMO-uri (simulator) myqux)
 				console.log(`Am trimis (virtual) mesajul ${msg.id} (payload ${JSON.stringify(msg.payload || msg.data)}) in afara...`)
 			}
 		}

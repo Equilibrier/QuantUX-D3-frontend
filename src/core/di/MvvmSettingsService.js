@@ -49,8 +49,8 @@ export class MvvmSettingsService {
         this.__private = {
             loadedFromDb_: false,
 
-            loadFromDb: () => {
-                const setts_ = DIProvider.model()["mvvm_settings"]
+            loadFromDb: async () => {
+                const setts_ = (await DIProvider.waitForAsync())["mvvm_settings"] || {}
                 for (let sm of this.settingsMeta_) {
                     this.data_[sm.key] = setts_ && setts_[sm.key] ? setts_[sm.key] : sm.def
 
@@ -58,13 +58,13 @@ export class MvvmSettingsService {
                         this.__private.saveDataRow(sm.key, this.data_[sm.key])
                     }
                 }
-                return this.data_        
+                return this.data_
             },
 
-            getData: () => {
+            getData: async () => {
                 if (!this.__private.loadedFromDb_) {
                     this.__private.loadedFromDb_ = true
-                    return this.__private.loadFromDb()
+                    return await this.__private.loadFromDb()
                 }
                 return this.data_
             },
@@ -81,7 +81,7 @@ export class MvvmSettingsService {
         }
     }
 
-    data() { return this.__private.getData() }
+    async data() { return await this.__private.getData() }
 
     updateSettingsRow(key, val) {
         this.data_[key] = val

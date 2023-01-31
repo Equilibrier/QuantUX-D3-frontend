@@ -69,7 +69,7 @@ export default class ScriptEngine {
         }
         if (message.data.key && message.data.key === "ext-notif") {
             const {message} = message.data.props;
-            DIProvider.mvvmOutputsService().sendExternalNotification(message)
+            DIProvider.mvvmOutputsService().sendExternalNotification(message) // is async function, but I don't have to wait for it (I think... :) )
             return;
         }
 

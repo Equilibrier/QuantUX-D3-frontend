@@ -1535,13 +1535,16 @@ export default class RenderFactory extends Core {
 				css.add(parent, "MatcScreenImageVertical");
 			}
 			if (this.hash) {
+				console.log(`RenderFactory: get img with hash ${img.url}`)
 				parent.style.backgroundImage = "url(/rest/images/" + this.hash + "/" + img.url + ")";
 			} else if (this.jwtToken) {
+				console.log(`RenderFactory: get img with jwt token ${img.url}`)
 				parent.style.backgroundImage = "url(/rest/images/" + img.url + "?token=" + this.jwtToken+ ")";
 			} else {
+				console.log(`RenderFactory: get img with NO SECURITY ${img.url}`)
 				if (!this.isPublic) {
 					this.logger.warn('_set_backgroundImage', 'error > no token or hash')
-					this.logger.sendError(new Error('RenderFactgoryNoToken'))
+					this.logger.sendError(new Error('RenderFactoryNoToken'))
 				}
 				parent.style.backgroundImage = "url(/rest/images/" + img.url + ")";
 			}
