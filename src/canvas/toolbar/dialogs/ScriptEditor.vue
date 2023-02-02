@@ -230,7 +230,15 @@ return "myScreen"
             this.$emit('run', this.script)
             this.errorMsg = ''
             try {
+                await DIProvider.waitWhileMvvmRunning()
+                const isMvvmProj_ = await DIProvider.isMvvmProject()
+                if (isMvvmProj_) {
+                    DIProvider.emitMvvmStartedExecuting()
+                }
                 const result = await this.simulator.runScript(this.script)
+                if (isMvvmProj_) {
+                    DIProvider.emitMvvmStoppedExecuting()
+                }
                 if (result) {
                     if (result.console) {
                         this.logs = result.console

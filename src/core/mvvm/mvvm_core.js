@@ -429,7 +429,7 @@ class EventsQueueConsumer {
 				consumer = { _label: '_consumeGenericCmd', f: (cmd, queueU) => this._consumeGenericCmd(cmd, queueU) }
 			}
 			if (!consumer.f(ev, queueU)) {
-				console.error(`Selected consumer ${consumer._label} was not able to consume event '${ev.type()}', payload: ${JSON.stringify(ev.payload())}. Maybe the event is a VM consuming event and it got handled by the VM instead (it which case it triggered a refresh-screen instruction).`)
+				console.error(`Selected consumer ${consumer._label} was not able to consume event '${ev.type()}', payload: ${JSON.stringify(ev.payload())}. This is not necessary an error, since the event might be is a VM consuming event, in which case it should have been handled by the VM instead and should have triggered a refresh-screen instruction).`)
 			}
 		}
 		while (ev !== undefined) // consum toata coada (continutul disponibil in prezent)
@@ -659,7 +659,7 @@ class MVVMInputModule { // clasa FINALA, a NU se mai extinde
 		else {
 			MVVMInputModule.prototype['notify'] = function(inputMsg) { // functie implicita (pentru DEMO-uri (simulator) myqux)
 				console.log(`MVVM: am primit mesaj de la modulul de inputs: ${JSON.stringify(inputMsg)}`)
-				MVVM_CONTROLLER.createAsyncEvent(inputMsg.id, inputMsg.payload || inputMsg.data)
+				MVVM_CONTROLLER.pushAsyncEvent(inputMsg.id, inputMsg.payload || inputMsg.data)
 			}
 		}
 	}

@@ -16,6 +16,8 @@ import { ExternalCallsService } from 'core/di/ExternalCallsService'
 import { InputsModuleLoadingService } from 'core/mvvm/InputsModuleLoadingService'
 import { OutputsModuleSendingService } from 'core/mvvm/OutputsModuleSendingService'
 import { SimulatorStateService } from 'core/di/SimulatorStateService'
+import { MvvmStateObserver } from 'core/di/MvvmStateObserver'
+import { MvvmCheckerService } from 'core/di/MvvmCheckerService'
 
 class DIProvider {
 
@@ -23,6 +25,8 @@ class DIProvider {
 
         this.__private = {
             initSimulatorStateService: () => new SimulatorStateService(),
+
+            initMvvmCheckerService: () => new MvvmCheckerService(),
 
             initMvvmRuntimeCodeRetriever: () => new MvvmRuntimeCodeService(),
             initMvvmInputsService: () => new InputsModuleLoadingService(),
@@ -49,6 +53,8 @@ class DIProvider {
         this._mvvmOutputsService = null
         this._externalCallsService = null
         this._simulatorStateService = null
+        this._mvvmStateObserver = new MvvmStateObserver()
+        this._mvvmCheckerService = null
 
         this._listeners = {};
 
@@ -129,6 +135,32 @@ class DIProvider {
         else {
             this._listeners[data] = this._listeners[data] === undefined ? [] : this._listeners[data];
             this._listeners[data].push(callback);
+        }
+    }
+
+    async isMvvmProject() {
+        if (this._mvvmCheckerService === null) {
+            this._mvvmCheckerService = this.__private.initMvvmCheckerService()
+        }
+        return await this._mvvmCheckerService.waitForIsMvvmProject()
+    }
+
+    emitMvvmStartedExecuting() { this._mvvmStateObserver.setRunning() }
+    emitMvvmStoppedExecuting() { this._mvvmStateObserver.setStopped() }
+    isMvvmRunning() { return this._mvvmStateObserver.isRunning() }
+    async waitWhileMvvmRunning() { await this._mvvmStateObserver.waitWhileRunning() }
+
+    async executeMvvm(script) {
+        if (this._simulator) {
+            await this.waitWhileMvvmRunning()
+            const isMvvmProj_ = await this.isMvvmProject()
+            if (isMvvmProj_) {
+                this.emitMvvmStartedExecuting()
+            }
+            this._simulator.runScript(script, null, null)
+            if (isMvvmProj_) {
+                this.emitMvvmStoppedExecuting()
+            }
         }
     }
 

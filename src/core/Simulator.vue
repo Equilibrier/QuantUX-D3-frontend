@@ -513,7 +513,16 @@ export default {
 				DIProvider.keyInputHandler().listenForKeyUp(`${w.props['trigger-key']},${w.props['trigger-extkey']}`, async (/*ev dummy param*/) => {
 					this.__resetSourceMetadata();
 					this.dataBindingValues.__sourceScreen = this.currentScreen.name;
+					
+					await DIProvider.waitWhileMvvmRunning()
+					const isMvvmProj_ = await DIProvider.isMvvmProject()
+					if (isMvvmProj_) {
+						DIProvider.emitMvvmStartedExecuting()
+					}
 					await this.runScript(w.props.script, w, {from: w.id});
+					if (isMvvmProj_) {
+						DIProvider.emitMvvmStoppedExecuting()
+					}
 				}, 'sim');
 			});
 

@@ -31,8 +31,17 @@ export default {
         const widgets = DIProvider.elementsLookup().loadScriptWidgets()
         for (let i=0; i< widgets.length; i++) {
             const widget = widgets[i]
+
             if (widget.props.script) {
-               await this.runScript(widget.props.script, widget)
+                await DIProvider.waitWhileMvvmRunning()
+                const isMvvmProj_ = await DIProvider.isMvvmProject()
+                if (isMvvmProj_) {
+                    DIProvider.emitMvvmStartedExecuting()
+                }
+                await this.runScript(widget.props.script, widget)
+                if (isMvvmProj_) {
+                    DIProvider.emitMvvmStoppedExecuting()
+                }
             }
         }
         this.logger.log(2,"initLoadScripts","exit" );
@@ -58,7 +67,16 @@ export default {
                 /*const rresult = await this.justRunScript(widget.props.script)
                 this.applyApiDeltas(rresult)
                 this.rerenderWidgetsFromDataBindingAndUpdateViewModel(rresult)*/
+
+                await DIProvider.waitWhileMvvmRunning()
+                const isMvvmProj_ = await DIProvider.isMvvmProject()
+                if (isMvvmProj_) {
+                    DIProvider.emitMvvmStartedExecuting()
+                }
                 await this.runScript(widget.props.script, null, null)
+                if (isMvvmProj_) {
+                    DIProvider.emitMvvmStoppedExecuting()
+                }
             }
         }
         this.logger.log(-2,"executeDataScripts","exit");
@@ -85,8 +103,17 @@ export default {
         this.dataBindingValues.__sourceElement = {name: parent ? parent.name : seObj.name, id: parent ? parent.id : seObj.id}
 
         let widget = this.model.widgets[widgetID]
+
         if (widget && widget.props.script) {
+            await DIProvider.waitWhileMvvmRunning()
+            const isMvvmProj_ = await DIProvider.isMvvmProject()
+            if (isMvvmProj_) {
+                DIProvider.emitMvvmStartedExecuting()
+            }
             const result = await this.runScript(`${widget.props.script}`, widget, orginalLine)
+            if (isMvvmProj_) {
+                DIProvider.emitMvvmStoppedExecuting()
+            }
             console.log(`rezultat executeScript TO: '${JSON.stringify(result?.to)}'`)
 
             // for user triggers scripts, we must ensure that we call
@@ -136,7 +163,7 @@ export default {
 
             const q_ = DIProvider.mvvmInputsService().discardQueue()
             for (let inp of q_) {
-                await this.runScript(`return MVVM_CONTROLLER.EXT_INPUTS().notify(${JSON.stringify(inp)})`, widget, orginalLine)
+                await this.justRunScript(`return MVVM_CONTROLLER.EXT_INPUTS().notify(${JSON.stringify(inp)})`)
             }
 
             const result = await this.justRunScript(script)
@@ -154,19 +181,23 @@ export default {
                     this.rerenderWidgetsFromDataBindingAndUpdateViewModel(result)
 
                     if (!result.loop) {
-                        this.tryRenderScriptedScreenTransition(result, widget, orginalLine)
                         
-                        /*// running it just for screen-build (if necessary, if the JS needs it, it doesn't hurt to have another chance to update some bindings, programatically)
-                        const ts = this.retrieveTargetScreen(result)
-                        if (ts) { // only if a transition is present
-                            this.dataBindingValues.__sourceElement = null;
-                            this.dataBindingValues.__sourceScreen = ts;
-                            const rresult = await runScript() // it will run async, but I don't care, it's ok, this function doesn't need to be waited for end-call
-                            this.applyApiDeltas(rresult)
-                            this.rerenderWidgetsFromDataBindingAndUpdateViewModel(rresult)
-                        }*/
+                        if (widget !== null || orginalLine !== null) {
+                            this.tryRenderScriptedScreenTransition(result, widget, orginalLine)
                         
-                        this.logger.log(-1,"runScript","exit");
+                        
+                            /*// running it just for screen-build (if necessary, if the JS needs it, it doesn't hurt to have another chance to update some bindings, programatically)
+                            const ts = this.retrieveTargetScreen(result)
+                            if (ts) { // only if a transition is present
+                                this.dataBindingValues.__sourceElement = null;
+                                this.dataBindingValues.__sourceScreen = ts;
+                                const rresult = await runScript() // it will run async, but I don't care, it's ok, this function doesn't need to be waited for end-call
+                                this.applyApiDeltas(rresult)
+                                this.rerenderWidgetsFromDataBindingAndUpdateViewModel(rresult)
+                            }*/
+                            
+                            this.logger.log(-1,"runScript","exit");
+                        }
                     }
                     
                     let targetScreen = this.retrieveTargetScreen(result)
@@ -181,7 +212,7 @@ export default {
 
                             resolve(await this.runScript("\
                                 return MVVM_CONTROLLER.Compute();\
-                            ", widget, orginalLine))
+                            ", widget, orginalLine)) // @TODO oare trebuie sa mai pun inca o data, acelasi widget si orginaline sau mai bine NULL,NULL ca sa omita tranzitiile specifice QUX?!...
 
                         }, result.delayMs)
                     }
@@ -277,7 +308,7 @@ export default {
                             console.error(`<>script's target screen was not found for screen-name ${result.to}`);
                         }
                         setTimeout(async () => { // incercam sa consumam urmatoarea comanda UI din MVVM, pana cand nu mai e niciuna de executat (nothingToProcess e true)
-                            resolve(await this.runScript("return MVVM_CONTROLLER.Compute()", widget, orginalLine))
+                            resolve(await this.runScript("return MVVM_CONTROLLER.Compute()", widget, orginalLine)) // @TODO oare trebuie sa mai pun inca o data, acelasi widget si orginaline sau mai bine NULL,NULL ca sa omita tranzitiile specifice QUX?!...
                         }, 100)
                     }
 
