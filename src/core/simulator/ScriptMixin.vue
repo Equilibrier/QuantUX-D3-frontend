@@ -135,191 +135,200 @@ export default {
         return result
     },
 
+    async handleScriptResult(result, resolve = () => {}) {
+
+        const stopLoop = async (result, sched) => {
+            console.error(`ANIMATIONS complete: proceeding with OUT-LOOP screen transition to ${result.to}`)
+
+            // DIProvider.asyncScheduler().unschedule(sched1)
+            DIProvider.asyncScheduler().unschedule(sched)
+            // running default transition logic...
+            // console.warn(`cosmin:tryRenderScriptedScreenTransition: to ${result.to}, previousScreen: ${this.dataBindingValues.__sourceScreen}`)
+            this.tryRenderScriptedScreenTransition(result, null, orginalLine)
+
+            // running it just for screen-build (if necessary, if the JS needs it, it doesn't hurt to have another chance to update some bindings, programatically)
+            const ts = this.retrieveTargetScreen(result)
+            if (ts) { // only if a transition is present
+                this.dataBindingValues.__sourceElement = null;
+                this.dataBindingValues.__sourceScreen = ts;
+                const rresult = await this.justRunScript(script)
+                this.applyApiDeltas(rresult)
+                this.rerenderWidgetsFromDataBindingAndUpdateViewModel(rresult)
+                console.log(`ran-script vmodel--: ${JSON.stringify(result.viewModel.pagesnapshot?.cnt[1])}`)
+            }
+        }
+
+        if (result.refreshNeed) {
+            console.log('triggering refresh on current QUX screen...')
+            this.applyApiDeltas(result)
+            this.rerenderWidgetsFromDataBindingAndUpdateViewModel(result)
+        }
+
+        if (result.status === 'ok' && !result.nothingToProcess) {
+            requestAnimationFrame( async () => {
+
+                this.applyApiDeltas(result)
+                this.rerenderWidgetsFromDataBindingAndUpdateViewModel(result)
+
+                if (!result.loop) {
+
+                    if (widget !== null || orginalLine !== null) {
+                        this.tryRenderScriptedScreenTransition(result, widget, orginalLine)
+                    
+                    
+                        /*// running it just for screen-build (if necessary, if the JS needs it, it doesn't hurt to have another chance to update some bindings, programatically)
+                        const ts = this.retrieveTargetScreen(result)
+                        if (ts) { // only if a transition is present
+                            this.dataBindingValues.__sourceElement = null;
+                            this.dataBindingValues.__sourceScreen = ts;
+                            const rresult = await runScript() // it will run async, but I don't care, it's ok, this function doesn't need to be waited for end-call
+                            this.applyApiDeltas(rresult)
+                            this.rerenderWidgetsFromDataBindingAndUpdateViewModel(rresult)
+                        }*/
+                        
+                        this.logger.log(-1,"runScript","exit");
+                    }
+                }
+                
+                let targetScreen = this.retrieveTargetScreen(result)
+
+                //console.error(`targetScreen: ${JSON.stringify(targetScreen)}; \n\tresult: ${JSON.stringify(result)}`)
+
+                if (!targetScreen && result.delayMs !== undefined) {
+
+                    console.log(`Will wait ${result.delayMs/1000.0} seconds and then consume the next MVVM UI command`)
+
+                    setTimeout(async() => {
+
+                        resolve(await this.runScript("\
+                            return MVVM_CONTROLLER.Compute();\
+                        ", null, null)) // @TODO oare trebuie sa mai pun inca o data, acelasi widget si orginaline sau mai bine NULL,NULL ca sa omita tranzitiile specifice QUX?!...
+
+                    }, result.delayMs)
+                }
+
+                // TODO: ramura asta NU cred ca se mai foloseste
+                else if (targetScreen && result.delayedBackMs !== undefined) {
+                    setTimeout(async () => {
+                        if (!result.runCode) {
+                            this.onTransitionBack(targetScreen.id, null, null);
+                        }
+                        else {
+                            this.__resetSourceMetadata();
+                            this.dataBindingValues.__sourceScreen = targetScreen;
+                            
+                            const rrresult = await this.justRunScript(result.runCode)
+                            this.applyApiDeltas(rrresult)
+                            this.rerenderWidgetsFromDataBindingAndUpdateViewModel(rrresult)
+                            this.tryRenderScriptedScreenTransition(rrresult, null, null)
+                        }
+                        resolve(result)
+                    }, result.delayedBackMs);
+                }
+
+                else if (result.loop !== undefined) {
+
+                    this.dataBindingValues.__sourceElement = null;
+                    this.dataBindingValues.__sourceLooping = true;
+
+                    const endConditionReached = (result, dbind) => { return result.viewModel[dbind] }//this.dataBindingValues[dbind]
+                    const endLoopDataBinding = result.loop
+                    if (this.dataBindingValues[endLoopDataBinding] === undefined) {
+                        this.dataBindingValues[endLoopDataBinding] = false
+                    }
+                    // let sched1;
+                    let sched2;
+
+                    this.dataBindingValues.loopScreen = result.to !== undefined ? result.to : this.dataBindingValues.__sourceScreen.name;
+
+                    const doLoopbackScriptRun = async () => {
+                        const rresult = await this.justRunScript(script)
+
+                        const ttargetScreen = this.retrieveTargetScreen(rresult)
+                        //console.error(`dataBindingValues: ${JSON.stringify(this.dataBindingValues)}`)
+                        //console.error(`viewmodel: ${JSON.stringify(rresult.viewModel)}`)
+
+                        // console.log(`DATABINDING  : anca: ${this.dataBindingValues.pagesnapshot.cnt[2].label}; cosmin: ${this.dataBindingValues.pagesnapshot.cnt[3].label}; phase: ${this.dataBindingValues.phase}`)
+                        // console.log(`DATABINDING-r: anca: ${rresult.viewModel.pagesnapshot.cnt[2].label}; cosmin: ${rresult.viewModel.pagesnapshot.cnt[3].label}; phase: ${rresult.viewModel.phase}`)
+
+                        if (!((ttargetScreen && rresult.immediateTransition) || endConditionReached(rresult, endLoopDataBinding))) {
+                            //console.warn(`cosmin: no-skip: ${ttargetScreen.name}-${rresult.immediateTransition}-${endConditionReached(rresult, endLoopDataBinding)}`)
+                            this.applyApiDeltas(rresult)
+                        }
+                        else {
+                            console.warn(`skipping api-deltas&databinding-update`)
+                        }
+                        this.rerenderWidgetsFromDataBindingAndUpdateViewModel(rresult)
+
+                        if (ttargetScreen || endConditionReached(rresult, endLoopDataBinding)) {
+
+                            // if there is no transition (loop) to the same screen and end-loop condition was not reached
+                            if (!(result.to !== undefined && this.dataBindingValues.loopScreen !== undefined && result.to.toLowerCase() === this.dataBindingValues.loopScreen.toLowerCase() && !endConditionReached(rresult, endLoopDataBinding))) {
+                                
+                                if ((ttargetScreen && rresult.immediateTransition) || endConditionReached(rresult, endLoopDataBinding)) {
+                                    // console.warn(`cosmin:suntem:next-screen-loop -> immediatetransition`)
+                                    await stopLoop(rresult, sched2)
+                                    resolve(rresult)
+                                }
+                                else {
+                                    DIProvider.uiWidgetsActionQueue().registerNoMoreActionsListener('animate', async () => {
+                                        // console.warn(`cosmin:suntem:next-screen-loop -> nomoreactions`)
+                                        await stopLoop(rresult, sched2)
+                                        resolve(rresult)
+                                    });
+                                }
+                            }
+
+                        }
+                    }
+
+                    // sched1 = DIProvider.asyncScheduler().scheduleForAnimationStarted(async () => {
+                    //     console.error(`^^^^^^^^^^^^^^^^^ animation event (started)`)
+                    //     await doLoopbackScriptRun()
+                    // }, true)
+                    sched2 = DIProvider.asyncScheduler().scheduleForAnimationEnded(async () => {
+                        console.error(`^^^^^^^^^^^^^^^^^ animation event (ended)`)
+                        //await doLoopbackScriptRun()
+                        doLoopbackScriptRun()
+                    }, true)
+                }
+
+                else {
+                    if (targetScreen === undefined && result.to !== undefined) {
+                        console.error(`<>script's target screen was not found for screen-name ${result.to}`);
+                    }
+                    setTimeout(async () => { // incercam sa consumam urmatoarea comanda UI din MVVM, pana cand nu mai e niciuna de executat (nothingToProcess e true)
+                        resolve(await this.runScript("return MVVM_CONTROLLER.Compute()", null, null)) // @TODO oare trebuie sa mai pun inca o data, acelasi widget si orginaline sau mai bine NULL,NULL ca sa omita tranzitiile specifice QUX?!...
+                    }, 100)
+                }
+
+                //resolve(result)
+            })
+        } else {
+            if (result.nothingToProcess) {
+                console.log(`run-script result (transition.to/loop) IGNORED`)
+            }
+            resolve(result)
+        }
+    },
+
     async runScript (script, widget, orginalLine) {
+
+        console.warn(`RUN-SCRIPT`)
+
         this.logger.log(-2,"runScript","enter", widget?.name);
 
         return new Promise(async (resolve) => {
 
-            const stopLoop = async (result, sched) => {
-                console.error(`ANIMATIONS complete: proceeding with OUT-LOOP screen transition to ${result.to}`)
-
-                // DIProvider.asyncScheduler().unschedule(sched1)
-                DIProvider.asyncScheduler().unschedule(sched)
-                // running default transition logic...
-                // console.warn(`cosmin:tryRenderScriptedScreenTransition: to ${result.to}, previousScreen: ${this.dataBindingValues.__sourceScreen}`)
-                this.tryRenderScriptedScreenTransition(result, null, orginalLine)
-
-                // running it just for screen-build (if necessary, if the JS needs it, it doesn't hurt to have another chance to update some bindings, programatically)
-                const ts = this.retrieveTargetScreen(result)
-                if (ts) { // only if a transition is present
-                    this.dataBindingValues.__sourceElement = null;
-                    this.dataBindingValues.__sourceScreen = ts;
-                    const rresult = await this.justRunScript(script)
-                    this.applyApiDeltas(rresult)
-                    this.rerenderWidgetsFromDataBindingAndUpdateViewModel(rresult)
-                    console.log(`ran-script vmodel--: ${JSON.stringify(result.viewModel.pagesnapshot?.cnt[1])}`)
-                }
-            }
-
             const q_ = DIProvider.mvvmInputsService().discardQueue()
             for (let inp of q_) {
-                await this.justRunScript(`return MVVM_CONTROLLER.EXT_INPUTS().notify(${JSON.stringify(inp)})`)
+                const r_ = await this.justRunScript(`return MVVM_CONTROLLER.EXT_INPUTS().notify(${JSON.stringify(inp)})`)
+                this.applyApiDeltas(r_)
+                this.rerenderWidgetsFromDataBindingAndUpdateViewModel(r_)
             }
 
             const result = await this.justRunScript(script)
-
-            if (result.refreshNeed) {
-                console.log('triggering refresh on current QUX screen...')
-                this.applyApiDeltas(result)
-                this.rerenderWidgetsFromDataBindingAndUpdateViewModel(result)
-            }
-
-            if (result.status === 'ok' && !result.nothingToProcess) {
-                requestAnimationFrame( async () => {
-
-                    this.applyApiDeltas(result)
-                    this.rerenderWidgetsFromDataBindingAndUpdateViewModel(result)
-
-                    if (!result.loop) {
-                        
-                        if (widget !== null || orginalLine !== null) {
-                            this.tryRenderScriptedScreenTransition(result, widget, orginalLine)
-                        
-                        
-                            /*// running it just for screen-build (if necessary, if the JS needs it, it doesn't hurt to have another chance to update some bindings, programatically)
-                            const ts = this.retrieveTargetScreen(result)
-                            if (ts) { // only if a transition is present
-                                this.dataBindingValues.__sourceElement = null;
-                                this.dataBindingValues.__sourceScreen = ts;
-                                const rresult = await runScript() // it will run async, but I don't care, it's ok, this function doesn't need to be waited for end-call
-                                this.applyApiDeltas(rresult)
-                                this.rerenderWidgetsFromDataBindingAndUpdateViewModel(rresult)
-                            }*/
-                            
-                            this.logger.log(-1,"runScript","exit");
-                        }
-                    }
-                    
-                    let targetScreen = this.retrieveTargetScreen(result)
-
-                    //console.error(`targetScreen: ${JSON.stringify(targetScreen)}; \n\tresult: ${JSON.stringify(result)}`)
-
-                    if (!targetScreen && result.delayMs !== undefined) {
-
-                        console.log(`Will wait ${result.delayMs/1000.0} seconds and then consume the next MVVM UI command`)
-
-                        setTimeout(async() => {
-
-                            resolve(await this.runScript("\
-                                return MVVM_CONTROLLER.Compute();\
-                            ", widget, orginalLine)) // @TODO oare trebuie sa mai pun inca o data, acelasi widget si orginaline sau mai bine NULL,NULL ca sa omita tranzitiile specifice QUX?!...
-
-                        }, result.delayMs)
-                    }
-
-                    // TODO: ramura asta NU cred ca se mai foloseste
-                    else if (targetScreen && result.delayedBackMs !== undefined) {
-                        setTimeout(async () => {
-                            if (!result.runCode) {
-                                this.onTransitionBack(targetScreen.id, null, null);
-                            }
-                            else {
-                                this.__resetSourceMetadata();
-                                this.dataBindingValues.__sourceScreen = targetScreen;
-                                
-                                const rrresult = await this.justRunScript(result.runCode)
-                                this.applyApiDeltas(rrresult)
-                                this.rerenderWidgetsFromDataBindingAndUpdateViewModel(rrresult)
-                                this.tryRenderScriptedScreenTransition(rrresult, null, null)
-                            }
-                            resolve(result)
-                        }, result.delayedBackMs);
-                    }
-
-                    else if (result.loop !== undefined) {
-
-                        this.dataBindingValues.__sourceElement = null;
-                        this.dataBindingValues.__sourceLooping = true;
-
-                        const endConditionReached = (result, dbind) => { return result.viewModel[dbind] }//this.dataBindingValues[dbind]
-                        const endLoopDataBinding = result.loop
-                        if (this.dataBindingValues[endLoopDataBinding] === undefined) {
-                            this.dataBindingValues[endLoopDataBinding] = false
-                        }
-                        // let sched1;
-                        let sched2;
-
-                        this.dataBindingValues.loopScreen = result.to !== undefined ? result.to : this.dataBindingValues.__sourceScreen.name;
-
-                        const doLoopbackScriptRun = async () => {
-                            const rresult = await this.justRunScript(script)
-
-                            const ttargetScreen = this.retrieveTargetScreen(rresult)
-                            //console.error(`dataBindingValues: ${JSON.stringify(this.dataBindingValues)}`)
-                            //console.error(`viewmodel: ${JSON.stringify(rresult.viewModel)}`)
-
-                            // console.log(`DATABINDING  : anca: ${this.dataBindingValues.pagesnapshot.cnt[2].label}; cosmin: ${this.dataBindingValues.pagesnapshot.cnt[3].label}; phase: ${this.dataBindingValues.phase}`)
-                            // console.log(`DATABINDING-r: anca: ${rresult.viewModel.pagesnapshot.cnt[2].label}; cosmin: ${rresult.viewModel.pagesnapshot.cnt[3].label}; phase: ${rresult.viewModel.phase}`)
-
-                            if (!((ttargetScreen && rresult.immediateTransition) || endConditionReached(rresult, endLoopDataBinding))) {
-                                //console.warn(`cosmin: no-skip: ${ttargetScreen.name}-${rresult.immediateTransition}-${endConditionReached(rresult, endLoopDataBinding)}`)
-                                this.applyApiDeltas(rresult)
-                            }
-                            else {
-                                console.warn(`skipping api-deltas&databinding-update`)
-                            }
-                            this.rerenderWidgetsFromDataBindingAndUpdateViewModel(rresult)
-
-                            if (ttargetScreen || endConditionReached(rresult, endLoopDataBinding)) {
-
-                                // if there is no transition (loop) to the same screen and end-loop condition was not reached
-                                if (!(result.to !== undefined && this.dataBindingValues.loopScreen !== undefined && result.to.toLowerCase() === this.dataBindingValues.loopScreen.toLowerCase() && !endConditionReached(rresult, endLoopDataBinding))) {
-                                    
-                                    if ((ttargetScreen && rresult.immediateTransition) || endConditionReached(rresult, endLoopDataBinding)) {
-                                        // console.warn(`cosmin:suntem:next-screen-loop -> immediatetransition`)
-                                        await stopLoop(rresult, sched2)
-                                        resolve(rresult)
-                                    }
-                                    else {
-                                        DIProvider.uiWidgetsActionQueue().registerNoMoreActionsListener('animate', async () => {
-                                            // console.warn(`cosmin:suntem:next-screen-loop -> nomoreactions`)
-                                            await stopLoop(rresult, sched2)
-                                            resolve(rresult)
-                                        });
-                                    }
-                                }
-
-                            }
-                        }
-
-                        // sched1 = DIProvider.asyncScheduler().scheduleForAnimationStarted(async () => {
-                        //     console.error(`^^^^^^^^^^^^^^^^^ animation event (started)`)
-                        //     await doLoopbackScriptRun()
-                        // }, true)
-                        sched2 = DIProvider.asyncScheduler().scheduleForAnimationEnded(async () => {
-                            console.error(`^^^^^^^^^^^^^^^^^ animation event (ended)`)
-                            //await doLoopbackScriptRun()
-                            doLoopbackScriptRun()
-                        }, true)
-                    }
-
-                    else {
-                        if (targetScreen === undefined && result.to !== undefined) {
-                            console.error(`<>script's target screen was not found for screen-name ${result.to}`);
-                        }
-                        setTimeout(async () => { // incercam sa consumam urmatoarea comanda UI din MVVM, pana cand nu mai e niciuna de executat (nothingToProcess e true)
-                            resolve(await this.runScript("return MVVM_CONTROLLER.Compute()", widget, orginalLine)) // @TODO oare trebuie sa mai pun inca o data, acelasi widget si orginaline sau mai bine NULL,NULL ca sa omita tranzitiile specifice QUX?!...
-                        }, 100)
-                    }
-
-                    //resolve(result)
-                })
-            } else {
-                if (result.nothingToProcess) {
-                    console.log(`run-script result (transition.to/loop) IGNORED`)
-                }
-                resolve(result)
-            }
+            handleScriptResult(result, resolve)
         }) 
     },
 
