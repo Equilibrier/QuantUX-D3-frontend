@@ -78,7 +78,7 @@ export class InputsModuleLoadingService {
                 if (this.queue_.length > 0) { // if we have arrived external messages, we try to inject them into mvvm, only if it is not already done automatically, by the current running flow
                     setTimeout(async () => {
                         if (this.queue_.length > 0 && !DIProvider.isMvvmRunning()) {
-                            await DIProvider.executeMvvm("") // if mvvm is not running, we run it forcely, because we have unconsumed external messages from this module, to be processed; we provide empty script, because input-module injecting code is already implemented into ScriptMixin.runScript(...) and we only need to trigger it
+                            await DIProvider.executeMvvm("return MVVM_CONTROLLER.Compute()") // if mvvm is not running, we run it forcely, because we have unconsumed external messages from this module, to be processed; we provide empty script, because input-module injecting code is already implemented into ScriptMixin.runScript(...) and we only need to trigger it
                         }
                     }, 300)
                 }

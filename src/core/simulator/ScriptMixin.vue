@@ -135,7 +135,7 @@ export default {
         return result
     },
 
-    async handleScriptResult(result, resolve = () => {}) {
+    async handleScriptResult(result, widget = null, orginalLine = {}, script = "", resolve = () => {}) {
 
         const stopLoop = async (result, sched) => {
             console.error(`ANIMATIONS complete: proceeding with OUT-LOOP screen transition to ${result.to}`)
@@ -292,10 +292,12 @@ export default {
                         doLoopbackScriptRun()
                     }, true)
                 }
-
                 else {
                     if (targetScreen === undefined && result.to !== undefined) {
                         console.error(`<>script's target screen was not found for screen-name ${result.to}`);
+                    }
+                    else if (targetScreen) {
+                        this.tryRenderScriptedScreenTransition(result, widget, orginalLine)
                     }
                     setTimeout(async () => { // incercam sa consumam urmatoarea comanda UI din MVVM, pana cand nu mai e niciuna de executat (nothingToProcess e true)
                         resolve(await this.runScript("return MVVM_CONTROLLER.Compute()", null, null)) // @TODO oare trebuie sa mai pun inca o data, acelasi widget si orginaline sau mai bine NULL,NULL ca sa omita tranzitiile specifice QUX?!...
@@ -325,10 +327,13 @@ export default {
                 const r_ = await this.justRunScript(`return MVVM_CONTROLLER.EXT_INPUTS().notify(${JSON.stringify(inp)})`)
                 this.applyApiDeltas(r_)
                 this.rerenderWidgetsFromDataBindingAndUpdateViewModel(r_)
+                if (!r_.loop && !r_.nothingToProcess && r_.to) {
+                    this.tryRenderScriptedScreenTransition(r_, null, {})
+                }
             }
 
             const result = await this.justRunScript(script)
-            handleScriptResult(result, resolve)
+            this.handleScriptResult(result, widget, orginalLine, script, resolve)
         }) 
     },
 
