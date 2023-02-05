@@ -640,6 +640,7 @@ export default {
 				}
 
 				// setting the current value
+				console.warn(`dialog value: ${JSON.stringify(mvvmSettingsValues_[m.key])}`)
 				mycomp.setValue(mvvmSettingsValues_[m.key])
 
 				// place the built instance

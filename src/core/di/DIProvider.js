@@ -15,6 +15,7 @@ import { MvvmRuntimeCodeService } from 'core/di/MvvmRuntimeCodeService'
 import { ExternalCallsService } from 'core/di/ExternalCallsService'
 import { InputsModuleLoadingService } from 'core/mvvm/InputsModuleLoadingService'
 import { OutputsModuleSendingService } from 'core/mvvm/OutputsModuleSendingService'
+import { OutputQueriesModuleSendingService } from 'core/mvvm/OutputQueriesModuleSendingService'
 import { SimulatorStateService } from 'core/di/SimulatorStateService'
 import { MvvmStateObserver } from 'core/di/MvvmStateObserver'
 import { MvvmCheckerService } from 'core/di/MvvmCheckerService'
@@ -31,6 +32,7 @@ class DIProvider {
             initMvvmRuntimeCodeRetriever: () => new MvvmRuntimeCodeService(),
             initMvvmInputsService: () => new InputsModuleLoadingService(),
             initMvvmOutputsService: () => new OutputsModuleSendingService(),
+            initMvvmOutputsQuery: () => new OutputQueriesModuleSendingService(),
             initExternalCallsService: () => new ExternalCallsService(),
         }
         this._simulator = null
@@ -51,6 +53,7 @@ class DIProvider {
         this._mvvmRuntimeCodeRetriever = null
         this._mvvmInputsService = null
         this._mvvmOutputsService = null
+        this._mvvmOutputsQueryService = null
         this._externalCallsService = null
         this._simulatorStateService = null
         this._mvvmStateObserver = new MvvmStateObserver()
@@ -145,7 +148,7 @@ class DIProvider {
         return await this._mvvmCheckerService.waitForIsMvvmProject()
     }
 
-    emitMvvmStartedExecuting() { this._mvvmStateObserver.setRunning() }
+    emitMvvmStartedExecuting() { console.warn('sim-trace'); this._mvvmStateObserver.setRunning() }
     emitMvvmStoppedExecuting() { this._mvvmStateObserver.setStopped() }
     isMvvmRunning() { return this._mvvmStateObserver.isRunning() }
     async waitWhileMvvmRunning() { await this._mvvmStateObserver.waitWhileRunning() }
@@ -242,6 +245,7 @@ class DIProvider {
 
     mvvmInputsService() { this._mvvmInputsService = this._mvvmInputsService ? this._mvvmInputsService : this.__private.initMvvmInputsService(); return this._mvvmInputsService }
     mvvmOutputsService() { this._mvvmOutputsService = this._mvvmOutputsService ? this._mvvmOutputsService : this.__private.initMvvmOutputsService(); return this._mvvmOutputsService }
+    mvvmOutputsQueryService() { this._mvvmOutputsQueryService = this._mvvmOutputsQueryService ? this._mvvmOutputsQueryService : this.__private.initMvvmOutputsQuery(); return this._mvvmOutputsQueryService }
 
     externalCallsService() { this._externalCallsService = this._externalCallsService ? this._externalCallsService : this.__private.initExternalCallsService(); return this._externalCallsService }
 

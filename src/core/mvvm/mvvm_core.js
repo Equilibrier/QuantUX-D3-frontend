@@ -5,9 +5,50 @@ let inputModuleNotify = null // @strict-remove
 let outputModuleSendMessage = null // @strict-remove
 let outputQueryModuleQuery = null // @strict-remove
 
-class Model {
+function generateUuid() {
+    const ho = (n, p) => n.toString(16).padStart(p, 0); /// Return the hexadecimal text representation of number `n`, padded with zeroes to be of length `p`
+    const data = crypto.getRandomValues(new Uint8Array(16)); /// Fill the buffer with random data
+    data[6] = (data[6] & 0xf) | 0x40; /// Patch the 6th byte to reflect a version 4 UUID
+    data[8] = (data[8] & 0x3f) | 0x80; /// Patch the 8th byte to reflect a variant 1 UUID (version 4 UUIDs are)
+    const view = new DataView(data.buffer); /// Create a view backed by a 16-byte buffer
+    return `${ho(view.getUint32(0), 8)}-${ho(view.getUint16(4), 4)}-${ho(view.getUint16(6), 4)}-${ho(view.getUint16(8), 4)}-${ho(view.getUint32(10), 8)}${ho(view.getUint16(14), 4)}`; /// Compile the canonical textual form from the array data
+}
 
+class GlobalObjectsRegister { // per MVVM runtime session, so no persistency is needed
 	constructor() {
+		this.objs_ = {}
+	}
+
+	autoRegisterObject(id, this_) {
+		this.objs_[id] = this_
+	}
+
+	objectRegistered(id) { this.objs_[id] !== undefined }
+	lookupObject(id) { return this.objs_[id] }
+}
+
+class MVVMObject {
+
+	constructor(id) {
+		this.id_ = id
+		MVVM_CONTROLLER.MVVM_OBJECTS_REGISTER().autoRegisterObject(id, this)
+	}
+
+	sendExternalQuery(msg) { qux.sendExternalQuery(this.id_, msg) }
+
+	handleQueryResponse(query, response) {
+		query ? null : null
+		response ? null : null
+		throw "Not implemented, to be overriden in super-classes"
+	}
+}
+
+
+class Model extends MVVMObject {
+
+	constructor(mvvmId) {
+		super(mvvmId)
+
 		this.listeners_ = {}
 		this.loaded_ = this._load()
 		if (!this.loaded_) {
@@ -272,6 +313,7 @@ class GenericQueue {
 		}
 		data[_qn].head_c = this.c_head_
 		data[_qn].data = JSON.parse(JSON.stringify(this.elements_))
+
 		return true
 	}
 
@@ -536,9 +578,11 @@ class UIEvent {
 	payload() { return this.payload_ }
 }
 
-class VM {
+class VM extends MVVMObject {
 	
-	constructor() {
+	constructor(mvvmId) {
+		super(mvvmId)
+
 		this.pendingEvents_ = []
 		this.listeners_ = []
 		this.id_ = parseInt(Math.random() * 1000)
@@ -702,16 +746,28 @@ class MVVMOutputQueryModule { // clasa FINALA, a NU se mai extinde
 	}
 }
 
-class PScreen { // projected screen
+class PScreen extends MVVMObject { // projected screen
 
 	constructor() {
+		super(`screen_${generateUuid()}`) // just for the sake of it, but it will probably have no use, for now, at least
 		this.resetVMRetrieve_ = true
+	}
+
+	sendExternalQuery(msg) {
+		msg ? null : null
+		throw "Forbidden, it would be a MVVM design flaw, if used !"
+	}
+	handleQueryResponse(query, response) {
+		query ? null : null
+		response ? null : null
+		throw "Forbidden, it would be a MVVM design flaw, if used !"
 	}
 	
 	init() {
 		const vm = this.getVM()
 		if (vm) {
 			vm.registerForVMChange((vmEvent, payload) => {
+
 				switch (vmEvent?.toLowerCase()) {
 					
 					case "init_ui":
@@ -1037,6 +1093,8 @@ class MVVMContext {
 		if (syncContextFromQux) {
 			const quxScreenLabel_ = data?.__sourceScreen?.name
 			const quxScreenClsName_ = quxScreenLabel_ ? MVVM_CONTROLLER.Configurator().ScreenFactory().screenQuxLabelToClsName(quxScreenLabel_) : undefined
+			console.log(`(1)quxScreenLabel_: ${quxScreenLabel_};\nquxScreenClsName_: ${quxScreenClsName_};`)
+
 			const lastStackedScreenClsName_ = this.lastScreen()?.screen
 			console.log(`caller: context constructor`)
 			const lastStackedScreenInstance_ = lastStackedScreenClsName_ ? MVVM_CONTROLLER.Configurator().ScreenFactory().createScreen(lastStackedScreenClsName_, {}) : null
@@ -1125,6 +1183,8 @@ class MVVMController {
 		this.inputsModule_ = new MVVMInputModule()
 		this.outputingModule_ = new MVVMOutputModule()
 		this.extQueryModule_ = new MVVMOutputQueryModule()
+
+		this.objsRegister_ = new GlobalObjectsRegister()
 	}
 
 	UIUtils() { return this.uiUtils_ }
@@ -1136,9 +1196,11 @@ class MVVMController {
 	EXT_OUTPUTS() { return this.outputingModule_ }
 	EXT_QUERIES() { return this.extQueryModule_ }
 
+	MVVM_OBJECTS_REGISTER() { return this.objsRegister_ }
+
 	__private_helpers() {
 		return {
-			'buildScreenByRef': (screen, params, isPush = false) => {
+			buildScreenByRef: (screen, params, isPush = false) => {
 				//const {screen, params} = MVVMStarter._parseScreenUrl(forceTransitionTo)
 				const ns = this._instantiateScreen(screen, params)
 				const nvm = ns.getVM()
@@ -1148,23 +1210,67 @@ class MVVMController {
 				// console.log(`log1: 111 initView done`)
 				return ns
 			},
-			'buildCurrentScreen': (isPush = true) => {
+			buildCurrentScreen: (isPush = true) => {
 				const {screen, params} = this.__context().lastScreen()
 				return this.__private_helpers().buildScreenByRef(screen, params, isPush)
 			},
-			'buildScreen': (screenId, isPush = false) => {
+			buildScreen: (screenId, isPush = false) => {
 				const {screen, params} = this.__context().screen(screenId)
 				return this.__private_helpers().buildScreenByRef(screen, params, isPush)
 			},
-			'digestEvents': () => {
+			digestEvents: () => {
 				this.Configurator().EventsConsumer().consume(this.queueE_, this.queueU_)
 			},
-			'sendEventToScreen': (ev) => {
+			sendEventToScreen: (ev) => {
 				const screen = this.__private_helpers().buildScreen(ev.sourceScreen().id)
 				return screen.sendUIEvent(ev.toUIEvent())
+			},
+
+			routeExtQueryResponses: () => {
+				data.mvvm_output_queries = data.mvvm_output_queries ? data.mvvm_output_queries : {}
+
+				for (let id_ of Object.keys(data.mvvm_output_queries)) {
+
+					let remainingAnswers_ = []
+					const responsesQueue_ = data.mvvm_output_queries[id_]
+					if (responsesQueue_) {
+						for (let qi_ of responsesQueue_) { // it should be an array of {query, response}
+							const query_ = qi_.query
+							const response_ = qi_.response
+
+							if (query_ && response_) {
+								if (this.MVVM_OBJECTS_REGISTER().objectRegistered(id_)) {
+									const sender_ = this.MVVM_OBJECTS_REGISTER().lookupObject(id_)
+									if (sender_) {
+										sender_.handleQueryResponse(query_, response_)
+									}
+									else {
+										console.error(`Ext-query sender ${id_} was instantiated but its reference in GlobalObjectsRegister is null/undefined. This is an abnormal situation. Will postpone its query response for a later time, which it may be instantiated though, but this is an abnormal internal state of the MVVM engine and should be fixed ASAP !`)
+										remainingAnswers_.push(qi_)
+									}
+								}
+								else {
+									console.warn(`Ext-query sender ${id_} was not instantiated yet (although it should have been). Problem is, it will receive its query response later on, which might be bad for the consistency of the app ! You should check this !`)
+									remainingAnswers_.push(qi_)
+								}
+							}
+						}
+						data.mvvm_output_queries[id_] = remainingAnswers_ // removing the asnwered responses from the queue
+					}
+				}
 			}
 		}
 	}
+
+	pushExtQueryResponse(senderId, originalQuery, response) {
+		data.mvvm_output_queries = data.mvvm_output_queries ? data.mvvm_output_queries : {}
+		data.mvvm_output_queries[senderId] = data.mvvm_output_queries[senderId] ? data.mvvm_output_queries[senderId] : []
+		data.mvvm_output_queries[senderId].push({
+			query: originalQuery,
+			response
+		})
+	}
+	computeExternalQueryResponses() { this.__private_helpers.routeExtQueryResponses() }
 
 	pushClickEvent(sourceElement) {
 		if (sourceElement === undefined) {
@@ -1252,9 +1358,13 @@ class MVVMController {
 		const uiOptimizer = MVVM_CONTROLLER.Configurator().UIOptimizer()
 
 		uiOptimizer.optimizeQueue(this.queueU_)
+		
+		console.log(`queueU: ${JSON.stringify(this.queueU_.elements_)}`)
 
 		let nextUIInstruction = this.queueU_.consume()
-		// console.log(`nextI: ${JSON.stringify(nextUIInstruction)} -- ${typeof nextUIInstruction?.isDelayInstruction}`)
+		
+		console.log(`nextI: ${JSON.stringify(nextUIInstruction)} -- ${typeof nextUIInstruction?.isDelayInstruction}`)
+		
 		if (nextUIInstruction && nextUIInstruction.isDelayInstruction() && nextUIInstruction.previousInstruction()?.isDelayInstruction()) {
 			console.warn(`Invalid state, delay UI instruction after delay UI instruction; the last one will be ignored.`)
 			nextUIInstruction = this.queueU_.consume()
@@ -1343,6 +1453,8 @@ const dummy20 = new QueueU();
 const dummy21 = new UIQueueOptimizer();
 const dummy22 = new EventsQueueConsumer();
 const dummy23 = new ScreenMetaFactory();
+const dummy24 = new MVVMObject();
+const dummy25 = new GlobalObjectsRegister();
 dummy0 ? null : null
 dummy1 ? null : null
 dummy2 ? null : null
@@ -1366,6 +1478,8 @@ dummy20 ? null : null
 dummy21 ? null : null
 dummy22 ? null : null
 dummy23 ? null : null
+dummy24 ? null : null
+dummy25 ? null : null
 }
 
 export const code = codeFunction.toString().match(/function[^{]+\{([\s\S]*)\}$/)[1]

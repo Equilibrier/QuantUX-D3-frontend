@@ -18,6 +18,15 @@ export class ExternalCallsService {
             },
 
             makeExternalCall: async (id) => {
+                let res_ = null, rej_ = null
+                const p_ = new Promise((resolve, reject) => {
+                    res_ = resolve
+                    rej_ = reject
+                })
+                this.results_[id] = {
+                    promise: p_
+                }
+
                 const {url, msg} = this.queue_[id]
                 try {
                     const res = fetch(url, {
@@ -26,11 +35,22 @@ export class ExternalCallsService {
                         headers: this.__private.createDefaultHeader(),
                         body: JSON.stringify(msg),
                     })
-                    if (res.status === 200) this.results_[id] = await res.json()
-                    else throw new Error(`ExternalCallsService: Could not POST to url url for some reason`)
+                    if (res.status === 200) {
+                        const r_ = await res.json()
+                        this.results_[id].result = r_
+                        res_(r_)
+                    }
+                    else {
+                        this.results_[id].result = null
+                        rej_(`ExternalCallsService: Could not POST to url ${url} for some reason`)
+                        //throw new Error(`ExternalCallsService: Could not POST to url url for some reason`)
+                        console.error(`ExternalCallsService: Could not POST to url ${url} for some reason`)
+                    }
                 }
                 catch(err) {
                     console.error(err)
+                    rej_(err)
+                    this.results_[id].result = null
                 }
             }
         }
@@ -48,6 +68,9 @@ export class ExternalCallsService {
     }
 
     resultOf(id) {
-        return this.results_[id]
+        return this.results_[id].result
+    }
+    async waitForResult(id) {
+        return this.results_[id].promise
     }
 }

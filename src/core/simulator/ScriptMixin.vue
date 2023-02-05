@@ -322,6 +322,7 @@ export default {
 
         return new Promise(async (resolve) => {
 
+            // -1- handling input-module messages...
             const q_ = DIProvider.mvvmInputsService().discardQueue()
             for (let inp of q_) {
                 const r_ = await this.justRunScript(`return MVVM_CONTROLLER.EXT_INPUTS().notify(${JSON.stringify(inp)})`)
@@ -332,6 +333,20 @@ export default {
                 }
             }
 
+            // -2- handling output-queries module responses...
+            const qs_ = DIProvider.mvvmOutputsQueryService()
+            let ed_;
+            while ((ed_ = qs_.consume()) !== undefined) {
+                await this.justRunScript(`return MVVM_CONTROLLER.pushExtQueryResponse(${ed_.sender}, ${JSON.stringify(ed_.query)}, ${JSON.stringify(ed_.response)})`)
+            }
+            const r_ = await this.justRunScript(`return MVVM_CONTROLLER.computeExternalQueryResponses()`)
+            this.applyApiDeltas(r_)
+            this.rerenderWidgetsFromDataBindingAndUpdateViewModel(r_)
+            if (!r_.loop && !r_.nothingToProcess && r_.to) {
+                this.tryRenderScriptedScreenTransition(r_, null, {})
+            }
+
+            // -3- actually, running the script...
             const result = await this.justRunScript(script)
             this.handleScriptResult(result, widget, orginalLine, script, resolve)
         }) 

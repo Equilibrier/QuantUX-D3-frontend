@@ -464,6 +464,17 @@ export default class ScriptAPI {
         })
     }
 
+    sendExternalQuery(id, message) {
+        self.postMessage({
+            type: this.type,
+            key: 'ext-query',
+            props: {
+                message,
+                from_id: id
+            }
+        })
+    }
+
     stopAnimation(animId) {
         // console.log(`cosmin:stopanim: ${animId}`)
 

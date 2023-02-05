@@ -715,7 +715,9 @@ export default {
 
 			DIProvider.transitionsNotifier().notifyTransition(screenID, line.to, widgetID)
 
+			// if !mvvm_project executeLine..., like bellow
 			this.executeLine(screenID, widgetID, line);
+			// else, simulez data. sourceElement si sourceScreen si dau drumul, direct, la executeScript("...Compute()"), ar trebui sa mearga
 		},
 
 		executeLine (screenID, widgetID, line){

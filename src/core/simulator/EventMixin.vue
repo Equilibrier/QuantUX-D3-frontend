@@ -15,6 +15,7 @@ export default {
     methods: {
 
 		executeAction (screenID, widgetID, action, eventType, e) {
+			
 			this.logger.log(-2,"executeAction","enter >  sreen:" + screenID +  " > widget: "  + widgetID + " > eventType:" + eventType, e);
 			this.stopEvent(e);
 			this.log("WidgetClick",screenID, widgetID, e);

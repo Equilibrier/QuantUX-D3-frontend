@@ -72,6 +72,11 @@ export default class ScriptEngine {
             DIProvider.mvvmOutputsService().sendExternalNotification(message) // is async function, but I don't have to wait for it (I think... :) )
             return;
         }
+        if (message.data.key && message.data.key === "ext-query") {
+            const {message} = message.data.props;
+            DIProvider.mvvmOutputsQueryService().sendExternalQuery(message) // is async function, but I don't have to wait for it (I think... :) )
+            return;
+        }
 
         const end = new Date().getTime()
         Logger.log(-1, 'ScriptEngine.onMessage() > took',end - start)
