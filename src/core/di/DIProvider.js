@@ -59,6 +59,8 @@ class DIProvider {
         this._mvvmStateObserver = new MvvmStateObserver()
         this._mvvmCheckerService = null
 
+        this._unexecutedJsScripts = [] // this should be a separate service, but for now, we implement this on the DIProvider
+
         this._listeners = {};
 
         this.__waitUntil('_route', 5000, () => {
@@ -165,6 +167,9 @@ class DIProvider {
                 this.emitMvvmStoppedExecuting()
             }
         }
+        else {
+            this._unexecutedJsScripts.push(script)
+        }
     }
 
     setBaseController(ref) {
@@ -202,6 +207,14 @@ class DIProvider {
 
     setSimulatorRef(sim) {
         this.__set("_simulator")(sim)
+        if (sim) {
+            const f = async () => {
+                for (let s of this._unexecutedJsScripts) {
+                    await this.executeMvvm(s)
+                }
+            }
+            f()
+        }
     }
 
     simulatorStarted() { return this.simulatorStateService().started() }

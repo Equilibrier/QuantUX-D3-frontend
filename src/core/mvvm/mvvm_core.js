@@ -1313,6 +1313,7 @@ class MVVMController {
 	}
 
 	loadInitialData() {
+		console.log('loading initial data for the QUX session')
 		this.__initLoader().loadData()
 	}
 
