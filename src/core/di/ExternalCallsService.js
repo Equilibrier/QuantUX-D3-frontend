@@ -29,7 +29,7 @@ export class ExternalCallsService {
 
                 const {url, msg} = this.queue_[id]
                 try {
-                    const res = fetch(url, {
+                    const res = await fetch(url, {
                         method: 'post',
                         // credentials: "same-origin",
                         headers: this.__private.createDefaultHeader(),
@@ -38,13 +38,14 @@ export class ExternalCallsService {
                     if (res.status === 200) {
                         const r_ = await res.json()
                         this.results_[id].result = r_
+                        console.log(`response from ${url}: ${JSON.stringify(r_)}`)
                         res_(r_)
                     }
                     else {
                         this.results_[id].result = null
-                        rej_(`ExternalCallsService: Could not POST to url ${url} for some reason`)
+                        rej_(`ExternalCallsService: Could not POST to url ${url} for some reason: http code ${res.status}`)
                         //throw new Error(`ExternalCallsService: Could not POST to url url for some reason`)
-                        console.error(`ExternalCallsService: Could not POST to url ${url} for some reason`)
+                        console.error(`ExternalCallsService: Could not POST to url ${url} for some reason: http code ${res.status}`)
                     }
                 }
                 catch(err) {

@@ -60,27 +60,28 @@ export default class ScriptEngine {
         })
     }
 
-    onMessage (message, resolve, reject, start) {
-        //console.error(`worker msg: ${JSON.stringify(message.data)}`)
-        if (message.data.key && message.data.key === "stop-animation") {
-            const {animId} = message.data.props;
+    onMessage (msg, resolve, reject, start) {
+        // console.error(`worker msg: ${JSON.stringify(msg.data)}`)
+        if (msg.data.key && msg.data.key === "stop-animation") {
+            const {animId} = msg.data.props;
             DIProvider.uiWidgetsActionQueue().stopAnimation(animId)
             return;
         }
-        if (message.data.key && message.data.key === "ext-notif") {
-            const {message} = message.data.props;
+        if (msg.data.key && msg.data.key === "ext-notif") {
+            const {message} = msg.data.props;
             DIProvider.mvvmOutputsService().sendExternalNotification(message) // is async function, but I don't have to wait for it (I think... :) )
             return;
         }
-        if (message.data.key && message.data.key === "ext-query") {
-            const {message} = message.data.props;
-            DIProvider.mvvmOutputsQueryService().sendExternalQuery(message) // is async function, but I don't have to wait for it (I think... :) )
+        if (msg.data.key && msg.data.key === "ext-query") {
+            // console.log(`message: ${JSON.stringify(msg)}`)
+            const {message, from_id} = msg.data.props;
+            DIProvider.mvvmOutputsQueryService().sendExternalQuery(from_id, message) // is async function, but I don't have to wait for it (I think... :) )
             return;
         }
 
         const end = new Date().getTime()
         Logger.log(-1, 'ScriptEngine.onMessage() > took',end - start)
         this.isDone = true
-        resolve(message.data)
+        resolve(msg.data)
     }
 }

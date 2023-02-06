@@ -16,6 +16,8 @@ export class MvvmSettingsService {
         { return "views_url" }
     static KEY__CONFIGURATOR_URL()
         { return "configurator_url" }
+    static KEY__INITLOAD_SCRIPT_URL()
+        { return "initload_script_url" }
     static KEY__HOST_JS_SERVER()
         { return "host_js_server" }
     static KEY__HOST_INPUT_MODULE_SERVER()
@@ -37,6 +39,7 @@ export class MvvmSettingsService {
             {key: MvvmSettingsService.KEY__VIEWMODELS_URL()                 , label: 'VIEW-MODELS url'                , type: 'text', def: 'https://equilibrium.go.ro/quantux-apis/smartbasket/js?filename=viewmodels.js', categ: 'ext_mvvm_code'},
             {key: MvvmSettingsService.KEY__VIEWS_URL()                      , label: 'VIEWS url'                      , type: 'text', def: 'https://equilibrium.go.ro/quantux-apis/smartbasket/js?filename=views.js', categ: 'ext_mvvm_code'},
             {key: MvvmSettingsService.KEY__CONFIGURATOR_URL()               , label: 'CONFIGURATOR url'               , type: 'text', def: 'https://equilibrium.go.ro/quantux-apis/smartbasket/js?filename=configurator.js', categ: 'ext_mvvm_code'},
+            {key: MvvmSettingsService.KEY__INITLOAD_SCRIPT_URL()            , label: 'INIT-LOAD script url'           , type: 'text', def: 'https://equilibrium.go.ro/quantux-apis/smartbasket/js?filename=initloads.js', categ: 'ext_mvvm_code'},
 
             {key: MvvmSettingsService.KEY__HOST_JS_SERVER()                 , label: 'JS-SERVER host'                 , type: 'text', def: 'localhost:3005'},
             {key: MvvmSettingsService.KEY__HOST_INPUT_MODULE_SERVER()       , label: 'INPUT-MODULE-SERVER host'       , type: 'text', def: 'localhost:3006'},

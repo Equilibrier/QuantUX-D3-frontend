@@ -4,6 +4,9 @@ let qux = null // @strict-remove
 let inputModuleNotify = null // @strict-remove
 let outputModuleSendMessage = null // @strict-remove
 let outputQueryModuleQuery = null // @strict-remove
+let initialLoading = null // @strict-remove
+
+let MVVM_CONTROLLER = null; // will be later instantiated
 
 function generateUuid() {
     const ho = (n, p) => n.toString(16).padStart(p, 0); /// Return the hexadecimal text representation of number `n`, padded with zeroes to be of length `p`
@@ -23,7 +26,7 @@ class GlobalObjectsRegister { // per MVVM runtime session, so no persistency is 
 		this.objs_[id] = this_
 	}
 
-	objectRegistered(id) { this.objs_[id] !== undefined }
+	objectRegistered(id) { return this.objs_[id] !== undefined }
 	lookupObject(id) { return this.objs_[id] }
 }
 
@@ -36,13 +39,47 @@ class MVVMObject {
 
 	sendExternalQuery(msg) { qux.sendExternalQuery(this.id_, msg) }
 
-	handleQueryResponse(query, response) {
+	handleQueryResponse(query, response) { // should return bool, if succeeded or not
 		query ? null : null
 		response ? null : null
 		throw "Not implemented, to be overriden in super-classes"
 	}
 }
 
+class InitialDataLoader extends MVVMObject {
+
+	constructor() {
+		super('mvvm_initial_data_loader')
+		this.handlers_ = initialLoading()
+		// console.log(`handlers: ${JSON.stringify(this.handlers_)}`)
+	}
+
+	loadData() {
+		if (this.handlers_['_']) {
+			this.handlers_['_']() // default loader callback if existed, it's ran
+		}
+		for (let qRaw_ of Object.keys(this.handlers_)) {
+			if (qRaw_ === "_") continue
+
+			const q_ = JSON.parse(qRaw_)
+			this.sendExternalQuery(q_)
+		}
+	}
+
+	handleQueryResponse(query, response) {
+		for (let qRaw_ of Object.keys(this.handlers_)) {
+			if (qRaw_ === "_") continue
+
+			const q_ = JSON.parse(qRaw_)
+			if (JSON.stringify(q_) === JSON.stringify(query)) { // because in js two dicts are always NOT equal, because they have different references, so == or === would equal to false; using stringify but based on the already parsed from string variant of qRaw_, because I hope stringify would sort things identically (like the keys in alphabetical order)
+				const resp_ = this.handlers_[qRaw_]
+				resp_(response)
+				return true
+			}
+		}
+		return false
+	}
+}
 
 class Model extends MVVMObject {
 
@@ -1073,9 +1110,6 @@ class MVVMConfigurator {
 	ScreenClassesDefinitions() { return {} }
 }
 
-
-let MVVM_CONTROLLER = null; // will be later instantiated
-
 class MVVMContext {
 	
 	__saveState() {
@@ -1172,20 +1206,32 @@ class MVVMContext {
 }
 
 class MVVMController {
+
+	_singletonAccess(fname, instantiateClbk) {
+		const field_ = fname.toLowerCase()
+		if (this[field_] === undefined) {
+			this[field_] = instantiateClbk()
+		}
+		return this[field_]
+	}
+
 	
 	constructor() {
 		this.context_ = null
 		this.uiUtils_ = new MVVM_UIUtils()
-
+		
 		this.queueE_ = new QueueE()
 		this.queueU_ = new QueueU()
-
+		
 		this.inputsModule_ = new MVVMInputModule()
 		this.outputingModule_ = new MVVMOutputModule()
 		this.extQueryModule_ = new MVVMOutputQueryModule()
-
+		
 		this.objsRegister_ = new GlobalObjectsRegister()
+		// this.initLoader_ = new InitialDataLoader() // nu mai instantiem de la inceput, fiindca va fi o dependinta circula (MVVMObject foloseste MVVMController)
 	}
+	__initLoader() { return this._singletonAccess('initLoader_', () => new InitialDataLoader()) }
+
 
 	UIUtils() { return this.uiUtils_ }
 	
@@ -1229,6 +1275,8 @@ class MVVMController {
 			routeExtQueryResponses: () => {
 				data.mvvm_output_queries = data.mvvm_output_queries ? data.mvvm_output_queries : {}
 
+				console.warn(`mvvm_output_queries: ${JSON.stringify(data.mvvm_output_queries)}`)
+
 				for (let id_ of Object.keys(data.mvvm_output_queries)) {
 
 					let remainingAnswers_ = []
@@ -1242,7 +1290,9 @@ class MVVMController {
 								if (this.MVVM_OBJECTS_REGISTER().objectRegistered(id_)) {
 									const sender_ = this.MVVM_OBJECTS_REGISTER().lookupObject(id_)
 									if (sender_) {
-										sender_.handleQueryResponse(query_, response_)
+										if (!sender_.handleQueryResponse(query_, response_)) {
+											console.warn(`handleQueryResponse failed on handling ext query ${JSON.stringify(query_)} for sender ${id_} or maybe sender forgot to return true after succesfully handled the query response, so @TODO PLEASE CHECK this !`)
+										}
 									}
 									else {
 										console.error(`Ext-query sender ${id_} was instantiated but its reference in GlobalObjectsRegister is null/undefined. This is an abnormal situation. Will postpone its query response for a later time, which it may be instantiated though, but this is an abnormal internal state of the MVVM engine and should be fixed ASAP !`)
@@ -1262,6 +1312,10 @@ class MVVMController {
 		}
 	}
 
+	loadInitialData() {
+		this.__initLoader().loadData()
+	}
+
 	pushExtQueryResponse(senderId, originalQuery, response) {
 		data.mvvm_output_queries = data.mvvm_output_queries ? data.mvvm_output_queries : {}
 		data.mvvm_output_queries[senderId] = data.mvvm_output_queries[senderId] ? data.mvvm_output_queries[senderId] : []
@@ -1270,7 +1324,7 @@ class MVVMController {
 			response
 		})
 	}
-	computeExternalQueryResponses() { this.__private_helpers.routeExtQueryResponses() }
+	routeExternalQueryResponses() { this.__initLoader(); /*initializam initloaderul, fiindca s-ar putea sa fie receiver de query-response si cum e instantiat lazy, il instantiem aici la sigur*/ this.__private_helpers().routeExtQueryResponses() }
 
 	pushClickEvent(sourceElement) {
 		if (sourceElement === undefined) {
@@ -1455,6 +1509,7 @@ const dummy22 = new EventsQueueConsumer();
 const dummy23 = new ScreenMetaFactory();
 const dummy24 = new MVVMObject();
 const dummy25 = new GlobalObjectsRegister();
+const dummy26 = new InitialDataLoader();
 dummy0 ? null : null
 dummy1 ? null : null
 dummy2 ? null : null
@@ -1480,6 +1535,7 @@ dummy22 ? null : null
 dummy23 ? null : null
 dummy24 ? null : null
 dummy25 ? null : null
+dummy26 ? null : null
 }
 
 export const code = codeFunction.toString().match(/function[^{]+\{([\s\S]*)\}$/)[1]

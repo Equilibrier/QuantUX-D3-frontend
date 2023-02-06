@@ -314,7 +314,7 @@ export default {
         }
     },
 
-    async runScript (script, widget, orginalLine) {
+    async runScript (script, widget, originalLine) {
 
         console.warn(`RUN-SCRIPT`)
 
@@ -337,18 +337,22 @@ export default {
             const qs_ = DIProvider.mvvmOutputsQueryService()
             let ed_;
             while ((ed_ = qs_.consume()) !== undefined) {
-                await this.justRunScript(`return MVVM_CONTROLLER.pushExtQueryResponse(${ed_.sender}, ${JSON.stringify(ed_.query)}, ${JSON.stringify(ed_.response)})`)
+                // console.warn(`ed_: ${JSON.stringify(ed_)}`)
+                const r_ = await this.justRunScript(`MVVM_CONTROLLER.pushExtQueryResponse("${ed_.sender}", ${JSON.stringify(ed_.query)}, ${JSON.stringify(ed_.response)})`)
+                this.applyApiDeltas(r_)
+                this.rerenderWidgetsFromDataBindingAndUpdateViewModel(r_)
             }
-            const r_ = await this.justRunScript(`return MVVM_CONTROLLER.computeExternalQueryResponses()`)
+            const r_ = await this.justRunScript(`return MVVM_CONTROLLER.routeExternalQueryResponses()`)
             this.applyApiDeltas(r_)
             this.rerenderWidgetsFromDataBindingAndUpdateViewModel(r_)
-            if (!r_.loop && !r_.nothingToProcess && r_.to) {
-                this.tryRenderScriptedScreenTransition(r_, null, {})
-            }
 
             // -3- actually, running the script...
             const result = await this.justRunScript(script)
-            this.handleScriptResult(result, widget, orginalLine, script, resolve)
+            this.handleScriptResult(result, widget, originalLine, script, resolve)
+            // originalLine ? null : null
+            // widget ? null : null
+            // resolve ? null : null
+            // result ? null : null
         }) 
     },
 

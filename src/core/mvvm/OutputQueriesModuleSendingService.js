@@ -19,6 +19,10 @@ export class OutputQueriesModuleSendingService {
     }
 
     consume() {
-        return Object.values(this.queue_).shift()
+        // console.log(`queue length: ${Object.keys(this.queue_).length}`)
+        const oid_ = Object.keys(this.queue_).shift()
+        const val_ = this.queue_[oid_]
+        delete this.queue_[oid_]
+        return val_
     }
 }

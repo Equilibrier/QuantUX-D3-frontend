@@ -68,7 +68,7 @@ export class MvvmRuntimeCodeService {
         if (!this.__private.loadedFromServer_) {
             let corelib = this.__private.retrieveCoreLib()
             const extFileContents_ = await this.__private.downloadMvvmCode()
-            this.finalCode_ = Object.values(extFileContents_).reduce((a, e) => a + e + "\n", corelib + "\n\n")
+            this.finalCode_ = Object.values(extFileContents_).reduce((a, e) => a + e + "\n", corelib + "\n\n") // @TODO good order is guaranteed for now by the MvvmSettingsService order in which the settings are defined in the db, but the order should have been explicitely defined somewhere, I think
 
             this.__private.loadedFromServer_ = true
         }
