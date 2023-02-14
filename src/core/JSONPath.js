@@ -20,16 +20,20 @@ class JSONPath {
     }
 
     set (data, path, value) {
+        let ddata = JSON.parse(JSON.stringify(data))
+
+        console.trace()
+        console.error(`modificat data la path ${path} si value ${JSON.stringify(value)}, valoare initiala\n${JSON.stringify(data)}`)
+
         let elements = this.getJsonPath(path)
         let current = elements.shift()
-        let node = data
+        let node = ddata
         let i = 0
         while (current !== undefined && current !== null && i < 100) {
             i++
             if (elements.length > 0) {
                 if (!node[current]) {
                     if (elements[0].toLowerCase) {
-
                         node[current] = {}
                     } else {
                         node[current] = []
@@ -41,7 +45,8 @@ class JSONPath {
                 node[current] = value;
             }
         }
-        return data
+        Object.seal(ddata)
+        return ddata
     }
 
 

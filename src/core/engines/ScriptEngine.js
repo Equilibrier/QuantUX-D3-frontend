@@ -21,6 +21,9 @@ export default class ScriptEngine {
                 const start = new Date().getTime()
                 worker.onmessage = (m) => this.onMessage(m, resolve, reject, start, js, renderFactory)
                 // console.error(`##### getting scaling factor from diprovider: ${DIProvider.scalingComputer().scaleFactor()}`)
+
+                console.error(`#INITIAL CLONE-----`)
+
                 worker.postMessage({
                     code: js, 
                     //model: lang.clone(model),

@@ -6,6 +6,8 @@
 
 import JSONPath from 'core/JSONPath'
 
+// import DIProvider from 'core/di/DIProvider'
+
 export default {
 	name: 'DataBindingMixin',
     methods: {
@@ -84,7 +86,9 @@ export default {
 
 		setDataBindingByKey (path, value) {
 			if (this.dataBindingValues) {
-				JSONPath.set(this.dataBindingValues, path, value)
+				this.dataBindingValues = JSONPath.set(this.dataBindingValues, path, value)
+				console.error(`returnat ${JSON.stringify(this.dataBindingValues)}`)
+
 				this.emit('onDataBindingChange', this.dataBindingValues)
 			}
 		},
@@ -129,6 +133,7 @@ export default {
 			let oldValue = JSONPath.get(this.dataBindingValues, variable)
 			if (oldValue !== value) {
 				this.dataBindingValues = JSONPath.set(this.dataBindingValues, variable, value)
+				console.error(`returnat ${JSON.stringify(this.dataBindingValues)}`)
 				this.emit('onDataBindingChange', this.dataBindingValues)
 				this.updateAllDataBindings(screenID, variable, oldValue, value, runDataScripts)
 			} else {
@@ -220,22 +225,25 @@ export default {
 			}
 		},
 
-		updateWidgetFromDataBinding (newValues) {
+		updateWidgetFromDataBinding (newValues/*, screenId*/) {
 			this.logger.log(4,"updateWidgetFromDataBinding","enter  > ", newValues);
 
-			this.dataBindingValues = newValues
-
-			if (!this.currentScreen) {
-				this.logger.log(-4,"updateWidgetFromDataBinding","exit  > No screen");
-				return
-			}
+			// if (!screenId) {
+				if (!this.currentScreen) {
+					this.logger.log(-4,"updateWidgetFromDataBinding","exit  > No screen");
+					return
+				}
+			// }
 			// update all visible widgets
+			// const screenID = !screenId ? this.currentScreen.id : screenId
 			const screenID = this.currentScreen.id
-			const widgets = this.renderFactory.getAllUIWidgets();
+			// const widgets = !screenId ? this.renderFactory.getAllUIWidgets() : DIProvider.elementsLookup().screenWidgets(screenId);
+			const widgets = this.renderFactory.getAllUIWidgets()
 
 			for(let id in widgets){
                 const uiWidget = widgets[id];
 				if (!this.isRepaterChild(uiWidget)) {
+					// const databinding = uiWidget?.props?.databinding ? uiWidget?.props?.databinding : this.getDataBinding(uiWidget.model);
 					const databinding = this.getDataBinding(uiWidget.model);
 					if (databinding) {
 						for (let key in databinding) {
@@ -244,6 +252,7 @@ export default {
 
 							if (!uiWidget.isHidden()) {
 								if (value !== undefined && value !== null) {
+									console.error(`WIDGET BIND UPDATE: ${uiWidget.name} -- ${variable} -- ${value}`)
 									this.logger.log(4,"updateWidgetFromDataBinding","set  > " +  variable + ': ' , value);
 									const changed = uiWidget.setDataBinding(variable, value, this);
 									if(changed){

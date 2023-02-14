@@ -119,6 +119,9 @@ export class ElementsLookup {
     keyupScriptWidgets() { // likewise, cache-ing is not a bad idea...
         return Object.values(this.model.widgets).filter(w => w.type === 'Script' && w.props.trigger === 'keyup')
     }
+
+    allScreens() { return JSON.parse(JSON.stringify(Object.values(this.model.screens))) }
+    screenWidgets(screenId) { return this.screenFromId(screenId)?.children.filter(wid => this.isWidget(wid)).map(wid => this.widgetFromId(wid)) }
 }
 
 //export default new ElementsLookup();

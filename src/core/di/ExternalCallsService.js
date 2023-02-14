@@ -38,7 +38,7 @@ export class ExternalCallsService {
                     if (res.status === 200) {
                         const r_ = await res.json()
                         this.results_[id].result = r_
-                        console.log(`response from ${url}: ${JSON.stringify(r_)}`)
+                        console.log(`response from ${url} with body ${JSON.stringify(msg)}:\n\t${JSON.stringify(r_)}`)
                         res_(r_)
                     }
                     else {

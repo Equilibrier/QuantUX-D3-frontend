@@ -157,17 +157,18 @@ class DIProvider {
 
     async executeMvvm(script) {
         if (this._simulator) {
-            await this.waitWhileMvvmRunning()
             const isMvvmProj_ = await this.isMvvmProject()
             if (isMvvmProj_) {
+                await this.waitWhileMvvmRunning()
                 this.emitMvvmStartedExecuting()
             }
-            this._simulator.runScript(script, null, null)
+            await this._simulator.runScript(script, null, null)
             if (isMvvmProj_) {
                 this.emitMvvmStoppedExecuting()
             }
         }
         else {
+            console.error(`SIMREF NESETAT, programam script ${script}`)
             this._unexecutedJsScripts.push(script)
         }
     }
@@ -202,7 +203,13 @@ class DIProvider {
     }
 
     setSimulatorStartState(started) {
-        started ? this.simulatorStateService().emitStarted() : this.simulatorStateService().emitStopped()
+        if (started) {
+            this.simulatorStateService().emitStarted()
+        }
+        else {
+            this.simulatorStateService().emitStopped()
+            this._simulator = null
+        }
     }
 
     setSimulatorRef(sim) {
@@ -212,6 +219,7 @@ class DIProvider {
                 for (let s of this._unexecutedJsScripts) {
                     await this.executeMvvm(s)
                 }
+                this._unexecutedJsScripts = []
             }
             f()
         }

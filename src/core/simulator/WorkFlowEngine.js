@@ -11,7 +11,7 @@ export function executeAction (action, data) {
     if (action && action.steps) {
         action.steps.forEach(step => {
             let change = executeStep(step, data)
-                if (change) {
+            if (change) {
                 if (isObject(change.value)) {
                     expandJSON(change.path, change.value, changes)
                 }

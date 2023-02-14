@@ -1125,7 +1125,7 @@ class MVVMContext {
 		this.screensStack_ = data.screensStack ? data.screensStack : []
 
 		if (syncContextFromQux) {
-			const quxScreenLabel_ = data?.__sourceScreen?.name
+			/*const quxScreenLabel_ = data?.__sourceScreen?.name
 			const quxScreenClsName_ = quxScreenLabel_ ? MVVM_CONTROLLER.Configurator().ScreenFactory().screenQuxLabelToClsName(quxScreenLabel_) : undefined
 			console.log(`(1)quxScreenLabel_: ${quxScreenLabel_};\nquxScreenClsName_: ${quxScreenClsName_};`)
 
@@ -1138,7 +1138,7 @@ class MVVMContext {
 			if (quxScreenClsName_ && quxScreenClsName_.toLowerCase() !== lastStackedScreenClsName_?.toLowerCase() && lastStackedScreenInstance_?.screenId() !== quxScreenLabel_) {
 				console.log(`pushing screen ${quxScreenClsName_}`)
 				this.pushScreen(quxScreenClsName_) // aici facem trecerea de la ecrane QUX de care MVVM nu stie (tranzitii netrecute prin MVVM) la logica MVVM; daca nu facem asta, atunci inconsistenta asta strica toata logica MVVM (chiar daca nu stiu ce alte tranzitii a facut QUX intre timp, fara MVVM, ma intereseaza acest ultim ecran) -- in general nu o idee prea buna mixul asta intre MVVM si QUX, dar e greu sa impl ceva foarte bine delimitat
-			}
+			}*/
 		}
 		
 		// const lastScreenIsNotRegistered = (ps) => ps && this.lastScreen()?.screen && MVVM_CONTROLLER.Configurator().ScreenFactory().createScreen(this.lastScreen()?.screen, {})?.screenId()?.toLowerCase() !== ps.toLowerCase()
@@ -1305,6 +1305,7 @@ class MVVMController {
 								}
 							}
 						}
+						console.error(`mvvm_output_queries raman urmatoarele NE-procesate: ${JSON.stringify(remainingAnswers_)}`)
 						data.mvvm_output_queries[id_] = remainingAnswers_ // removing the asnwered responses from the queue
 					}
 				}

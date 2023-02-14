@@ -160,6 +160,15 @@ export default {
 			this.screenHistory = [];
 			this.dataBindingValues = {};
 
+			// const handler = {
+			// 	set: function(obj, prop, value) {
+			// 		console.stack();
+			// 		obj[prop] = value;
+			// 		return true;
+			// 	}
+			// };
+			// this.monitored = new Proxy(this.dataBindingValues, handler);
+
 			this.renderFactory = new RenderFactory();
 			this.renderFactory.setMode("simulator");
 			this.own(this.renderFactory.on("uiWidgetInit", lang.hitch(this, "onWidgetInit")));
@@ -514,9 +523,9 @@ export default {
 					this.__resetSourceMetadata();
 					this.dataBindingValues.__sourceScreen = this.currentScreen.name;
 					
-					await DIProvider.waitWhileMvvmRunning()
 					const isMvvmProj_ = await DIProvider.isMvvmProject()
 					if (isMvvmProj_) {
+						await DIProvider.waitWhileMvvmRunning()
 						DIProvider.emitMvvmStartedExecuting()
 					}
 					await this.runScript(w.props.script, w, {from: w.id});
@@ -714,6 +723,17 @@ export default {
 			this.log("WidgetClick",screenID, widgetID, e);
 
 			DIProvider.transitionsNotifier().notifyTransition(screenID, line.to, widgetID)
+
+			const widget = this.model.widgets[widgetID]
+			const wid = widget.id
+			const seObj = DIProvider.elementsLookup().getObjectFromId(wid)
+			const parent = DIProvider.elementsLookup().groupOf(wid)
+			// console.error(`se: ${JSON.stringify(seObj)}; parent: ${JSON.stringify(parent)}`)
+			const __sourceElement = {name: parent ? parent.name : seObj.name, id: parent ? parent.id : seObj.id}
+			// console.error(`CLICKED widg: ${JSON.stringify(__sourceElement)}`)
+
+			this.dataBindingValues.__sourceElement = __sourceElement
+			/*await*/DIProvider.executeMvvm('MVVM_CONTROLLER.pushClickEvent(); return MVVM_CONTROLLER.Compute()')
 
 			// if !mvvm_project executeLine..., like bellow
 			this.executeLine(screenID, widgetID, line);

@@ -13,12 +13,12 @@ export default {
   methods: {
 
     __resetSourceMetadata() {
-        this.dataBindingValues.__sourceScreen = undefined;
-        this.dataBindingValues.__sourceElement = undefined;
-        this.dataBindingValues.__sourceLooping = false;
-        this.dataBindingValues.__sourceData = undefined;
-        this.dataBindingValues.__sourceOldValue = undefined;
-        this.dataBindingValues.__sourceNewValue = undefined;
+        // this.dataBindingValues.__sourceScreen = undefined;
+        // this.dataBindingValues.__sourceElement = undefined;
+        // this.dataBindingValues.__sourceLooping = false;
+        // this.dataBindingValues.__sourceData = undefined;
+        // this.dataBindingValues.__sourceOldValue = undefined;
+        // this.dataBindingValues.__sourceNewValue = undefined;
     },
 
     async initLoadScripts () {
@@ -33,9 +33,9 @@ export default {
             const widget = widgets[i]
 
             if (widget.props.script) {
-                await DIProvider.waitWhileMvvmRunning()
                 const isMvvmProj_ = await DIProvider.isMvvmProject()
                 if (isMvvmProj_) {
+                    await DIProvider.waitWhileMvvmRunning()
                     DIProvider.emitMvvmStartedExecuting()
                 }
                 await this.runScript(widget.props.script, widget)
@@ -54,9 +54,9 @@ export default {
         }
         this.__resetSourceMetadata();
 
-        this.dataBindingValues.__sourceData = databind;
-        this.dataBindingValues.__sourceOldValue = oldVal;
-        this.dataBindingValues.__sourceNewValue = newVal;
+        // this.dataBindingValues.__sourceData = databind;
+        // this.dataBindingValues.__sourceOldValue = oldVal;
+        // this.dataBindingValues.__sourceNewValue = newVal;
 
         const widgets = DIProvider.elementsLookup().dataBindingScriptWidgets();
         for (let i=0; i< widgets.length; i++) {
@@ -68,9 +68,9 @@ export default {
                 this.applyApiDeltas(rresult)
                 this.rerenderWidgetsFromDataBindingAndUpdateViewModel(rresult)*/
 
-                await DIProvider.waitWhileMvvmRunning()
                 const isMvvmProj_ = await DIProvider.isMvvmProject()
                 if (isMvvmProj_) {
+                    await DIProvider.waitWhileMvvmRunning()
                     DIProvider.emitMvvmStartedExecuting()
                 }
                 await this.runScript(widget.props.script, null, null)
@@ -82,7 +82,7 @@ export default {
         this.logger.log(-2,"executeDataScripts","exit");
     },
 
-    async executeScript (widgetID, orginalLine) {
+    async executeScript (widgetID, originalLine) {
         this.logger.log(-2,"executeScript","enter >" + widgetID);
 
         if (this.doNotExecuteScripts) {
@@ -105,12 +105,12 @@ export default {
         let widget = this.model.widgets[widgetID]
 
         if (widget && widget.props.script) {
-            await DIProvider.waitWhileMvvmRunning()
             const isMvvmProj_ = await DIProvider.isMvvmProject()
             if (isMvvmProj_) {
+                await DIProvider.waitWhileMvvmRunning()
                 DIProvider.emitMvvmStartedExecuting()
             }
-            const result = await this.runScript(`${widget.props.script}`, widget, orginalLine)
+            const result = await this.runScript(`${widget.props.script}`, widget, originalLine)
             if (isMvvmProj_) {
                 DIProvider.emitMvvmStoppedExecuting()
             }
@@ -126,12 +126,15 @@ export default {
     },
 
     retrieveTargetScreen(scriptResult) {
-        return Object.values(this.model.screens).find(s => scriptResult?.to !== undefined && s.name.toLowerCase() === scriptResult?.to?.toLowerCase())
+        return !this?.model?.screens ? null : Object.values(this.model.screens).find(s => scriptResult?.to !== undefined && s.name.toLowerCase() === scriptResult?.to?.toLowerCase())
     },
 
     async justRunScript(script) {
+
+        console.warn(`JUST--run-script: ${script}`)
+
         const glbJS = await DIProvider.mvvmRuntimeCodeRetriever().cachedCode();
-        const result = await DIProvider.jsRunController().scheduleRun(glbJS + script, this.model, this.dataBindingValues, this.renderFactory)
+        const result = await DIProvider.jsRunController().scheduleRun(glbJS + script, this.model, this.dataBindingValues, this.renderFactory, script)
         return result
     },
 
@@ -314,6 +317,32 @@ export default {
         }
     },
 
+    async runMvvmSpecifics() {
+        // -1- handling input-module messages...
+        const q_ = DIProvider.mvvmInputsService().discardQueue()
+        for (let inp of q_) {
+            const r_ = await this.justRunScript(`return MVVM_CONTROLLER.EXT_INPUTS().notify(${JSON.stringify(inp)})`)
+            this.applyApiDeltas(r_)
+            this.rerenderWidgetsFromDataBindingAndUpdateViewModel(r_, true)
+            if (!r_.loop && !r_.nothingToProcess && r_.to) {
+                this.tryRenderScriptedScreenTransition(r_, null, {})
+            }
+        }
+
+        // -2- handling output-queries module responses...
+        const qs_ = DIProvider.mvvmOutputsQueryService()
+        let ed_;
+        while ((ed_ = qs_.consume()) !== undefined) { // @TODO: asta poate fi optimizata, daca voi face un pushExtQueryMultipleResponses si o functie consumeAll() elimin while-ul
+            // console.warn(`ed_: ${JSON.stringify(ed_)}`)
+            const r_ = await this.justRunScript(`MVVM_CONTROLLER.pushExtQueryResponse("${ed_.sender}", ${JSON.stringify(ed_.query)}, ${JSON.stringify(ed_.response)})`)
+            this.applyApiDeltas(r_)
+            this.rerenderWidgetsFromDataBindingAndUpdateViewModel(r_, true)
+        }
+        const r_ = await this.justRunScript(`return MVVM_CONTROLLER.routeExternalQueryResponses()`)
+        this.applyApiDeltas(r_)
+        this.rerenderWidgetsFromDataBindingAndUpdateViewModel(r_, true)
+    },
+
     async runScript (script, widget, originalLine) {
 
         console.warn(`RUN-SCRIPT`)
@@ -322,33 +351,20 @@ export default {
 
         return new Promise(async (resolve) => {
 
-            // -1- handling input-module messages...
-            const q_ = DIProvider.mvvmInputsService().discardQueue()
-            for (let inp of q_) {
-                const r_ = await this.justRunScript(`return MVVM_CONTROLLER.EXT_INPUTS().notify(${JSON.stringify(inp)})`)
-                this.applyApiDeltas(r_)
-                this.rerenderWidgetsFromDataBindingAndUpdateViewModel(r_)
-                if (!r_.loop && !r_.nothingToProcess && r_.to) {
-                    this.tryRenderScriptedScreenTransition(r_, null, {})
-                }
-            }
+            // -1- run mvvm input-module&output-modules logic
+            await this.runMvvmSpecifics()
 
-            // -2- handling output-queries module responses...
-            const qs_ = DIProvider.mvvmOutputsQueryService()
-            let ed_;
-            while ((ed_ = qs_.consume()) !== undefined) {
-                // console.warn(`ed_: ${JSON.stringify(ed_)}`)
-                const r_ = await this.justRunScript(`MVVM_CONTROLLER.pushExtQueryResponse("${ed_.sender}", ${JSON.stringify(ed_.query)}, ${JSON.stringify(ed_.response)})`)
-                this.applyApiDeltas(r_)
-                this.rerenderWidgetsFromDataBindingAndUpdateViewModel(r_)
-            }
-            const r_ = await this.justRunScript(`return MVVM_CONTROLLER.routeExternalQueryResponses()`)
-            this.applyApiDeltas(r_)
-            this.rerenderWidgetsFromDataBindingAndUpdateViewModel(r_)
-
-            // -3- actually, running the script...
+            // -2- actually, running the script...
             const result = await this.justRunScript(script)
-            this.handleScriptResult(result, widget, originalLine, script, resolve)
+            let rresolve = null;
+            const np = new Promise((resolve2) => {
+                rresolve = resolve2;
+            })
+            this.handleScriptResult(result, widget, originalLine, script, rresolve)
+            const r = await np;
+            console.error(`AFTER: databinding: ${JSON.stringify(this.dataBindingValues)}`)
+            Object.freeze(this.dataBindingValues)
+            resolve(r)
             // originalLine ? null : null
             // widget ? null : null
             // resolve ? null : null
@@ -367,10 +383,24 @@ export default {
     },
 
 
-    rerenderWidgetsFromDataBindingAndUpdateViewModel (result) {
+    rerenderWidgetsFromDataBindingAndUpdateViewModel (result, allScreens = false) {
+        
         this.logger.log(2,"rerenderWidgetsFromDataBinding","enter >", result.viewModel);
+
+        console.error('###STACK---');
+
         if (result.viewModel) {
-           this.updateWidgetFromDataBinding(result.viewModel)
+            this.dataBindingValues = result.viewModel// JSON.parse(JSON.stringify(result.viewModel)) // no need because result.viewModel is cloned from dataBindingValues before jscript run
+            
+            if (!allScreens) {
+                this.updateWidgetFromDataBinding(result.viewModel)
+            }
+            else {
+                const screens = DIProvider.elementsLookup().allScreens()
+                for (let screen of screens) {
+                    this.updateWidgetFromDataBinding(result.viewModel, screen.id)
+                }
+            }
         }
     },
     tryRenderScriptedScreenTransition (result, widget, orginalLine) {

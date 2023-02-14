@@ -6,3 +6,18 @@ export function generateUuid() {
     const view = new DataView(data.buffer); /// Create a view backed by a 16-byte buffer
     return `${ho(view.getUint32(0), 8)}-${ho(view.getUint16(4), 4)}-${ho(view.getUint16(6), 4)}-${ho(view.getUint16(8), 4)}-${ho(view.getUint32(10), 8)}${ho(view.getUint16(14), 4)}`; /// Compile the canonical textual form from the array data
 }
+
+export class Debouncer {
+
+    constructor(_this) {
+        this.timeoutId_ = null
+        this._this = _this
+    }
+
+    debounce(fn, delayMs) {
+        return () => {
+            if (this.timeoutId_) clearTimeout(this.timeoutId_);
+            this.timeoutId_ = setTimeout(() => fn.apply(this._this, arguments), delayMs);
+        };
+    }
+}
