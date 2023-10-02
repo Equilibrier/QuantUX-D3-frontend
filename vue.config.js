@@ -4,6 +4,7 @@ module.exports = {
     proxy: {
       '^/rest': {
         target:  'http://qux-be:8080',
+	//target: 'htpp://172.17.0.1:8080', // for DEBUG mode with eclipse, you will start the backend with eclipse, you will have all env vars from docker-compose.yml specific for DEBUG session, stored in Debug-configuration in Eclipse, and prividing this link to 172.17.0.1 (host of docker containers, so where the eclipse and backend are running), you will have a FULL debug (breakpoints...) session for the backend - restore the qux-be:8080 and you have a stable backend and you want to be more lite and shutdown eclipse...
         //target: 'https://v1.quant-ux.com',
         ws: true,
         changeOrigin: true
