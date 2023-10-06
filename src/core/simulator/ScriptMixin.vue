@@ -319,7 +319,7 @@ export default {
 
     async runMvvmSpecifics() {
         // -1- handling input-module messages...
-        const q_ = DIProvider.mvvmInputsService().discardQueue()
+        const q_ = DIProvider.mvvmNotificationsService().discardQueue()
         for (let inp of q_) {
             const r_ = await this.justRunScript(`return MVVM_CONTROLLER.EXT_INPUTS().notify(${JSON.stringify(inp)})`)
             this.applyApiDeltas(r_)

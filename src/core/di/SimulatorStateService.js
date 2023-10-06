@@ -5,7 +5,7 @@ export class SimulatorStateService {
     constructor() {
         this.listeners_ = []
         this.started_ = false
-        this.miService_ = DIProvider.mvvmInputsService()
+        this.mnService_ = DIProvider.mvvmNotificationsService()
 
         this.__private = {
             'acknowledge': () => { for (let l of this.listeners_) l(this.started_) }
@@ -26,8 +26,8 @@ export class SimulatorStateService {
         this.started_ = true
         this.__private.acknowledge()
         
-        this.miService_.discardQueue()
-        this.miService_.startListening()
+        this.mnService_.discardQueue()
+        this.mnService_.startListening()
     }
     emitStopped() {
         if (!this.started_) { console.warn(`SimulatorStateService: simulator already (acknowledged as) stopped`); return }
@@ -35,7 +35,7 @@ export class SimulatorStateService {
         this.started_ = false
         this.__private.acknowledge()
 
-        this.miService_.stopListening()
+        this.mnService_.stopListening()
     }
 
     started() { return this.started_ }

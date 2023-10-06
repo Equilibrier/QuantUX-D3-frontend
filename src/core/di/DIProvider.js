@@ -13,7 +13,7 @@ import { TransitionsNotifier } from 'core/di/TransitionsNotifier'
 import { MvvmSettingsService } from 'core/di/MvvmSettingsService'
 import { MvvmRuntimeCodeService } from 'core/di/MvvmRuntimeCodeService'
 import { ExternalCallsService } from 'core/di/ExternalCallsService'
-import { InputsModuleLoadingService } from 'core/mvvm/InputsModuleLoadingService'
+import { MvvmNotificationsService } from 'core/mvvm/MvvmNotificationsService'
 import { OutputsModuleSendingService } from 'core/mvvm/OutputsModuleSendingService'
 import { OutputQueriesModuleSendingService } from 'core/mvvm/OutputQueriesModuleSendingService'
 import { SimulatorStateService } from 'core/di/SimulatorStateService'
@@ -30,7 +30,7 @@ class DIProvider {
             initMvvmCheckerService: () => new MvvmCheckerService(),
 
             initMvvmRuntimeCodeRetriever: () => new MvvmRuntimeCodeService(),
-            initMvvmInputsService: () => new InputsModuleLoadingService(),
+            initMvvmNotificationsService: () => new MvvmNotificationsService(),
             initMvvmOutputsService: () => new OutputsModuleSendingService(),
             initMvvmOutputsQuery: () => new OutputQueriesModuleSendingService(),
             initExternalCallsService: () => new ExternalCallsService(),
@@ -51,7 +51,7 @@ class DIProvider {
         this._mvvmSettingsService = new MvvmSettingsService()
         this._baseController = null // lazy instantiation, see __private init functions and the getters; @TODO: for now I only did for these, as these were using themselves in circular dependencies, but it can be done for everything, and this technique should solve every similar issue
         this._mvvmRuntimeCodeRetriever = null
-        this._mvvmInputsService = null
+        this._mvvmNotificationsService = null
         this._mvvmOutputsService = null
         this._mvvmOutputsQueryService = null
         this._externalCallsService = null
@@ -264,7 +264,7 @@ class DIProvider {
 
     mvvmRuntimeCodeRetriever() { this._mvvmRuntimeCodeRetriever = this._mvvmRuntimeCodeRetriever ? this._mvvmRuntimeCodeRetriever : this.__private.initMvvmRuntimeCodeRetriever(); return this._mvvmRuntimeCodeRetriever }
 
-    mvvmInputsService() { this._mvvmInputsService = this._mvvmInputsService ? this._mvvmInputsService : this.__private.initMvvmInputsService(); return this._mvvmInputsService }
+    mvvmNotificationsService() { this._mvvmNotificationsService = this._mvvmNotificationsService ? this._mvvmNotificationsService : this.__private.initMvvmNotificationsService(); return this._mvvmNotificationsService }
     mvvmOutputsService() { this._mvvmOutputsService = this._mvvmOutputsService ? this._mvvmOutputsService : this.__private.initMvvmOutputsService(); return this._mvvmOutputsService }
     mvvmOutputsQueryService() { this._mvvmOutputsQueryService = this._mvvmOutputsQueryService ? this._mvvmOutputsQueryService : this.__private.initMvvmOutputsQuery(); return this._mvvmOutputsQueryService }
 
