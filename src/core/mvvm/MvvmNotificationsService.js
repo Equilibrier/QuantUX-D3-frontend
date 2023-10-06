@@ -42,13 +42,6 @@ export class MvvmNotificationsService {
                 
                 // initial start of the remove (notifications) listener
                 startEventSource();
-                
-                // a variant with setInterval, but the setTimeout-0 variant should be better
-                // setInterval(() => {
-                //   if (eventSource.readyState === EventSource.CLOSED) {
-                //     startEventSource();
-                //   }
-                // }, 5000);
             },
 
             triggerQueueProcessing: async () => {
@@ -63,9 +56,8 @@ export class MvvmNotificationsService {
                     if (!DIProvider.isMvvmRunning()) {
                         await DIProvider.executeMvvm("return MVVM_CONTROLLER.Compute()");
                     }
-                    // Logica de manipulare a mesajului
                 } catch (error) {
-                    // Logica de manipulare a erorilor
+                    console.error(error);
                 }
 
                 this.__private.isProcessing = false;
@@ -73,59 +65,6 @@ export class MvvmNotificationsService {
                     setTimeout(() => this.__private.processQueue(), 0); // breaking the call stack
                 }
             }
-
-            // retrieveUrl: async () => {
-
-            //     if (this.__private.url) return this.__private.url // lazy instantiation
-
-            //     const mvvmSettings_ = await DIProvider.mvvmSettings().data()
-            //     this.__private.url = mvvmSettings_.host_input_module_server
-            //     this.error_ = false
-            //     if (!this.__private.url) {
-            //         console.error(`MvvmNotificationsService: Something is wrong, mvvm setting 'host_input_module_server' could not be retrieved !`)
-            //         this.error_ = true
-            //     }
-            //     return this.__private.url
-            // },
-
-            // createDefaultHeader: () => {
-
-            //     let headers = new Headers({
-            //         'Content-Type': 'application/json',
-            //         'Accept': 'application/json'
-            //     })
-            //     return headers
-            // },
-
-            // makeExternalCall: async () => {
-
-            //     if (this.error_) { console.warn('MvvmNotificationsService: startListening: module is in error mode, call ommited !'); return }
-
-            //     try {
-            //         const url_ = await this.__private.retrieveUrl()
-            //         const res = await fetch(url_, {
-            //             method: 'get',
-            //             // credentials: "same-origin",
-            //             // body: JSON.stringify(data),
-            //             headers: this.__private.createDefaultHeader()
-            //         })
-            //         if (res.status === 200) {
-            //             const result_ = await res.json()
-            //             if (Array.isArray(result_)) {
-            //                 for (let r of result_) {
-            //                     this.queue_.push(r)
-            //                 }
-            //             }
-            //             else {
-            //                 this.queue_.push(result_)
-            //             }
-            //         }
-            //         else throw new Error(`MvvmNotificationsService: Could not GET from url ${url_} for some reason (status ${res.status})`)
-            //     }
-            //     catch(err) {
-            //         console.error(err)
-            //     }
-            // }
         }
     }
 
