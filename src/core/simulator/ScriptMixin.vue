@@ -330,11 +330,11 @@ export default {
         }
 
         // -2- handling output-queries module responses...
-        const qs_ = DIProvider.mvvmOutputsQueryService()
+        const qs_ = DIProvider.mvvmQueriesService()
         let ed_;
         while ((ed_ = qs_.consume()) !== undefined) { // @TODO: asta poate fi optimizata, daca voi face un pushExtQueryMultipleResponses si o functie consumeAll() elimin while-ul
             // console.warn(`ed_: ${JSON.stringify(ed_)}`)
-            const r_ = await this.justRunScript(`MVVM_CONTROLLER.pushExtQueryResponse("${ed_.sender}", ${JSON.stringify(ed_.query)}, ${JSON.stringify(ed_.response)})`)
+            const r_ = await this.justRunScript(`MVVM_CONTROLLER.pushExtQueryResponse("${ed_.sender}", ${ed_.query}, ${JSON.stringify(ed_.response)})`)
             this.applyApiDeltas(r_)
             this.rerenderWidgetsFromDataBindingAndUpdateViewModel(r_, true)
         }

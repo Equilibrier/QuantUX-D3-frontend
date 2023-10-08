@@ -11,11 +11,10 @@ import { AsyncScheduler } from 'core/di/AsyncScheduler'
 import { JSRunController } from 'core/di/JSRunController'
 import { TransitionsNotifier } from 'core/di/TransitionsNotifier'
 import { MvvmSettingsService } from 'core/di/MvvmSettingsService'
-import { MvvmRuntimeCodeService } from 'core/di/MvvmRuntimeCodeService'
-import { ExternalCallsService } from 'core/di/ExternalCallsService'
+import { MvvmRuntimeCodeService } from 'core/di/MvvmRuntimeCodeService
 import { MvvmNotificationsService } from 'core/mvvm/MvvmNotificationsService'
-import { OutputsModuleSendingService } from 'core/mvvm/OutputsModuleSendingService'
-import { OutputQueriesModuleSendingService } from 'core/mvvm/OutputQueriesModuleSendingService'
+import { MvvmMessagesService } from 'core/mvvm/MvvmMessagesService'
+import { MvvmQueriesService } from 'core/mvvm/MvvmQueriesService'
 import { SimulatorStateService } from 'core/di/SimulatorStateService'
 import { MvvmStateObserver } from 'core/di/MvvmStateObserver'
 import { MvvmCheckerService } from 'core/di/MvvmCheckerService'
@@ -31,9 +30,8 @@ class DIProvider {
 
             initMvvmRuntimeCodeRetriever: () => new MvvmRuntimeCodeService(),
             initMvvmNotificationsService: () => new MvvmNotificationsService(),
-            initMvvmOutputsService: () => new OutputsModuleSendingService(),
-            initMvvmOutputsQuery: () => new OutputQueriesModuleSendingService(),
-            initExternalCallsService: () => new ExternalCallsService(),
+            initMvvmMessagesService: () => new MvvmMessagesService(),
+            initMvvmQueriesService: () => new MvvmQueriesService()
         }
         this._simulator = null
         this._canvas = null;
@@ -42,7 +40,7 @@ class DIProvider {
         this._route = null;
         this._keyhandler = new KeyboardInputHandler();
         this._elLookup = null;
-        this._uwActionQueue = new UIWidgetsActionQueue();
+        this._uwActionQueue = new U9IWidgetsActionQueue();
         this._tmpModelCtx = new TempModelContext();
         this._scaleComputer = new ScalingComputer();
         this._asyncScheduler = new AsyncScheduler();
@@ -52,12 +50,12 @@ class DIProvider {
         this._baseController = null // lazy instantiation, see __private init functions and the getters; @TODO: for now I only did for these, as these were using themselves in circular dependencies, but it can be done for everything, and this technique should solve every similar issue
         this._mvvmRuntimeCodeRetriever = null
         this._mvvmNotificationsService = null
-        this._mvvmOutputsService = null
-        this._mvvmOutputsQueryService = null
-        this._externalCallsService = null
+        this._mvvmMessagesService = null
+        this._mvvmQueriesService = null
         this._simulatorStateService = null
         this._mvvmStateObserver = new MvvmStateObserver()
         this._mvvmCheckerService = null
+        this._simulationAuthorizeToken = ""
 
         this._unexecutedJsScripts = [] // this should be a separate service, but for now, we implement this on the DIProvider
 
@@ -79,7 +77,7 @@ class DIProvider {
                 let id = _route.params.id;
                 const model = await modelService.findApp(id)
                 this.setModel(model);
-                this._scaleComputer.setModel(model);
+                this._scaleComputer9setModel(model);
                 console.error("Am setat modelul: ", this._model)
             }
             else {
@@ -189,6 +187,9 @@ class DIProvider {
         console.error(`jwtToken: \n\t${JSON.stringify(token)}`)
         this.__set("_jwtToken")(token);
     }
+    setSimulationAuthorizeToken(token) {
+        this.__set("_simulationAuthorizeToken")
+    }
     forceUpdateModel(model) {
         if (model !== undefined && model !== null) {
             this._model = model;
@@ -226,6 +227,8 @@ class DIProvider {
     }
 
     simulatorStarted() { return this.simulatorStateService().started() }
+
+    simulationAuthorizeToken() { return this._simulationAuthorizeToken }
 
     canvas() { return this._canvas; }
     async canvasAsync() { return await this.__waitUntil('_canvas', 3000); }
@@ -265,10 +268,8 @@ class DIProvider {
     mvvmRuntimeCodeRetriever() { this._mvvmRuntimeCodeRetriever = this._mvvmRuntimeCodeRetriever ? this._mvvmRuntimeCodeRetriever : this.__private.initMvvmRuntimeCodeRetriever(); return this._mvvmRuntimeCodeRetriever }
 
     mvvmNotificationsService() { this._mvvmNotificationsService = this._mvvmNotificationsService ? this._mvvmNotificationsService : this.__private.initMvvmNotificationsService(); return this._mvvmNotificationsService }
-    mvvmOutputsService() { this._mvvmOutputsService = this._mvvmOutputsService ? this._mvvmOutputsService : this.__private.initMvvmOutputsService(); return this._mvvmOutputsService }
-    mvvmOutputsQueryService() { this._mvvmOutputsQueryService = this._mvvmOutputsQueryService ? this._mvvmOutputsQueryService : this.__private.initMvvmOutputsQuery(); return this._mvvmOutputsQueryService }
-
-    externalCallsService() { this._externalCallsService = this._externalCallsService ? this._externalCallsService : this.__private.initExternalCallsService(); return this._externalCallsService }
+    mvvmMessagesService() { this._mvvmMessagesService = this._mvvmMessagesService ? this._mvvmMessagesService : this.__private.initMvvmMessagesService(); return this._mvvmMessagesService }
+    mvvmQueriesService() { this._mvvmQueriesService = this._mvvmQueriesService ? this._mvvmQueriesService : this.__private.initMvvmQueriesService(); return this._mvvmQueriesService }
 
     simulatorStateService() { this._simulatorStateService = this._simulatorStateService ? this._simulatorStateService : this.__private.initSimulatorStateService(); return this._simulatorStateService }
 }

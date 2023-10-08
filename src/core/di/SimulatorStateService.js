@@ -19,9 +19,9 @@ export class SimulatorStateService {
     emitStarted() {
         if (this.started_) { console.warn(`SimulatorStateService: simulator already (acknowledged as) started`); return }
 
-        DIProvider.mvvmOutputsQueryService().clearQueue()
+        DIProvider.mvvmQueriesService().clearQueue()
         
-        DIProvider.executeMvvm("MVVM_CONTROLLER.loadInitialData()")
+        //DIProvider.executeMvvm("MVVM_CONTROLLER.loadInitialData()")
         
         this.started_ = true
         this.__private.acknowledge()

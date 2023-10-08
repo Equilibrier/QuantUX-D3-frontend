@@ -454,23 +454,25 @@ export default class ScriptAPI {
         return this.appDeltas
     }
 
-    sendExternalNotification(message) {
+    sendExternalMessage(endpoint, data) {
         self.postMessage({
             type: this.type,
-            key: 'ext-notif',
+            key: 'ext-message',
             props: {
-                message
+                endpoint,
+                data
             }
         })
     }
 
-    sendExternalQuery(id, message) {
+    sendExternalQuery(from_id, aGetEndpointWithParams, force_retrieve = false) {
         self.postMessage({
             type: this.type,
             key: 'ext-query',
             props: {
-                message,
-                from_id: id
+                endpoint: aGetEndpointWithParams,
+                from_id,
+                force_retrieve
             }
         })
     }

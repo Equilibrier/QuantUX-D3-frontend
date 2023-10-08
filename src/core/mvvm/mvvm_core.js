@@ -46,41 +46,6 @@ class MVVMObject {
 	}
 }
 
-class InitialDataLoader extends MVVMObject {
-
-	constructor() {
-		super('mvvm_initial_data_loader')
-		this.handlers_ = initialLoading()
-		// console.log(`handlers: ${JSON.stringify(this.handlers_)}`)
-	}
-
-	loadData() {
-		if (this.handlers_['_']) {
-			this.handlers_['_']() // default loader callback if existed, it's ran
-		}
-		for (let qRaw_ of Object.keys(this.handlers_)) {
-			if (qRaw_ === "_") continue
-
-			const q_ = JSON.parse(qRaw_)
-			this.sendExternalQuery(q_)
-		}
-	}
-
-	handleQueryResponse(query, response) {
-		for (let qRaw_ of Object.keys(this.handlers_)) {
-			if (qRaw_ === "_") continue
-
-			const q_ = JSON.parse(qRaw_)
-			if (JSON.stringify(q_) === JSON.stringify(query)) { // because in js two dicts are always NOT equal, because they have different references, so == or === would equal to false; using stringify but based on the already parsed from string variant of qRaw_, because I hope stringify would sort things identically (like the keys in alphabetical order)
-				const resp_ = this.handlers_[qRaw_]
-				resp_(response)
-				return true
-			}
-		}
-		return false
-	}
-}
-
 class Model extends MVVMObject {
 
 	constructor(mvvmId) {
@@ -1228,11 +1193,7 @@ class MVVMController {
 		this.extQueryModule_ = new MVVMOutputQueryModule()
 		
 		this.objsRegister_ = new GlobalObjectsRegister()
-		// this.initLoader_ = new InitialDataLoader() // nu mai instantiem de la inceput, fiindca va fi o dependinta circula (MVVMObject foloseste MVVMController)
 	}
-	__initLoader() { return this._singletonAccess('initLoader_', () => new InitialDataLoader()) }
-
-
 	UIUtils() { return this.uiUtils_ }
 	
 	// le pun cu litera mare la inceput ca sa arat ca sunt functii, in mod special, publice, ce se vrea a fi apelate din afara
@@ -1313,16 +1274,11 @@ class MVVMController {
 		}
 	}
 
-	loadInitialData() {
-		console.log('loading initial data for the QUX session')
-		this.__initLoader().loadData()
-	}
-
-	pushExtQueryResponse(senderId, originalQuery, response) {
+	pushExtQueryResponse(senderId, originalQueryEndpoint, response) {
 		data.mvvm_output_queries = data.mvvm_output_queries ? data.mvvm_output_queries : {}
 		data.mvvm_output_queries[senderId] = data.mvvm_output_queries[senderId] ? data.mvvm_output_queries[senderId] : []
 		data.mvvm_output_queries[senderId].push({
-			query: originalQuery,
+			query: originalQueryEndpoint,
 			response
 		})
 	}
@@ -1511,7 +1467,6 @@ const dummy22 = new EventsQueueConsumer();
 const dummy23 = new ScreenMetaFactory();
 const dummy24 = new MVVMObject();
 const dummy25 = new GlobalObjectsRegister();
-const dummy26 = new InitialDataLoader();
 dummy0 ? null : null
 dummy1 ? null : null
 dummy2 ? null : null
@@ -1537,7 +1492,6 @@ dummy22 ? null : null
 dummy23 ? null : null
 dummy24 ? null : null
 dummy25 ? null : null
-dummy26 ? null : null
 }
 
 export const code = codeFunction.toString().match(/function[^{]+\{([\s\S]*)\}$/)[1]

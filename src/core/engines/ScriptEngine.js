@@ -70,15 +70,15 @@ export default class ScriptEngine {
             DIProvider.uiWidgetsActionQueue().stopAnimation(animId)
             return;
         }
-        if (msg.data.key && msg.data.key === "ext-notif") {
-            const {message} = msg.data.props;
-            DIProvider.mvvmOutputsService().sendExternalNotification(message) // is async function, but I don't have to wait for it (I think... :) )
+        if (msg.data.key && msg.data.key === "ext-message") {
+            const {endpoint, data} = msg.data.props;
+            DIProvider.mvvmMessagesService().sendExternalMessage(endpoint, data) // is async function, but I don't have to wait for it (I think... :) )
             return;
         }
         if (msg.data.key && msg.data.key === "ext-query") {
             // console.log(`message: ${JSON.stringify(msg)}`)
-            const {message, from_id} = msg.data.props;
-            DIProvider.mvvmOutputsQueryService().sendExternalQuery(from_id, message) // is async function, but I don't have to wait for it (I think... :) )
+            const {endpoint, from_id, force_retrieve} = msg.data.props;
+            DIProvider.mvvmQueriesService().sendExternalQuery(from_id, endpoint, force_retrieve) // is async function, but I don't have to wait for it (I think... :) )
             return;
         }
 
