@@ -11,7 +11,7 @@ import { AsyncScheduler } from 'core/di/AsyncScheduler'
 import { JSRunController } from 'core/di/JSRunController'
 import { TransitionsNotifier } from 'core/di/TransitionsNotifier'
 import { MvvmSettingsService } from 'core/di/MvvmSettingsService'
-import { MvvmRuntimeCodeService } from 'core/di/MvvmRuntimeCodeService
+import { MvvmRuntimeCodeService } from 'core/di/MvvmRuntimeCodeService'
 import { MvvmNotificationsService } from 'core/mvvm/MvvmNotificationsService'
 import { MvvmMessagesService } from 'core/mvvm/MvvmMessagesService'
 import { MvvmQueriesService } from 'core/mvvm/MvvmQueriesService'
@@ -40,7 +40,7 @@ class DIProvider {
         this._route = null;
         this._keyhandler = new KeyboardInputHandler();
         this._elLookup = null;
-        this._uwActionQueue = new U9IWidgetsActionQueue();
+        this._uwActionQueue = new UIWidgetsActionQueue();
         this._tmpModelCtx = new TempModelContext();
         this._scaleComputer = new ScalingComputer();
         this._asyncScheduler = new AsyncScheduler();
@@ -188,7 +188,7 @@ class DIProvider {
         this.__set("_jwtToken")(token);
     }
     setSimulationAuthorizeToken(token) {
-        this.__set("_simulationAuthorizeToken")
+        this.__set("_simulationAuthorizeToken")(token)
     }
     forceUpdateModel(model) {
         if (model !== undefined && model !== null) {

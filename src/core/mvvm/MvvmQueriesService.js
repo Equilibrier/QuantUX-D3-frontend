@@ -43,7 +43,7 @@ export class MvvmQueriesService {
                 console.error(e)
             }
         }
-        console.log(`MvvmQueriesService: Inserting response in queue, for query ${JSON.stringify(queryMsg)}. Will be send asap to mvvm consume logic...`)
+        console.log(`MvvmQueriesService: Inserting response in queue, for query ${JSON.stringify(queryEndpoint)}. Will be send asap to mvvm consume logic...`)
         this.queue_.push({
             sender: senderId,
             query: queryEndpoint,
