@@ -15,8 +15,8 @@ export class MvvmQueriesService {
 
             scheduleConsume: () => {
                 return this.__private.debouncer_.debounce(() => {
-                    if (Object.keys(this.queue_).length > 0 && !DIProvider.isMvvmRunning()) {// if we have arrived external messages, we try to inject them into mvvm, only if it is not already done automatically, by the current running flow
-                        console.error(`scheduleConsume() - VA FI CONSUMAT si queue length este ${Object.keys(this.queue_).length}`)
+                    if (this.queue_.length > 0 && !DIProvider.isMvvmRunning()) {// if we have arrived external messages, we try to inject them into mvvm, only if it is not already done automatically, by the current running flow
+                        console.error(`scheduleConsume() - VA FI CONSUMAT si queue length este ${this.queue_.length}`)
                         /*await */DIProvider.executeMvvm("return MVVM_CONTROLLER.Compute()") // if mvvm is not running, we run it forcely, because we have unconsumed external messages from this module, to be processed; we provide empty script, because input-module injecting code is already implemented into ScriptMixin.runScript(...) and we only need to trigger it
                     }
                 }, 300)()
