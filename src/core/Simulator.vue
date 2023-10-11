@@ -479,7 +479,7 @@ export default {
 
 			DIProvider.uiWidgetsActionQueue().reset()
 			DIProvider.tempModelContext().resetModel(this.model)
-			DIProvider.setSimulatorStartState(true)
+			await DIProvider.setSimulatorStartStateAsync(true, this.dataBindingValues)
 
 			this.logger.log(2,"startSimulator","enter >" + model.id);
 
@@ -1210,7 +1210,7 @@ export default {
 
 		destroy (){
 
-			DIProvider.setSimulatorStartState(false)
+			DIProvider.setSimulatorStartState(false, this.dataBindingValues)
 
 			this.logger.log(-1,"destroy","enter");
 			this.isDestroyed = true;

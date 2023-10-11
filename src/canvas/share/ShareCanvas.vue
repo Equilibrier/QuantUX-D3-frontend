@@ -353,7 +353,7 @@ export default {
 		startSimulator (e, model) {
 			DIProvider.uiWidgetsActionQueue().reset()
 			DIProvider.tempModelContext().resetModel(this.model)
-			DIProvider.setSimulatorStartState(true)
+			DIProvider.setSimulatorStartState(true, this.dataBindingValues) // I didn't checked if this is part of the mixin that own dataBindingValues
 
 			this.logger.log(1,"startSimulator", "enter > " );
 

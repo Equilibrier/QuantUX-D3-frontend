@@ -14,7 +14,7 @@ export class MvvmMessagesService {
             scheduleProcess: () => {
                 return this.__private.debouncer_.debounce(() => {
                     if (this.queue_.length > 0 && !this.__private.inProcessing_) {// if we have arrived external messages, we try to inject them into mvvm, only if it is not already done automatically, by the current running flow
-                        let {endpoint, data} = this.queue_.shift()
+                        const {endpoint, data} = this.queue_.shift()
                         this.__private.processQueueItem(endpoint, data)
                     }
                 }, 300)()
@@ -46,5 +46,9 @@ export class MvvmMessagesService {
             data
         })
         this.__private.scheduleProcess()
+    }
+
+    clearQueue() {
+        this.queue_ = []
     }
 }

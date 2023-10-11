@@ -62,5 +62,10 @@ export class MvvmQueriesService {
         //return val_
     }
 
+    peekQueue(index) {
+        return index >= 0 && index < this.queue_.length ? this.queue_[index] : null
+    }
+    queueSize() { return this.queue_.length }
+
     clearQueue() { this.queue_ = []; this.cache_ = {} }
 }

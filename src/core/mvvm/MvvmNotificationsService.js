@@ -20,7 +20,7 @@ export class MvvmNotificationsService {
                   }
                 
                   let repoName = DIProvider.model().mvvm_repo_name
-                  console.log(JSON.stringify(DIProvider.model()));
+                  //console.log(JSON.stringify(DIProvider.model()));
                   this.__private.eventSource = new EventSource(`mvvm/apigateway/${repoName}/notification`);
                 
                   this.__private.eventSource.onmessage = (event) => {

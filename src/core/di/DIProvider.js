@@ -77,7 +77,7 @@ class DIProvider {
                 let id = _route.params.id;
                 const model = await modelService.findApp(id)
                 this.setModel(model);
-                this._scaleComputer9setModel(model);
+                this._scaleComputer.setModel(model);
                 console.error("Am setat modelul: ", this._model)
             }
             else {
@@ -203,12 +203,22 @@ class DIProvider {
         this.__set("_route")(route);
     }
 
-    setSimulatorStartState(started) {
+    setSimulatorStartState(started, dataBindingValues) {
         if (started) {
-            this.simulatorStateService().emitStarted()
+            this.simulatorStateService().emitStarted(dataBindingValues)
         }
         else {
-            this.simulatorStateService().emitStopped()
+            this.simulatorStateService().emitStopped(dataBindingValues)
+            this._simulator = null
+        }
+    }
+
+    async setSimulatorStartStateAsync(started, dataBindingValues) {
+        if (started) {
+            await this.simulatorStateService().emitStarted(dataBindingValues)
+        }
+        else {
+            await this.simulatorStateService().emitStopped(dataBindingValues)
             this._simulator = null
         }
     }
