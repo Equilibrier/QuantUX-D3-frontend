@@ -523,7 +523,7 @@ export default {
 					this.__resetSourceMetadata();
 					this.dataBindingValues.__sourceScreen = this.currentScreen.name;
 					
-					const isMvvmProj_ = await DIProvider.isMvvmProject()
+					const isMvvmProj_ = DIProvider.isMvvmProject()
 					if (isMvvmProj_) {
 						await DIProvider.waitWhileMvvmRunning()
 						DIProvider.emitMvvmStartedExecuting()

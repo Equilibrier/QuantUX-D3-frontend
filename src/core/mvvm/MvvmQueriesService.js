@@ -1,6 +1,7 @@
 import DIProvider from 'core/di/DIProvider'
 import {Debouncer} from 'util/generic_utils'
 import {fetchGETWithAuthorization} from 'core/mvvm/mvvm_fetching_utils'
+import {generateUuid} from 'util/generic_utils'
 
 export class MvvmQueriesService {
     
@@ -31,10 +32,9 @@ export class MvvmQueriesService {
             results_ = this.cache_[queryEndpoint]
         }
         else {
-            //const url_ = (await DIProvider.mvvmSettings().data())[MvvmSettings.KEY__HOST_OUTPUT_QUERY_MODULE_SERVER()]
-            const repoName_ = DIProvider.model().mvvm_repo_name
+            const repoName_ = DIProvider.mvvmRepoName()
             const authToken_ = DIProvider.simulationAuthorizeToken()
-            const url_ = `/mvvm/apigateway/${repoName_}/${queryEndpoint}`
+            const url_ = `/rest/mvvm/apigateway/${repoName_}/${queryEndpoint}`
             try {
                 results_ = await fetchGETWithAuthorization(url_, authToken_)
                 this.cache_[queryEndpoint] = results_
@@ -47,7 +47,8 @@ export class MvvmQueriesService {
         this.queue_.push({
             sender: senderId,
             query: queryEndpoint,
-            response: results_
+            response: results_,
+            _id: generateUuid()
         })
 
         this.__private.scheduleConsume()
@@ -66,6 +67,7 @@ export class MvvmQueriesService {
         return index >= 0 && index < this.queue_.length ? this.queue_[index] : null
     }
     queueSize() { return this.queue_.length }
+    removeById(id) { this.queue_ = this.queue_.filter(qi => qi._id != id) }
 
     clearQueue() { this.queue_ = []; this.cache_ = {} }
 }

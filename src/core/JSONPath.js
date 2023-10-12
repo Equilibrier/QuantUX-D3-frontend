@@ -23,7 +23,7 @@ class JSONPath {
         let ddata = JSON.parse(JSON.stringify(data))
 
         console.trace()
-        console.error(`modificat data la path ${path} si value ${JSON.stringify(value)}, valoare initiala\n${JSON.stringify(data)}`)
+        //console.error(`Cosmin: modificat data la path ${path} si value ${JSON.stringify(value)}, valoare initiala\n${JSON.stringify(data)}`)
 
         let elements = this.getJsonPath(path)
         let current = elements.shift()

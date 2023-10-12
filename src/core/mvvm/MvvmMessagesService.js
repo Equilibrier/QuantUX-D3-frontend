@@ -23,10 +23,10 @@ export class MvvmMessagesService {
             'processQueueItem': async (endpoint, data) => {
                 this.__private.inProcessing_ = true
 
-                const repoName_ = DIProvider.model().mvvm_repo_name
+                const repoName_ = DIProvider.mvvmRepoName()
                 const authToken_ = DIProvider.simulationAuthorizeToken()
                 // @TODO idempotent call, so generating an unique id to resend the message if it fails... should store a queue with un ACK ed messages...
-                const url_ = `/mvvm/apigateway/${repoName_}/${endpoint}`
+                const url_ = `/rest/mvvm/apigateway/${repoName_}/${endpoint}`
                 try {
                     /*const results_ = */await fetchPOSTWithAuthorization(url_, data, authToken_)
                 }

@@ -49,6 +49,7 @@ export class SimulatorStateService {
                                     stillSearchingCounter --
 
                                     this.results_[resultKey].handler(queueItem_.response)
+                                    DIProvider.mvvmQueriesService().removeById(queueItem_._id)
                                 }
                             }
                         })

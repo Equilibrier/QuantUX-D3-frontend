@@ -10,14 +10,12 @@ import { ScalingComputer } from 'core/di/ScalingComputer'
 import { AsyncScheduler } from 'core/di/AsyncScheduler'
 import { JSRunController } from 'core/di/JSRunController'
 import { TransitionsNotifier } from 'core/di/TransitionsNotifier'
-import { MvvmSettingsService } from 'core/di/MvvmSettingsService'
 import { MvvmRuntimeCodeService } from 'core/di/MvvmRuntimeCodeService'
 import { MvvmNotificationsService } from 'core/mvvm/MvvmNotificationsService'
 import { MvvmMessagesService } from 'core/mvvm/MvvmMessagesService'
 import { MvvmQueriesService } from 'core/mvvm/MvvmQueriesService'
 import { SimulatorStateService } from 'core/di/SimulatorStateService'
 import { MvvmStateObserver } from 'core/di/MvvmStateObserver'
-import { MvvmCheckerService } from 'core/di/MvvmCheckerService'
 
 class DIProvider {
 
@@ -25,8 +23,6 @@ class DIProvider {
 
         this.__private = {
             initSimulatorStateService: () => new SimulatorStateService(),
-
-            initMvvmCheckerService: () => new MvvmCheckerService(),
 
             initMvvmRuntimeCodeRetriever: () => new MvvmRuntimeCodeService(),
             initMvvmNotificationsService: () => new MvvmNotificationsService(),
@@ -46,7 +42,6 @@ class DIProvider {
         this._asyncScheduler = new AsyncScheduler();
         this._jsRunCtrl = new JSRunController();
         this._transitionsNotif = new TransitionsNotifier()
-        this._mvvmSettingsService = new MvvmSettingsService()
         this._baseController = null // lazy instantiation, see __private init functions and the getters; @TODO: for now I only did for these, as these were using themselves in circular dependencies, but it can be done for everything, and this technique should solve every similar issue
         this._mvvmRuntimeCodeRetriever = null
         this._mvvmNotificationsService = null
@@ -54,7 +49,6 @@ class DIProvider {
         this._mvvmQueriesService = null
         this._simulatorStateService = null
         this._mvvmStateObserver = new MvvmStateObserver()
-        this._mvvmCheckerService = null
         this._simulationAuthorizeToken = ""
 
         this._unexecutedJsScripts = [] // this should be a separate service, but for now, we implement this on the DIProvider
@@ -141,12 +135,8 @@ class DIProvider {
         }
     }
 
-    async isMvvmProject() {
-        if (this._mvvmCheckerService === null) {
-            this._mvvmCheckerService = this.__private.initMvvmCheckerService()
-        }
-        return await this._mvvmCheckerService.waitForIsMvvmProject()
-    }
+    isMvvmProject() { return this.model().is_d3_mvvm }
+    mvvmRepoName() { return this.model().mvvm_repo_name }
 
     emitMvvmStartedExecuting() { console.warn('sim-trace'); this._mvvmStateObserver.setRunning() }
     emitMvvmStoppedExecuting() { this._mvvmStateObserver.setStopped() }
@@ -155,7 +145,7 @@ class DIProvider {
 
     async executeMvvm(script) {
         if (this._simulator) {
-            const isMvvmProj_ = await this.isMvvmProject()
+            const isMvvmProj_ = this.isMvvmProject()
             if (isMvvmProj_) {
                 await this.waitWhileMvvmRunning()
                 this.emitMvvmStartedExecuting()
@@ -270,8 +260,6 @@ class DIProvider {
     simulatorRef() { return this._simulator }
 
     transitionsNotifier() { return this._transitionsNotif }
-
-    mvvmSettings() { return this._mvvmSettingsService }
 
     editingModelDBController() { return this._baseController }
 

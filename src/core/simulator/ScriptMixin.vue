@@ -33,7 +33,7 @@ export default {
             const widget = widgets[i]
 
             if (widget.props.script) {
-                const isMvvmProj_ = await DIProvider.isMvvmProject()
+                const isMvvmProj_ = DIProvider.isMvvmProject()
                 if (isMvvmProj_) {
                     await DIProvider.waitWhileMvvmRunning()
                     DIProvider.emitMvvmStartedExecuting()
@@ -68,7 +68,7 @@ export default {
                 this.applyApiDeltas(rresult)
                 this.rerenderWidgetsFromDataBindingAndUpdateViewModel(rresult)*/
 
-                const isMvvmProj_ = await DIProvider.isMvvmProject()
+                const isMvvmProj_ = DIProvider.isMvvmProject()
                 if (isMvvmProj_) {
                     await DIProvider.waitWhileMvvmRunning()
                     DIProvider.emitMvvmStartedExecuting()
@@ -105,7 +105,7 @@ export default {
         let widget = this.model.widgets[widgetID]
 
         if (widget && widget.props.script) {
-            const isMvvmProj_ = await DIProvider.isMvvmProject()
+            const isMvvmProj_ = DIProvider.isMvvmProject()
             if (isMvvmProj_) {
                 await DIProvider.waitWhileMvvmRunning()
                 DIProvider.emitMvvmStartedExecuting()

@@ -1245,21 +1245,6 @@ export default class BaseController extends Core {
 		this.render();
 	}
 
-	/**********************************************************************
-	 * MVVMSettings
-	 **********************************************************************/
-	updateMvvmSettings(settings) { // array with dicts of key and value
-		let dirty = false
-		this.model.mvvm_settings = this.model.mvvm_settings ? this.model.mvvm_settings : {}
-		for (let sett of settings) {
-			if (this.model.mvvm_settings[sett.key] !== sett.value) dirty = true
-			this.model.mvvm_settings[sett.key] = sett.value
-		}
-		if (dirty) {
-			this.setDirty() // this will save the model
-		}
-	}
-
 
 	/**********************************************************************
 	 * Box

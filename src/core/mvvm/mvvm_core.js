@@ -4,7 +4,6 @@ let qux = null // @strict-remove
 let inputModuleNotify = null // @strict-remove
 let outputModuleSendMessage = null // @strict-remove
 let outputQueryModuleQuery = null // @strict-remove
-let initialLoading = null // @strict-remove
 
 let MVVM_CONTROLLER = null; // will be later instantiated
 

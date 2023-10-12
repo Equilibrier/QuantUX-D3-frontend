@@ -9,7 +9,6 @@ import hash from 'dojo/hash'
 import domGeom from 'dojo/domGeom'
 import win from 'dojo/win'
 import CheckBox from 'common/CheckBox'
-import Input from 'common/Input'
 import Dialog from 'common/Dialog'
 import DomBuilder from 'common/DomBuilder'
 import Simulator from 'core/Simulator'
@@ -618,45 +617,6 @@ export default {
 			gridSnapTopLeftChkBox.setValue(settings.snapGridOnlyToTopLeft);
 			gridSnapTopLeftChkBox.placeAt(gridSnapTopLeftCntr);
 
-			var mygrp = db.div("form-group").build(cntr);
-			var mvvmSettingsComps = {}
-			const mvvmSettingsValues_ = await DIProvider.mvvmSettings().data()
-			for (let m of DIProvider.mvvmSettings().meta()) {
-				let mycomp;
-
-				// selecting instance and optionally insert pre-elements
-				switch (m.type.toLowerCase()) {
-					case "checkb":
-						mycomp = this.$new(CheckBox)
-						mycomp.setLabel(m.label)
-						db.label("MatcMarginTop", "").build(mygrp)
-						break
-					case "text":
-						db.label("MatcMarginTop",`${m.label} :`).build(mygrp);
-						mycomp = this.$new(Input)
-						break
-					default:
-						mycomp = this.$new(Input)
-				}
-
-				// setting the current value
-				console.warn(`dialog value: ${JSON.stringify(mvvmSettingsValues_[m.key])}`)
-				mycomp.setValue(mvvmSettingsValues_[m.key])
-
-				// place the built instance
-				mycomp.placeAt(mygrp)
-				mvvmSettingsComps[m.key] = mycomp
-
-				// optionally inject post-elements
-				switch (m.type.toLowerCase()) {
-					case "checkb":
-						// db.label("MatcMarginTop",``).build(mygrp);
-						//this.$new(Input).placeAt(mygrp)
-						db.break().build(mygrp)
-						break
-					default:
-				}
-			}
 
 			var bar = db.div("MatcButtonBar MatcMarginTopXL").build(popup);
 
@@ -667,7 +627,7 @@ export default {
 			dialog.own(on(dialog, "close", lang.hitch(this, "closeDialog")));
 			dialog.own(on(cancel, touch.press, lang.hitch(dialog, "close")));
 			dialog.own(on(save, touch.press, lang.hitch(
-				this, "onSaveSettings", dialog, themeList, mouseWheelList, colorPicker, zoomChkBox, protoMotoCheckBox, gridSnapTopLeftChkBox, selectMoveBox, designTokenCheckBox, mvvmSettingsComps
+				this, "onSaveSettings", dialog, themeList, mouseWheelList, colorPicker, zoomChkBox, protoMotoCheckBox, gridSnapTopLeftChkBox, selectMoveBox, designTokenCheckBox
 			)));
 
 			dialog.popup(popup, this.template);
@@ -678,7 +638,7 @@ export default {
 			this.logger.log(0,"onShowSettings", "exit > ");
 		},
 
-		onSaveSettings (dialog, themeList, mouseWheelList, colorPicker, zoomChkBox, protoMotoCheckBox, gridSnapTopLeftChkBox, selectMoveBox, designTokenCheckBox, mvvmSettingsComps){
+		onSaveSettings (dialog, themeList, mouseWheelList, colorPicker, zoomChkBox, protoMotoCheckBox, gridSnapTopLeftChkBox, selectMoveBox, designTokenCheckBox){
 
 			var settings = {
 				canvasTheme: themeList.getValue(),
@@ -690,10 +650,6 @@ export default {
 				selectMove: selectMoveBox.getValue(),
 				hasDesignToken: designTokenCheckBox.getValue(),
 			};
-
-			for (let sk of Object.keys(mvvmSettingsComps)) {
-				DIProvider.mvvmSettings().updateSettingsRow(sk, mvvmSettingsComps[sk].getValue())
-			}
 
 			this.canvas.setSettings(settings);
 			dialog.close();

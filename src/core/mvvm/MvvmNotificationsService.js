@@ -19,9 +19,9 @@ export class MvvmNotificationsService {
                     this.__private.eventSource.close();
                   }
                 
-                  let repoName = DIProvider.model().mvvm_repo_name
+                  let repoName = DIProvider.mvvmRepoName()
                   //console.log(JSON.stringify(DIProvider.model()));
-                  this.__private.eventSource = new EventSource(`mvvm/apigateway/${repoName}/notification`);
+                  this.__private.eventSource = new EventSource(`rest/mvvm/apigateway/${repoName}/notification`);
                 
                   this.__private.eventSource.onmessage = (event) => {
 

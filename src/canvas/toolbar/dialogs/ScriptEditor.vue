@@ -230,7 +230,7 @@ return "myScreen"
             this.$emit('run', this.script)
             this.errorMsg = ''
             try {
-                const isMvvmProj_ = await DIProvider.isMvvmProject()
+                const isMvvmProj_ = DIProvider.isMvvmProject()
                 if (isMvvmProj_) {
                     await DIProvider.waitWhileMvvmRunning()
                     DIProvider.emitMvvmStartedExecuting()

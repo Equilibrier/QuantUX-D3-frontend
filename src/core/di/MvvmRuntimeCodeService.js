@@ -8,6 +8,20 @@ export class MvvmRuntimeCodeService {
         this.finalCode_ = ""
 
         this.__private = {
+
+            'generateCodeChunks': () => {
+                const repoName = DIProvider.mvvmRepoName()
+                return [
+                    {key: 'IO-MODULES url'      , url: `/rest/mvvm/business-code-download/${repoName}/io_modules.js`},
+                    // {key: 'SIM-EXT-MODULES url' , url: '/rest/mvvm/business-code-download/${repoName}/sim_ext_modules.js`}, // fisierele cu sim_ sunt fisiere care nu o sa fie in proiectul React final, ci numai pentru demo-ul QuantUX, in schimb, la proiectul ReactJS o sa fie rescrise de generatorul de cod; aici ai posibilitatea sa scrii outputModuleSendMessage si outputQueryModuleQuery cu care sa poti inregistra apelurile spre afara, incat sa poti simula ceva; @TODO: pentru o simulare completa, mi-ar trebuie in QuantUX, aici, pe parcursul simularii, si o platforma de timere, pe care sa le pot accesa cumva din aceste fisiere si sa execut ceva evenimente asincrone la un anumit timp
+                    {key: 'MODELS url'          , url: `/rest/mvvm/business-code-download/${repoName}/models.js`},
+                    {key: 'VIEW-MODELS url'     , url: `/rest/mvvm/business-code-download/${repoName}/viewmodels.js`},
+                    {key: 'VIEWS url'           , url: `/rest/mvvm/business-code-download/${repoName}/views.js`},
+                    {key: 'CONFIGURATOR url'    , url: `/rest/mvvm/business-code-download/${repoName}/configurator.js`},
+                    {key: 'INIT-LOAD script url', url: `/rest/mvvm/business-code-download/${repoName}/initloads.js`}
+                ]
+            },
+
             loadedFromServer_: false,
 
             noCacheOptions: () => {
@@ -36,13 +50,11 @@ export class MvvmRuntimeCodeService {
             },
 
             downloadMvvmCode: async () => {
-                const codeMeta_ = DIProvider.mvvmSettings().filteredMeta('ext_mvvm_code')
-                const settingsData_ = await DIProvider.mvvmSettings().data()
-                let outp = {}
+                const codeMeta_ = this.__private.generateCodeChunks()
+                let outp = []
                 for (let m of codeMeta_) {
-                    const url_ = settingsData_[m.key]
-                    const code_ = await this.__private.downloadExternalCode(url_)
-                    outp[m.key] = code_
+                    const code_ = await this.__private.downloadExternalCode(m.url)
+                    outp.push(code_)
                 }
                 return outp
             },
@@ -68,7 +80,7 @@ export class MvvmRuntimeCodeService {
         if (!this.__private.loadedFromServer_) {
             let corelib = this.__private.retrieveCoreLib()
             const extFileContents_ = await this.__private.downloadMvvmCode()
-            this.finalCode_ = Object.values(extFileContents_).reduce((a, e) => a + e + "\n", corelib + "\n\n") // @TODO good order is guaranteed for now by the MvvmSettingsService order in which the settings are defined in the db, but the order should have been explicitely defined somewhere, I think
+            this.finalCode_ = extFileContents_.reduce((a, e) => a + e + "\n", corelib + "\n\n")
 
             this.__private.loadedFromServer_ = true
         }

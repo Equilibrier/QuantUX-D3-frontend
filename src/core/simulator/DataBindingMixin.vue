@@ -87,7 +87,7 @@ export default {
 		setDataBindingByKey (path, value) {
 			if (this.dataBindingValues) {
 				this.dataBindingValues = JSONPath.set(this.dataBindingValues, path, value)
-				console.error(`returnat ${JSON.stringify(this.dataBindingValues)}`)
+				//console.error(`Cosmin: returnat ${JSON.stringify(this.dataBindingValues)}`)
 
 				this.emit('onDataBindingChange', this.dataBindingValues)
 			}
@@ -133,7 +133,7 @@ export default {
 			let oldValue = JSONPath.get(this.dataBindingValues, variable)
 			if (oldValue !== value) {
 				this.dataBindingValues = JSONPath.set(this.dataBindingValues, variable, value)
-				console.error(`returnat ${JSON.stringify(this.dataBindingValues)}`)
+				//console.error(`Cosmin: returnat ${JSON.stringify(this.dataBindingValues)}`)
 				this.emit('onDataBindingChange', this.dataBindingValues)
 				this.updateAllDataBindings(screenID, variable, oldValue, value, runDataScripts)
 			} else {

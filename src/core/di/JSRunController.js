@@ -15,13 +15,13 @@ export class JSRunController { // @TODO: de ce am mai folosit clasa asta ? proba
             return false;
         }
         this.runnerStarted_ = true
-
-        if (DIProvider.isMvvmRunning()) {
-            console.error(`EERRRORRRRRRRRRRRR: mvvm already running when trying to execute ${cfg.jsCode}`)
-        }
         
         const cfg = this.runs_[0]
         this.runs_.splice(0, 1)
+
+        if (DIProvider.isMvvmRunning()) {
+            console.error(`EERRRORRRRRRRRRRRR: Cosmin: mvvm already running when trying to execute ${cfg.jsCode}`)
+        }
 
         const engine = new ScriptEngine()
         const result = await engine.run(cfg.jsCode, cfg.model, cfg.viewmodel, cfg.renderFactory)
