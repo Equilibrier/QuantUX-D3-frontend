@@ -844,18 +844,20 @@ export default {
 
 
 
-		startSimulator () {
+		prepareSimulator () {
+
+			console.error('Cosmin: prepareSimulator (_Dialogs)')
 			
 			DIProvider.uiWidgetsActionQueue().reset()
 			DIProvider.tempModelContext().resetModel(this.model)
 			DIProvider.setSimulatorStartState(true, this.dataBindingValues) // I didn't checked if this is part of the mixin that own dataBindingValues
 
-			this.logger.log(0,"startSimulator", "entry");
+			this.logger.log(0,"prepareSimulator", "entry");
 			var pos = domGeom.position(win.body());
 			let maxHeight = pos.h - 100
 			/**
 			 * Since 2.1.7 we have better scalling.
-			 * Keep in sync with the ShareCanvas.startSimulator() method
+			 * Keep in sync with the ShareCanvas.prepareSimulator() method
 			 *
 			 * FIXME: This could be still a litte bit better. We could max the height and with factors
 			 */

@@ -347,19 +347,21 @@ export default {
 		onSimulator (e) {
 			// make sure we use an un-zoomed model like
 			// the toolbar would do
-			this.startSimulator(e, this.controller.model)
+			this.prepareSimulator(e, this.controller.model)
 		},
 
-		startSimulator (e, model) {
+		prepareSimulator (e, model) {
 			DIProvider.uiWidgetsActionQueue().reset()
 			DIProvider.tempModelContext().resetModel(this.model)
 			DIProvider.setSimulatorStartState(true, this.dataBindingValues) // I didn't checked if this is part of the mixin that own dataBindingValues
 
-			this.logger.log(1,"startSimulator", "enter > " );
+			console.error('Cosmin: prepareSimulator (ShareCanvas)')
+
+			this.logger.log(1,"prepareSimulator", "enter > " );
 
 			/**
 			 * Since 2.1.7 we have better scalling. Keep in
-			 * sync with _Dialogs.startSimulator()
+			 * sync with _Dialogs.prepareSimulator()
 			 */
 			var pos = domGeom.position(win.body());
 			let maxHeight = pos.h - 100

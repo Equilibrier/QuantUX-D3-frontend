@@ -20,7 +20,8 @@ export class JSRunController { // @TODO: de ce am mai folosit clasa asta ? proba
         this.runs_.splice(0, 1)
 
         if (DIProvider.isMvvmRunning()) {
-            console.error(`EERRRORRRRRRRRRRRR: Cosmin: mvvm already running when trying to execute ${cfg.jsCode}`)
+            //console.error(`EERRRORRRRRRRRRRRR: Cosmin: mvvm already running when trying to execute ${cfg.jsCode}`)
+            console.error(`EERRRORRRRRRRRRRRR: Cosmin: JSRunController: mvvm already running when trying to execute business code`)
         }
 
         const engine = new ScriptEngine()

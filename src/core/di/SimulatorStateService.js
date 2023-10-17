@@ -18,6 +18,13 @@ export class SimulatorStateService {
 
     async emitStarted(dataBindingValues) {
 
+        if (dataBindingValues === null || dataBindingValues === undefined) {
+            console.error('dataBindingValues E null/undefined')
+        }
+        else {
+            console.error('dataBindingValues e *VALID*')
+        }
+
         class QueriesQueueMonitor {
 
             constructor(expectedResultsCheckers, timeoutMs = 2000) { // expectedResultsCheckers is a dictionary with some keys for each result and the value a lambda which checks if the corresponding result is present or not
@@ -95,8 +102,8 @@ export class SimulatorStateService {
         DIProvider.mvvmMessagesService().clearQueue()
         this.mnService_.discardQueue()
 
-        DIProvider.mvvmQueriesService().sendExternalQuery('quantux-d3', 'get-early-resources')
-        DIProvider.mvvmQueriesService().sendExternalQuery('quantux-d3', 'get-early-data')
+        DIProvider.mvvmQueriesService().sendExternalQuery('quantux-d3', 'get-early-resources', false, true)
+        DIProvider.mvvmQueriesService().sendExternalQuery('quantux-d3', 'get-early-data', false, true)
 
         const resultsTimeout = 3000 // timeout of 3 seconds, enough...
         const queueMonitor = new QueriesQueueMonitor({

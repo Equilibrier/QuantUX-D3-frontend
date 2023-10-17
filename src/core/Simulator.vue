@@ -160,6 +160,8 @@ export default {
 			this.screenHistory = [];
 			this.dataBindingValues = {};
 
+			console.error('Cosmin-postcreate simulator called')
+
 			// const handler = {
 			// 	set: function(obj, prop, value) {
 			// 		console.stack();
@@ -476,6 +478,7 @@ export default {
 		},
 
 		async startSimulator (model){
+			console.error('Cosmin: startSimulator (Simulator)')
 
 			DIProvider.uiWidgetsActionQueue().reset()
 			DIProvider.tempModelContext().resetModel(this.model)

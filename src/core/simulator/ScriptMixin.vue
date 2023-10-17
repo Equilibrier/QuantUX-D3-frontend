@@ -362,7 +362,7 @@ export default {
             })
             this.handleScriptResult(result, widget, originalLine, script, rresolve)
             const r = await np;
-            console.error(`AFTER: databinding: ${JSON.stringify(this.dataBindingValues)}`)
+            console.error(`cosmin: AFTER: databinding: ${JSON.stringify(this.dataBindingValues)}`)
             Object.freeze(this.dataBindingValues)
             resolve(r)
             // originalLine ? null : null

@@ -258,7 +258,7 @@ export default {
 		getMainMenu   () {
 
 			var options = [
- 			  {label : this.$i18n.t('toolbar.menu.start'), callback:lang.hitch(this, "startSimulator") },
+ 			  {label : this.$i18n.t('toolbar.menu.start'), callback:lang.hitch(this, "prepareSimulator") },
 			  {label : this.$i18n.t('toolbar.menu.settings'), callback:lang.hitch(this, "onShowSettings")},
 			  {label : this.$i18n.t('toolbar.menu.shortcuts'), callback:lang.hitch(this, "showShortCuts")},
 			  {label : this.$i18n.t('toolbar.menu.share'), callback:lang.hitch(this, "showSharing")},

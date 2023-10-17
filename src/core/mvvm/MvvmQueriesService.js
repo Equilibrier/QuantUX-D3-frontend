@@ -25,7 +25,7 @@ export class MvvmQueriesService {
         }
     }
 
-    async sendExternalQuery(senderId, queryEndpoint, forceRetrieve=false) {
+    async sendExternalQuery(senderId, queryEndpoint, forceRetrieve=false, autoResolvable=false) {
         
         let results_ = null
         if (queryEndpoint in this.cache_ && !forceRetrieve) {
@@ -43,25 +43,29 @@ export class MvvmQueriesService {
                 console.error(e)
             }
         }
-        console.log(`MvvmQueriesService: Inserting response in queue, for query ${JSON.stringify(queryEndpoint)}. Will be send asap to mvvm consume logic...`)
+        console.log(`MvvmQueriesService: Inserting response in queue, for query ${JSON.stringify(queryEndpoint)}.`)
         this.queue_.push({
             sender: senderId,
             query: queryEndpoint,
             response: results_,
+            auto_resolvable: autoResolvable,
             _id: generateUuid()
         })
 
-        this.__private.scheduleConsume()
+        if (!autoResolvable) {
+            console.log('...Will be send asap to mvvm consume logic !')
+            this.__private.scheduleConsume()
+        }
     }
 
     consume() {
-        // console.log(`queue length: ${Object.keys(this.queue_).length}`)
-        //const oid_ = Object.keys(this.queue_).shift()
-        //const val_ = this.queue_[oid_]
-        //delete this.queue_[oid_]
-        return this.queue_.shift()
-        //return val_
+        const index = this.queue_.findIndex(item => item.auto_resolvable === false);
+        if (index !== -1) {
+            return this.queue_.splice(index, 1)[0];
+        }
+        return undefined;
     }
+    
 
     peekQueue(index) {
         return index >= 0 && index < this.queue_.length ? this.queue_[index] : null
