@@ -86,7 +86,6 @@ import Replicate from "canvas/Replicate";
 
 import DomUtil from 'core/FastDomUtil'
 
-import DIProvider from 'core/di/DIProvider'
 
 export default {
     name: 'ShareCanvas',
@@ -351,10 +350,6 @@ export default {
 		},
 
 		prepareSimulator (e, model) {
-			DIProvider.uiWidgetsActionQueue().reset()
-			DIProvider.tempModelContext().resetModel(this.model)
-			DIProvider.setSimulatorStartState(true, this.dataBindingValues) // I didn't checked if this is part of the mixin that own dataBindingValues
-
 			console.error('Cosmin: prepareSimulator (ShareCanvas)')
 
 			this.logger.log(1,"prepareSimulator", "enter > " );

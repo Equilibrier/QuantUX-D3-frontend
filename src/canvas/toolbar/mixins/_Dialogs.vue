@@ -28,7 +28,6 @@ import AnimationComposer from 'canvas/toolbar/dialogs/AnimationComposer'
 import ExportDialog from 'canvas/toolbar/dialogs/ExportDialog'
 import CustomFonts from 'canvas/toolbar/dialogs/CustomFonts'
 
-import DIProvider from 'core/di/DIProvider'
 
 export default {
     name: '_Dialogs',
@@ -848,10 +847,6 @@ export default {
 
 			console.error('Cosmin: prepareSimulator (_Dialogs)')
 			
-			DIProvider.uiWidgetsActionQueue().reset()
-			DIProvider.tempModelContext().resetModel(this.model)
-			DIProvider.setSimulatorStartState(true, this.dataBindingValues) // I didn't checked if this is part of the mixin that own dataBindingValues
-
 			this.logger.log(0,"prepareSimulator", "entry");
 			var pos = domGeom.position(win.body());
 			let maxHeight = pos.h - 100

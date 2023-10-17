@@ -477,7 +477,7 @@ export default {
 			}
 		},
 
-		async startSimulator (model){
+		async startSimulator (model) {
 			console.error('Cosmin: startSimulator (Simulator)')
 
 			DIProvider.uiWidgetsActionQueue().reset()
