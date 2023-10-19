@@ -1281,7 +1281,7 @@ class MVVMController {
 			response
 		})
 	}
-	routeExternalQueryResponses() { this.__initLoader(); /*initializam initloaderul, fiindca s-ar putea sa fie receiver de query-response si cum e instantiat lazy, il instantiem aici la sigur*/ this.__private_helpers().routeExtQueryResponses() }
+	routeExternalQueryResponses() { this.__private_helpers().routeExtQueryResponses() }
 
 	pushClickEvent(sourceElement) {
 		if (sourceElement === undefined) {

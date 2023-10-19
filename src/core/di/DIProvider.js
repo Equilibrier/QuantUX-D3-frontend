@@ -150,7 +150,12 @@ class DIProvider {
                 await this.waitWhileMvvmRunning()
                 this.emitMvvmStartedExecuting()
             }
-            await this._simulator.runScript(script, null, null)
+            try {
+                await this._simulator.runScript(script, null, null)
+            }
+            catch(e) {
+                console.error(`${e}`)
+            }
             if (isMvvmProj_) {
                 this.emitMvvmStoppedExecuting()
             }
